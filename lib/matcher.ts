@@ -201,6 +201,8 @@ function fieldFor(pred: Predicate): ProfileField | undefined {
       return "outstanding";
     case "firstGeneration":
       return "firstGeneration";
+    case "completedMechina":
+      return "completedMechina";
     default:
       return undefined;
   }
@@ -289,6 +291,8 @@ function evalPredicate(pred: Predicate, profile: StudentProfile): EvalStatus {
       return arrayOverlap(profile.outstanding, pred.values);
     case "firstGeneration":
       return boolPred(profile.firstGeneration, pred.value ?? true);
+    case "completedMechina":
+      return boolPred(profile.completedMechina, pred.value ?? true);
     default: {
       const _exhaustive: never = pred;
       return _exhaustive;

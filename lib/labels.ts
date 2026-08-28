@@ -94,6 +94,7 @@ const LABELS: Record<string, string> = {
   incomeBand: "רמת הכנסה",
   socialBenefits: "גמלאות",
   firstGeneration: "דור ראשון להשכלה גבוהה",
+  completedMechina: "סיום מכינה קדם-אקדמית",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -200,6 +201,8 @@ export function predicateLabelHe(pred: Predicate): string {
       return `פעילות בולטת: ${pred.values.map(fieldLabelHe).join(" / ")}`;
     case "firstGeneration":
       return "דור ראשון להשכלה גבוהה";
+    case "completedMechina":
+      return pred.value === false ? "לא בוגר/ת מכינה" : "בוגר/ת מכינה קדם-אקדמית";
     default:
       return "קריטריון";
   }

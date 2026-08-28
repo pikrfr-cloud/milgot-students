@@ -217,6 +217,7 @@ export const NATIONAL: Scholarship[] = [
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "serviceIn", values: ["idf", "national", "civil"] },
       { type: "periphery", of: "residence" },
+      { type: "completedMechina" },
     ),
   }),
   s({

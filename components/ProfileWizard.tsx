@@ -40,6 +40,7 @@ const DEMO_PERIPHERY_TAU: StudentProfile = {
   isOleh: false,
   hasDisability: false,
   firstGeneration: true,
+  completedMechina: false,
 };
 
 const STEPS = [
@@ -87,12 +88,10 @@ export function ProfileWizard() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Client-only hydration from localStorage.
-    const stored = loadProfile();
-    setTimeout(() => {
-      setProfile(stored);
-      setReady(true);
-    }, 0);
+    // Hydrate from localStorage after mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
+    setProfile(loadProfile());
+    setReady(true);
   }, []);
 
   useEffect(() => {
@@ -263,6 +262,30 @@ export function ProfileWizard() {
                 <option value="">לא יודע/ת</option>
                 <option value="full">היקף מלא</option>
                 <option value="partial">היקף חלקי</option>
+              </select>
+            </Field>
+            <Field
+              label="האם סיימתם מכינה קדם-אקדמית?"
+              hint="נדרש למלגות ייעודיות כמו ייעוד 46. אם תדלגו — המלגה תופיע תחת «חסר פרט»."
+            >
+              <select
+                className={inputClass}
+                value={
+                  profile.completedMechina === true
+                    ? "yes"
+                    : profile.completedMechina === false
+                      ? "no"
+                      : ""
+                }
+                onChange={(e) =>
+                  patch({
+                    completedMechina: e.target.value === "" ? null : e.target.value === "yes",
+                  })
+                }
+              >
+                <option value="">לא יודע/ת</option>
+                <option value="yes">כן</option>
+                <option value="no">לא</option>
               </select>
             </Field>
           </>

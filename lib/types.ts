@@ -156,6 +156,7 @@ export type StudentProfile = {
   incomeBand?: IncomeBand | null;
   socialBenefits?: SocialBenefit[] | null;
   firstGeneration?: boolean | null;
+  completedMechina?: boolean | null;
 };
 
 export type ProfileField = keyof StudentProfile;
@@ -210,7 +211,8 @@ export type Predicate =
   | { type: "ageMin"; value: number; labelHe?: string }
   | { type: "ageMax"; value: number; labelHe?: string }
   | { type: "outstandingIn"; values: OutstandingActivity[]; labelHe?: string }
-  | { type: "firstGeneration"; value?: boolean; labelHe?: string };
+  | { type: "firstGeneration"; value?: boolean; labelHe?: string }
+  | { type: "completedMechina"; value?: boolean; labelHe?: string };
 
 export type Rule =
   | { op: "allOf"; rules: Rule[]; labelHe?: string }

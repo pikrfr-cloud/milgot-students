@@ -30,6 +30,7 @@ const tauPeripheryFirstYear: StudentProfile = {
   isOleh: false,
   hasDisability: false,
   firstGeneration: true,
+  completedMechina: false,
 };
 
 const technionMaStem: StudentProfile = {
@@ -168,6 +169,10 @@ describe("first-year BA at TAU from the periphery", () => {
     expect(matchScholarship(byId("tena"), tauPeripheryFirstYear).failed.some((c) => c.field === "sectors")).toBe(
       true,
     );
+  });
+
+  it("does not treat yeud 46 as eligible without a mechina", () => {
+    expect(bucketOf(tauPeripheryFirstYear, "yeud-46")).toBe("nearMiss");
   });
 
   it("is a near-miss for Schulich (STEM required)", () => {

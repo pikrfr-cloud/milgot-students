@@ -22,8 +22,8 @@ export function ResultsView() {
   const [showIneligible, setShowIneligible] = useState(false);
 
   useEffect(() => {
-    const stored = loadProfile();
-    setTimeout(() => setProfile(stored), 0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
+    setProfile(loadProfile());
   }, []);
 
   const grouped = useMemo(() => {
@@ -109,12 +109,33 @@ export function ResultsView() {
       </div>
       <CoverageNote className="mt-4" />
 
-      <div className="no-print mt-6 grid gap-3 rounded-2xl border border-line bg-card p-4 sm:grid-cols-2 lg:grid-cols-5">
+      <nav
+        aria-label="מעבר בין קטגוריות הדוח"
+        className="no-print sticky top-14 z-30 mt-6 flex flex-wrap gap-2 rounded-2xl border border-line bg-card/95 p-3 backdrop-blur-sm"
+      >
+        <a href="#eligible" className="rounded-full bg-ok/10 px-3 py-1.5 text-sm text-ok">
+          זכאים עכשיו ({eligible.length})
+        </a>
+        <a href="#need-info" className="rounded-full bg-info/10 px-3 py-1.5 text-sm text-info">
+          חסר פרט ({needInfo.length})
+        </a>
+        <a href="#near-miss" className="rounded-full bg-warn/10 px-3 py-1.5 text-sm text-warn">
+          כמעט זכאים ({nearMiss.length})
+        </a>
+        <a href="#ineligible" className="rounded-full bg-paper-deep px-3 py-1.5 text-sm">
+          לא זכאים ({ineligible.length})
+        </a>
+      </nav>
+
+      <div className="no-print mt-4 grid gap-3 rounded-2xl border border-line bg-card p-4 sm:grid-cols-2 lg:grid-cols-5">
         <input
           className="rounded-xl border border-line px-3 py-2"
           placeholder="חיפוש לפי שם או קרן"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (e.target.value.trim()) setShowIneligible(true);
+          }}
         />
         <select className="rounded-xl border border-line px-3 py-2" value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
           <option value="amount">מיון לפי סכום</option>
@@ -149,15 +170,17 @@ export function ResultsView() {
         </select>
       </div>
 
-      <section className="mt-10">
+      <section id="eligible" className="mt-10 scroll-mt-28">
         <h2 className="font-display text-2xl">זכאים עכשיו ({eligible.length})</h2>
         <p className="mt-1 text-sm text-ink-soft">כל הכללים המובְנים מתקיימים לפי הפרופיל.</p>
         <div className="mt-4 grid gap-4">
-          {eligible.length ? eligible.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} defaultOpen />) : <EmptyBucket />}
+          {eligible.length ? eligible.map((m, i) => (
+            <ScholarshipCard key={m.scholarship.id} match={m} defaultOpen={i === 0} />
+          )) : <EmptyBucket />}
         </div>
       </section>
 
-      <section className="mt-10">
+      <section id="need-info" className="mt-10 scroll-mt-28">
         <h2 className="font-display text-2xl">חסר פרט לאישור ({needInfo.length})</h2>
         <p className="mt-1 text-sm text-ink-soft">
           אף קריטריון לא נכשל, אבל שדה שדולג נדרש. מלאו אותו בפרופיל כדי לאשר.
@@ -167,7 +190,7 @@ export function ResultsView() {
         </div>
       </section>
 
-      <section className="mt-10">
+      <section id="near-miss" className="mt-10 scroll-mt-28">
         <h2 className="font-display text-2xl">כמעט זכאים ({nearMiss.length})</h2>
         <p className="mt-1 text-sm text-ink-soft">פער של קריטריון אחד או שניים — כדי ששום דבר לא יישכח.</p>
         <div className="mt-4 grid gap-4">
@@ -175,7 +198,7 @@ export function ResultsView() {
         </div>
       </section>
 
-      <section className="mt-10">
+      <section id="ineligible" className="mt-10 scroll-mt-28">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-2xl">לא זכאים ({ineligible.length})</h2>
           <button
