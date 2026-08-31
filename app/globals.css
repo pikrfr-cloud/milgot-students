@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+:root {
+  /* System stack so static export does not fetch Google Fonts at build time. */
+  --font-assistant: "Segoe UI", Tahoma, "Arial Hebrew", "Noto Sans Hebrew", Arial, sans-serif;
+  --font-frank: "Times New Roman", Georgia, "David Libre", David, serif;
+  --paper: #f3eee3;
+  --paper-deep: #e7dfd0;
+  --ink: #1c1814;
+  --ink-soft: #5c5349;
+  --forest: #1e4a3a;
+  --forest-deep: #143026;
+  --clay: #b4532a;
+  --clay-deep: #8d3e1d;
+  --gold: #b8953e;
+  --card: #fffdf8;
+  --line: #d9d0c0;
+  --ok: #1f6b4a;
+  --warn: #9a6b12;
+  --info: #2c5f73;
+  --danger: #8f2d2d;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-forest: var(--forest);
+  --color-forest-deep: var(--forest-deep);
+  --color-clay: var(--clay);
+  --color-clay-deep: var(--clay-deep);
+  --color-gold: var(--gold);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-assistant);
+  --font-display: var(--font-frank);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-assistant), "Segoe UI", Tahoma, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-frank), "Times New Roman", serif;
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  right: 1rem;
+  top: -3rem;
+  background: var(--forest);
+  color: white;
+  padding: 0.5rem 1rem;
+  z-index: 50;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+.pattern-band {
+  background-color: var(--forest-deep);
+  background-image:
+    radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.05) 0 2px, transparent 3px),
+    radial-gradient(circle at 80% 70%, rgba(184, 149, 62, 0.12) 0 40%, transparent 42%);
+}
+
+@media print {
+  header,
+  footer,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+  a[href]::after {
+    content: none !important;
+  }
+  .print-break {
+    break-inside: avoid;
+  }
+}
