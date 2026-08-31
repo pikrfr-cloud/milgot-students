@@ -15,9 +15,10 @@ import {
   type StudentProfile,
 } from "./types";
 import { INSTITUTIONS } from "./institutions";
-import { cityInList, isPeripheryCity } from "./cities";
+import { cityInList, isPeripheryCity, neighborhoodMatches } from "./cities";
 import { fieldLabelHe, predicateLabelHe } from "./labels";
 import { isDeadlineClosed } from "./format";
+import { profileIncomeBand } from "./income";
 
 function isUnknown(value: unknown): boolean {
   return value === null || value === undefined;
@@ -55,6 +56,7 @@ const IMMUTABLE_TYPES = new Set<Predicate["type"]>([
   "yearsSinceDischargeMax",
   "periphery",
   "nationalPriority",
+  "neighborhoodIn",
 ]);
 
 function isImmutablePredicate(pred: Predicate): boolean {
@@ -187,12 +189,20 @@ function fieldFor(pred: Predicate): ProfileField | undefined {
       return "studyLoad";
     case "cityIn":
       return pred.of === "hometown" ? "hometown" : "cityOfResidence";
+    case "neighborhoodIn":
+      return "neighborhood";
     case "periphery":
       return pred.of === "hometown" ? "peripheryHometown" : "peripheryResidence";
     case "nationalPriority":
       return "nationalPriorityResidence";
     case "incomeAtMost":
-      return "incomeBand";
+      return "householdIncomeBand";
+    case "minBagrut":
+      return "bagrutAverage";
+    case "minPsychometric":
+      return "psychometric";
+    case "minSechem":
+      return "sechem";
     case "hasSocialBenefit":
       return "socialBenefits";
     case "serviceIn":
@@ -266,16 +276,25 @@ function evalPredicate(pred: Predicate, profile: StudentProfile): EvalStatus {
     }
     case "cityIn":
       return cityMatches(profile, pred.values, pred.of ?? "residence");
+    case "neighborhoodIn": {
+      if (isUnknown(profile.neighborhood)) return "unknown";
+      return neighborhoodMatches(profile.neighborhood as string, pred.values) ? "pass" : "fail";
+    }
     case "periphery":
       return peripheryMatches(profile, pred.of ?? "residence");
     case "nationalPriority":
       return boolPred(profile.nationalPriorityResidence, true);
     case "incomeAtMost": {
-      if (isUnknown(profile.incomeBand)) return "unknown";
-      return incomeRank(profile.incomeBand as IncomeBand) <= incomeRank(pred.value)
-        ? "pass"
-        : "fail";
+      const band = profileIncomeBand(profile);
+      if (isUnknown(band)) return "unknown";
+      return incomeRank(band as IncomeBand) <= incomeRank(pred.value) ? "pass" : "fail";
     }
+    case "minBagrut":
+      return numPred(profile.bagrutAverage, (n) => n >= pred.value);
+    case "minPsychometric":
+      return numPred(profile.psychometric, (n) => n >= pred.value);
+    case "minSechem":
+      return numPred(profile.sechem, (n) => n >= pred.value);
     case "hasSocialBenefit": {
       if (isUnknown(profile.socialBenefits)) return "unknown";
       if (!pred.values || pred.values.length === 0) {

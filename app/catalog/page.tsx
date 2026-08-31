@@ -51,6 +51,13 @@ export default function CatalogPage() {
               {formatDeadline(s.deadline)} · {s.types.map(scholarshipTypeLabel).join(", ")} ·{" "}
               {scopeLabelHe(s.scope)}
             </p>
+            <p className="mt-2 text-xs">
+              {s.officialSource ? (
+                <span className="rounded-full bg-ok/10 px-2 py-0.5 text-ok">מקור רשמי</span>
+              ) : (
+                <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">אין מקור רשמי מאומת</span>
+              )}
+            </p>
             {s.sourceUrls.length > 0 ? (
               <p className="mt-2 text-xs text-ink-soft">
                 מקורות:{" "}

@@ -1,5 +1,6 @@
 import { CoverageNote } from "@/components/CoverageNote";
 import { CATALOG_STATS } from "@/data/scholarships";
+import Link from "next/link";
 
 export default function AboutPage() {
   return (
@@ -33,6 +34,11 @@ export default function AboutPage() {
         מסומן במפורש. אימות אחרון: {CATALOG_STATS.lastVerifiedMonth}.
       </p>
       <CoverageNote className="mt-4" />
+      <p className="mt-4">
+        <Link href="/accessibility" className="underline underline-offset-4">
+          הצהרת נגישות
+        </Link>
+      </p>
       <h2 className="mt-8 font-display text-2xl">הוספת מלגה</h2>
       <p className="mt-3">
         מוסיפים אובייקט בקובץ המתאים תחת <code>data/scholarships/</code> עם מזהה ייחודי, שם בעברית,

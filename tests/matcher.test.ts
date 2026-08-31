@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import { matchAll, matchScholarship } from "@/lib/matcher";
 import { SCHOLARSHIPS } from "@/data/scholarships";
 import { TIPS, TIP_IDS } from "@/data/tips";
-import { citiesMatch, isPeripheryCity } from "@/lib/cities";
+import { citiesMatch, isPeripheryCity, neighborhoodMatches } from "@/lib/cities";
 import { deadlineSortValue, deadlineStatus, isDeadlineClosed } from "@/lib/format";
-import { deadline } from "@/data/scholarships/helpers";
+import { allOf, deadline, not } from "@/data/scholarships/helpers";
+import { hasOfficialSource } from "@/lib/sources";
+import { deriveIncomeBand } from "@/lib/income";
+import { INSTITUTIONS } from "@/lib/institutions";
 import type { StudentProfile } from "@/lib/types";
 
 const byId = (id: string) => {
@@ -156,6 +159,20 @@ describe("catalog integrity", () => {
       expect(s.eligibility).toBeTruthy();
       expect(s.lastVerified.startsWith("2026")).toBe(true);
       expect(s.kind ?? "scholarship").toBe("scholarship");
+    }
+  });
+
+  it("every remaining scholarship has at least one official source", () => {
+    for (const s of SCHOLARSHIPS) {
+      expect(hasOfficialSource(s.sourceUrls), s.id).toBe(true);
+      expect(s.officialSource, s.id).toBe(true);
+    }
+  });
+
+  it("does not treat dean skeletons as eligible-now", () => {
+    for (const s of SCHOLARSHIPS.filter((x) => x.treatment === "checkAtInstitution")) {
+      const match = matchScholarship(s, { institution: s.institutionIds?.[0] });
+      expect(match.bucket, s.id).not.toBe("eligible");
     }
   });
 
@@ -344,7 +361,7 @@ describe("city aliases", () => {
     expect(citiesMatch("קריית גת", "קריית שמונה")).toBe(false);
   });
 
-  it("matches Tel Aviv municipal aid when the profile uses the short city name", () => {
+  it("matches Tel Aviv municipal aid city alias but requires a south-neighborhood", () => {
     const match = matchScholarship(byId("telaviv-south-neighborhoods"), {
       cityOfResidence: "תל אביב",
       hometown: "תל אביב",
@@ -352,6 +369,23 @@ describe("city aliases", () => {
     });
     expect(match.failed.some((c) => c.field === "cityOfResidence")).toBe(false);
     expect(match.passed.some((c) => c.field === "cityOfResidence" || c.field === "hometown")).toBe(true);
+    expect(match.bucket).toBe("needInfo");
+    expect(match.unknown.some((c) => c.field === "neighborhood")).toBe(true);
+  });
+
+  it("is eligible for south TA aid when a listed neighborhood is filled", () => {
+    expect(
+      bucketOf(
+        {
+          cityOfResidence: "תל אביב",
+          hometown: "תל אביב",
+          neighborhood: "שפירא",
+          studyLoad: "full",
+        },
+        "telaviv-south-neighborhoods",
+      ),
+    ).toBe("eligible");
+    expect(neighborhoodMatches("קרית שלום", ["קריית שלום"])).toBe(true);
   });
 });
 
@@ -396,5 +430,54 @@ describe("national-priority vs social periphery", () => {
     for (const city of ["ירושלים", "אשדוד", "חדרה", "לוד", "רמלה", "יבנה"]) {
       expect(isPeripheryCity(city)).toBe(false);
     }
+  });
+});
+
+describe("nested not / allOf", () => {
+  it("inverts an allOf of identity predicates", () => {
+    const sch = {
+      ...byId("perach"),
+      id: "synthetic-not-allof",
+      treatment: undefined,
+      eligibility: not(
+        allOf({ type: "sectorIn", values: ["haredi"] as const }, { type: "genderIn", values: ["male"] as const }),
+      ),
+    };
+    expect(matchScholarship(sch, ordinaryColmanProfile).bucket).toBe("eligible");
+    expect(matchScholarship(sch, harediCollege).bucket).not.toBe("eligible");
+  });
+});
+
+describe("household income derivation", () => {
+  it("maps a large household with a mid band to a lower per-capita band", () => {
+    expect(deriveIncomeBand(6, "band_15_25k")).toBe("low");
+    expect(deriveIncomeBand(1, "over_40k")).toBe("high");
+    expect(deriveIncomeBand(null, "band_8_15k")).toBeNull();
+  });
+});
+
+describe("empty institutions have check-at-institution records", () => {
+  it("covers teaching colleges and other campuses that had zero records", () => {
+    const ids = [
+      "kibbutzim",
+      "levinsky",
+      "david_yellin",
+      "gordon",
+      "kaye",
+      "oranim",
+      "herzog",
+      "ohalo",
+      "jca",
+      "wizo_haifa",
+      "ramat_gan_college",
+      "netanya",
+      "azrieli",
+    ];
+    for (const inst of ids) {
+      const records = SCHOLARSHIPS.filter((s) => s.institutionIds?.includes(inst));
+      expect(records.length, inst).toBeGreaterThan(0);
+      expect(records.some((s) => s.treatment === "checkAtInstitution"), inst).toBe(true);
+    }
+    expect(INSTITUTIONS.some((i) => i.id === "kibbutzim")).toBe(true);
   });
 });

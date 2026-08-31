@@ -44,6 +44,16 @@ export const INCOME_BANDS = [
 ] as const;
 export type IncomeBand = (typeof INCOME_BANDS)[number];
 
+/** Order-of-magnitude monthly household income. Per-capita is derived internally. */
+export const HOUSEHOLD_INCOME_BANDS = [
+  "under_8k",
+  "band_8_15k",
+  "band_15_25k",
+  "band_25_40k",
+  "over_40k",
+] as const;
+export type HouseholdIncomeBand = (typeof HOUSEHOLD_INCOME_BANDS)[number];
+
 export const SERVICE_TYPES = [
   "idf",
   "national",
@@ -148,6 +158,13 @@ export type StudentProfile = {
    * before studies. Never inferred from a city list (ייעוד 45/46).
    */
   nationalPriorityResidence?: boolean | null;
+  /** Neighborhood / quarter — required for some Tel Aviv and Jerusalem funds. */
+  neighborhood?: string | null;
+  bagrutAverage?: number | null;
+  psychometric?: number | null;
+  sechem?: number | null;
+  householdSize?: number | null;
+  householdIncomeBand?: HouseholdIncomeBand | null;
   age?: number | null;
   gender?: Gender | null;
   familyFlags?: FamilyFlag[] | null;
@@ -201,9 +218,13 @@ export type Predicate =
   | { type: "minAverage"; value: number; labelHe?: string }
   | { type: "studyLoadFull"; labelHe?: string }
   | { type: "cityIn"; values: string[]; of?: "residence" | "hometown" | "either"; labelHe?: string }
+  | { type: "neighborhoodIn"; values: string[]; labelHe?: string }
   | { type: "periphery"; of?: "residence" | "hometown" | "either"; labelHe?: string }
   | { type: "nationalPriority"; labelHe?: string }
   | { type: "incomeAtMost"; value: IncomeBand; labelHe?: string }
+  | { type: "minBagrut"; value: number; labelHe?: string }
+  | { type: "minPsychometric"; value: number; labelHe?: string }
+  | { type: "minSechem"; value: number; labelHe?: string }
   | { type: "hasSocialBenefit"; values?: SocialBenefit[]; labelHe?: string }
   | { type: "serviceIn"; values: ServiceType[]; labelHe?: string }
   | { type: "combatRole"; value?: boolean; labelHe?: string }
@@ -250,6 +271,8 @@ export type Scholarship = {
   coverageNoteHe?: string;
   lastVerified: string;
   sourceUrls: string[];
+  /** True when at least one sourceUrl is an official domain (not a news aggregator). */
+  officialSource?: boolean;
   eligibility: Rule;
   /** Institutions this scholarship is tied to; empty/omitted = national or not institution-specific. */
   institutionIds?: string[];
@@ -294,3 +317,13 @@ export type ScholarshipMatch = {
   failed: CriterionResult[];
   unknown: CriterionResult[];
 };
+
+export const TRACKING_STATUSES = ["in_progress", "submitted", "accepted"] as const;
+export type TrackingStatus = (typeof TRACKING_STATUSES)[number];
+
+export type TrackingEntry = {
+  status: TrackingStatus;
+  updatedAt: string;
+};
+
+export type ScholarshipTracking = Record<string, TrackingEntry>;

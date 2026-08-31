@@ -23,6 +23,10 @@ export function SiteFooter() {
           <Link href="/about" className="mt-2 inline-block underline underline-offset-4 text-white/90">
             איך ההתאמה עובדת
           </Link>
+          <br />
+          <Link href="/accessibility" className="mt-2 inline-block underline underline-offset-4 text-white/90">
+            הצהרת נגישות
+          </Link>
         </div>
       </div>
     </footer>

@@ -111,15 +111,15 @@ export function ResultsView() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2 no-print">
-          <Link href="/profile" className="rounded-full border border-line px-4 py-2 text-sm">
+          <Link href="/profile" className="inline-flex min-h-11 items-center rounded-full border border-line px-4 text-sm">
             לערוך פרופיל
           </Link>
           <button
             type="button"
             onClick={() => window.print()}
-            className="rounded-full bg-forest px-4 py-2 text-sm text-white"
+            className="inline-flex min-h-11 items-center rounded-full bg-forest px-4 text-sm text-white"
           >
-            הדפסה / PDF
+            שמור PDF
           </button>
         </div>
       </div>
@@ -127,25 +127,25 @@ export function ResultsView() {
 
       <nav
         aria-label="מעבר בין קטגוריות הדוח"
-        className="no-print sticky top-14 z-30 mt-6 flex flex-wrap gap-2 rounded-2xl border border-line bg-card/95 p-3 backdrop-blur-sm"
+        className="no-print mt-6 flex flex-wrap gap-2 rounded-2xl border border-line bg-card/95 p-3 md:sticky md:top-16 md:z-30 md:backdrop-blur-sm"
       >
-        <a href="#eligible" className="rounded-full bg-ok/10 px-3 py-1.5 text-sm text-ok">
+        <a href="#eligible" className="inline-flex min-h-11 items-center rounded-full bg-ok/10 px-3 text-sm text-ok">
           זכאים עכשיו ({eligible.length})
         </a>
-        <a href="#need-info" className="rounded-full bg-info/10 px-3 py-1.5 text-sm text-info">
+        <a href="#need-info" className="inline-flex min-h-11 items-center rounded-full bg-info/10 px-3 text-sm text-info">
           חסר פרט ({needInfo.length})
         </a>
-        <a href="#near-miss" className="rounded-full bg-warn/10 px-3 py-1.5 text-sm text-warn">
+        <a href="#near-miss" className="inline-flex min-h-11 items-center rounded-full bg-warn/10 px-3 text-sm text-warn">
           כמעט זכאים ({nearMiss.length})
         </a>
-        <a href="#ineligible" className="rounded-full bg-paper-deep px-3 py-1.5 text-sm">
+        <a href="#ineligible" className="inline-flex min-h-11 items-center rounded-full bg-paper-deep px-3 text-sm">
           לא זכאים ({ineligible.length})
         </a>
       </nav>
 
       <div className="no-print mt-4 grid gap-3 rounded-2xl border border-line bg-card p-4 sm:grid-cols-2 lg:grid-cols-5">
         <input
-          className="rounded-xl border border-line px-3 py-2"
+          className="min-h-11 rounded-xl border border-line px-3 py-2"
           placeholder="חיפוש לפי שם או קרן"
           aria-label="חיפוש מלגות לפי שם או קרן"
           value={query}
@@ -155,7 +155,7 @@ export function ResultsView() {
           }}
         />
         <select
-          className="rounded-xl border border-line px-3 py-2"
+          className="min-h-11 rounded-xl border border-line px-3 py-2"
           value={sort}
           aria-label="מיון תוצאות"
           onChange={(e) => setSort(e.target.value as SortKey)}
@@ -165,7 +165,7 @@ export function ResultsView() {
           <option value="name">מיון לפי שם</option>
         </select>
         <select
-          className="rounded-xl border border-line px-3 py-2"
+          className="min-h-11 rounded-xl border border-line px-3 py-2"
           value={scope}
           aria-label="סינון לפי היקף"
           onChange={(e) => setScope(e.target.value as typeof scope)}
@@ -177,7 +177,7 @@ export function ResultsView() {
           <option value="regional">אזורי</option>
         </select>
         <select
-          className="rounded-xl border border-line px-3 py-2"
+          className="min-h-11 rounded-xl border border-line px-3 py-2"
           value={type}
           aria-label="סינון לפי סוג מלגה"
           onChange={(e) => setType(e.target.value)}
@@ -191,7 +191,7 @@ export function ResultsView() {
           <option value="service">שירות / מילואים</option>
         </select>
         <select
-          className="rounded-xl border border-line px-3 py-2"
+          className="min-h-11 rounded-xl border border-line px-3 py-2"
           value={minAmount}
           aria-label="סינון לפי סכום מינימלי"
           onChange={(e) => setMinAmount(Number(e.target.value))}

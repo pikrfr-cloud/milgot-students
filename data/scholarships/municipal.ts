@@ -1,4 +1,5 @@
 import type { Scholarship } from "@/lib/types";
+import { TEL_AVIV_SOUTH_NEIGHBORHOODS } from "@/lib/cities";
 import {
   CHECK_ANNUALLY,
   DOCS_BASIC,
@@ -24,10 +25,13 @@ export const MUNICIPAL: Scholarship[] = [
       "סטודנטים הלומדים במוסד להשכלה גבוהה בירושלים (ובמסלולים מסוימים גם כפרי סטודנטים). בתשפ״ו פורסם תקציב של כ־20 מיליון ₪.",
     documentsHe: [...DOCS_BASIC, "הוכחת לימודים בירושלים", "שיבוץ להתנדבות"],
     howToApplyHe: "מערכת קרן המלגות העירונית של עיריית ירושלים.",
-    applyUrl: "https://www.jerusalem.muni.il/",
-    notesHe: "קיים גם מסלול כפרי סטודנטים. הסכום והשעות עלולים להתעדכן.",
+    applyUrl: "https://jerusalemfoundation.org/he/news/%D7%A7%D7%A8%D7%9F-%D7%94%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%94%D7%A2%D7%99%D7%A8%D7%95%D7%A0%D7%99%D7%AA-%D7%9C%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D-%D7%94%D7%94%D7%A8%D7%A9%D7%9E%D7%94/",
+    notesHe: "קיים גם מסלול כפרי סטודנטים. הסכום והשעות עלולים להתעדכן. תשפ״ז טרם פורסמה באתר העירייה.",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.jerusalemharedim.co.il/%d7%97%d7%93%d7%a9%d7%95%d7%aa/688370"],
+    sourceUrls: [
+      "https://jerusalemfoundation.org/he/news/%D7%A7%D7%A8%D7%9F-%D7%94%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%94%D7%A2%D7%99%D7%A8%D7%95%D7%A0%D7%99%D7%AA-%D7%9C%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D-%D7%94%D7%94%D7%A8%D7%A9%D7%9E%D7%94/",
+      "https://www.jerusalem.muni.il/",
+    ],
     institutionIds: ["huji", "bezalel", "azrieli", "hadassah", "jca", "david_yellin"],
     eligibility: allOf(
       {
@@ -60,6 +64,7 @@ export const MUNICIPAL: Scholarship[] = [
         values: ["תל אביב-יפו"],
         of: "either",
       },
+      { type: "neighborhoodIn", values: TEL_AVIV_SOUTH_NEIGHBORHOODS },
       { type: "studyLoadFull" },
     ),
   }),
@@ -273,7 +278,7 @@ export const MUNICIPAL: Scholarship[] = [
     howToApplyHe: "עיריית שדרות / מכללת ספיר / רכז קהילה.",
     applyUrl: "https://www.sderot.muni.il/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://www.sderot.muni.il/", "https://www.sapir.ac.il/"],
     eligibility: allOf(
       {
         op: "anyOf",
@@ -299,7 +304,7 @@ export const MUNICIPAL: Scholarship[] = [
     howToApplyHe: "רכז קהילות בתל־חי.",
     applyUrl: "https://www.telhai.ac.il/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://www.telhai.ac.il/"],
     institutionIds: ["telhai"],
     eligibility: allOf(
       { type: "institutionIn", values: ["telhai"] },

@@ -69,8 +69,8 @@ export const FOUNDATIONS: Scholarship[] = [
     notesHe: "שעות התנדבות משתנות לפי מסלול (פורסם כ־65 בחלק מהמסלולים).",
     lastVerified: VERIFIED,
     sourceUrls: [
-      "https://www.study.co.il/%D7%A7%D7%A8%D7%9F-%D7%92%D7%A8%D7%95%D7%A1-%D7%9E%D7%9C%D7%92%D7%95%D7%AA/",
-      "https://www.milgapo.co.il/scholarships/gruss",
+      "https://www.gruss.org.il/blank",
+      "https://www.hachvana.mod.gov.il/MainEducation/Scholarship/Pages/Gruss.aspx",
     ],
     eligibility: allOf(
       { type: "serviceIn", values: ["idf", "national", "civil"] },
@@ -101,7 +101,7 @@ export const FOUNDATIONS: Scholarship[] = [
     howToApplyHe: "אתר עתידים / המוסד השותף.",
     applyUrl: "https://www.atidim.org/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/P45997/"],
+    sourceUrls: ["https://www.atidim.org/"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "yearOfStudyIn", values: [1] },
@@ -125,7 +125,7 @@ export const FOUNDATIONS: Scholarship[] = [
     howToApplyHe: "אתר שגרירי רוטשילד.",
     applyUrl: "https://www.rhcf.org.il/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://www.rhcf.org.il/"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "willingToVolunteer" },
@@ -182,7 +182,7 @@ export const FOUNDATIONS: Scholarship[] = [
     howToApplyHe: "אתר קרן מושל.",
     applyUrl: "https://www.moshalprogram.org/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/P45944/"],
+    sourceUrls: ["https://www.moshalprogram.org/"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "fieldOfStudyIn", values: STEM_PLUS_MED },
@@ -225,8 +225,9 @@ export const FOUNDATIONS: Scholarship[] = [
       "סטודנטים מהפריפריה החברתית והגיאוגרפית, כולל יוצאי אתיופיה, החברה החרדית והחברה הערבית, עם התנדבות במסגרות העמותה.",
     documentsHe: [...DOCS_BASIC, ...DOCS_INCOME],
     howToApplyHe: "אתר קרן הזנק לעתיד.",
+    applyUrl: "https://www.heznekleatid.org.il/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://www.heznekleatid.org.il/"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "willingToVolunteer" },
@@ -252,7 +253,7 @@ export const FOUNDATIONS: Scholarship[] = [
     howToApplyHe: "אתר HIAS Israel / קול קורא שנתי.",
     applyUrl: "https://www.hias.org.il/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A2%D7%95%D7%9C%D7%99%D7%9D-%D7%97%D7%93%D7%A9%D7%99%D7%9D-%D7%9E%D7%9C%D7%92%D7%95%D7%AA/"],
+    sourceUrls: ["https://www.hias.org.il/"],
     eligibility: allOf(
       { type: "isOleh" },
       { type: "degreeLevelIn", values: ["ba", "ma"] },
@@ -272,8 +273,9 @@ export const FOUNDATIONS: Scholarship[] = [
     whoItsForHe: "סטודנטים המוכנים לחונכות ילדים ונוער במסגרת סחלב.",
     documentsHe: [...DOCS_BASIC],
     howToApplyHe: "דרך המוסד או העמותה המפעילה באזור.",
+    applyUrl: "https://www.perach.org.il/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://www.perach.org.il/"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma", "teaching_certificate"] },
       { type: "willingToVolunteer" },

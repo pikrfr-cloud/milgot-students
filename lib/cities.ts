@@ -173,3 +173,61 @@ export function cityInList(city: string, values: string[]): boolean {
 export function isPeripheryCity(city: string): boolean {
   return SOCIAL_PERIPHERY_CITIES.has(normalizeCityName(city.trim()));
 }
+
+export function isTelAvivCity(city: string | null | undefined): boolean {
+  if (!city) return false;
+  return normalizeCityName(city) === "תל אביב-יפו";
+}
+
+export function isJerusalemCity(city: string | null | undefined): boolean {
+  if (!city) return false;
+  return normalizeCityName(city) === "ירושלים";
+}
+
+export function cityNeedsNeighborhood(city: string | null | undefined): boolean {
+  return isTelAvivCity(city) || isJerusalemCity(city);
+}
+
+/** South Tel Aviv / Jaffa quarters named on the municipal scholarship page. */
+export const TEL_AVIV_SOUTH_NEIGHBORHOODS = [
+  "שפירא",
+  "קריית שלום",
+  "התקווה",
+  "יפו",
+  "נווה עופר",
+  "כפר שלם",
+  "עזרא",
+  "ארגזים",
+  "פלורנטין",
+  "נווה שאנן",
+  "יד אליהו",
+  "גבעת התמרים",
+  "עג'מי",
+  "גבעת עלייה",
+  "נווה גולן",
+];
+
+export const JERUSALEM_NEIGHBORHOOD_SUGGESTIONS = [
+  "קטמון",
+  "רחביה",
+  "טלביה",
+  "בית הכרם",
+  "גילה",
+  "פסגת זאב",
+  "רמות",
+  "עין כרם",
+  "ארנונה",
+  "בקעה",
+  "המושבה הגרמנית",
+  "נחלאות",
+  "קריית יובל",
+  "קריית מנחם",
+  "הר נוף",
+  "בית וגן",
+  "גבעת שאול",
+];
+
+export function neighborhoodMatches(name: string, values: string[]): boolean {
+  const needle = normalizeCityName(name);
+  return values.some((v) => normalizeCityName(v) === needle);
+}

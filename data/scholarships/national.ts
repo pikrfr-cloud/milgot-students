@@ -10,8 +10,10 @@ import {
   STEM,
   VERIFIED,
   allOf,
+  anyOf,
   amount,
   deadline,
+  not,
   s,
 } from "./helpers";
 
@@ -151,7 +153,7 @@ export const NATIONAL: Scholarship[] = [
     applyUrl: "https://www.hachvana.mod.gov.il/",
     notesHe: "אין כפל עם ייעוד 45/46 ועם חלק ממענקי המילואים. הסכום צמוד לשכ״ל האוניברסיטאי.",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria45.aspx"],
     institutionIds: PERIPHERY_STUDY_INSTITUTIONS,
     eligibility: allOf(
       { type: "institutionIn", values: PERIPHERY_STUDY_INSTITUTIONS },
@@ -517,7 +519,7 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "דרך האוניברסיטה / רשות המחקר לפי קול קורא שנתי של ות״ת.",
     applyUrl: "https://che.org.il/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://che.org.il/"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["phd"] },
       {
@@ -548,7 +550,7 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "דרך המוסד המפעיל את הקהילה / רכז הקהילה.",
     notesHe: "רשימת הישובים והמוסדות משתנה. היקף ההתנדבות גבוה משמעותית מפר״ח.",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://che.org.il/"],
     institutionIds: ["telhai", "kinneret", "shenkar", "achva", "sapir", "zefat", "kibbutzim", "huji", "bezalel", "yvc"],
     eligibility: allOf(
       {
@@ -573,7 +575,7 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "דרך המוסד השותף או תוכנית הישגים.",
     notesHe: "כוללת שלבי אבחון, מכינה ותואר. לא כל מועמד להנדסה זכאי אוטומטית.",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://www.biu.ac.il/"],
     institutionIds: ["biu", "technion", "bgu"],
     eligibility: allOf(
       { type: "institutionIn", values: ["biu", "technion", "bgu"] },
@@ -598,8 +600,11 @@ export const NATIONAL: Scholarship[] = [
     whoItsForHe: "סטודנטים בשנת הלימודים האחרונה שמתחייבים להיקלט לעבודה בנגב לתקופה שנקבעה (פורסם: שנתיים).",
     documentsHe: [...DOCS_BASIC, "התחייבות למעסיק קולט בנגב"],
     howToApplyHe: "דרך המשרד לפיתוח הנגב והגליל / מכרזי התוכנית.",
+    applyUrl: "https://www.gov.il/he/departments/ministry_for_the_development_of_the_periphery_the_negev_and_the_galilee",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: [
+      "https://www.gov.il/he/departments/ministry_for_the_development_of_the_periphery_the_negev_and_the_galilee",
+    ],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma"] },
       { type: "yearOfStudyMin", value: 3 },
@@ -640,7 +645,7 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "דרך המכינה / פרסום המל״ג.",
     applyUrl: "https://che.org.il/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.kikar.co.il/haredim-news/ti1wo2"],
+    sourceUrls: ["https://che.org.il/scholarships/%d7%9e%d7%9c%d7%92%d7%aa-%d7%a8%d7%90%d7%95%d7%99%d7%99%d7%9d-%d7%9c%d7%a1%d7%99%d7%95%d7%a2/"],
     eligibility: allOf({ type: "degreeLevelIn", values: ["prep"] }, { type: "incomeAtMost", value: "lower_middle" }),
   }),
   s({
@@ -680,5 +685,91 @@ export const NATIONAL: Scholarship[] = [
       "https://www.kolzchut.org.il/he/%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A2%D7%9D_%D7%9E%D7%95%D7%92%D7%91%D7%9C%D7%95%D7%99%D7%95%D7%AA_%D7%95%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A0%D7%9B%D7%99%D7%9D",
     ],
     eligibility: allOf({ type: "hasDisability" }),
+  }),
+  s({
+    id: "kemach-derech-tzlacha",
+    nameHe: "מלגה לדרך / דרך צלחה — קרן קמ״ח",
+    funderHe: "קרן ק.מ.ח. (קידום מקצועי חרדי)",
+    types: ["population", "need"],
+    scope: "national",
+    amounts: amount("עד 5,000 ₪ מלגת לימודים לשנה א׳ + סדנאות (שווי שפורסם כ־2,500 ₪)", {
+      min: 5000,
+      max: 5000,
+    }),
+    cadence: "one_time",
+    deadline: CHECK_ANNUALLY,
+    whoItsForHe:
+      "סטודנטים חרדים גברים בשנה א׳ לתואר ראשון (למעט חינוך), המקיימים אורח חיים חרדי. אין חובה ללמוד במוסד בפיקוח חרדי.",
+    documentsHe: [...DOCS_BASIC],
+    howToApplyHe: "הרשמה באתר קרן קמ״ח / טופס מלגה לדרך.",
+    applyUrl: "https://keren-kemach.org/milga-laderech/",
+    lastVerified: VERIFIED,
+    sourceUrls: ["https://keren-kemach.org/milga-laderech/", "https://keren-kemach.org/"],
+    eligibility: allOf(
+      { type: "sectorIn", values: ["haredi"] },
+      { type: "genderIn", values: ["male"] },
+      { type: "degreeLevelIn", values: ["ba"] },
+      { type: "yearOfStudyIn", values: [1] },
+      not({ type: "fieldOfStudyIn", values: ["education"] }, "לא לימודי חינוך"),
+    ),
+  }),
+  s({
+    id: "moh-nursing-tuition",
+    nameHe: "מלגת שכר לימוד לסיעוד — משרד הבריאות",
+    funderHe: "משרד הבריאות, מינהל הסיעוד",
+    types: ["population", "loan"],
+    scope: "national",
+    amounts: amount(
+      "הלוואה עומדת בהיקף כ־50% משכר הלימוד האוניברסיטאי; הופכת למענק בכפוף לסיום הלימודים ולעבודה במערכת הבריאות לפי תנאי המשרד. סכומים מדויקים לפי מסלול — לא אומתו כאן כמספר אחיד.",
+      { uncertain: true },
+    ),
+    cadence: "multi_year",
+    deadline: CHECK_ANNUALLY,
+    whoItsForHe:
+      "סטודנטים לתואר ראשון בסיעוד (אחיוּת) במוסד מוכר, כולל מסלולי הסבת אקדמאים בחלק מהתוכניות. מותנה בהתחייבות.",
+    documentsHe: [...DOCS_BASIC, "התחייבות / שטר חוב לפי הנחיות המשרד"],
+    howToApplyHe: "דרך המוסד / מינהל הסיעוד באתר משרד הבריאות.",
+    applyUrl: "https://www1.health.gov.il/nursing/study/tuition-scholarships/",
+    lastVerified: VERIFIED,
+    sourceUrls: [
+      "https://www1.health.gov.il/nursing/study/tuition-scholarships/",
+      "https://www1.health.gov.il/nursing/study/tuition-scholarships/bachelors-degree-tuition/",
+      "https://studentsadmin.huji.ac.il/NursingScholarships",
+    ],
+    eligibility: allOf(
+      { type: "degreeLevelIn", values: ["ba"] },
+      { type: "fieldOfStudyIn", values: ["nursing", "health"] },
+    ),
+  }),
+  s({
+    id: "moe-teaching-conditional-loan",
+    nameHe: "הלוואה מותנית / מערך מסייע — משרד החינוך",
+    funderHe: "משרד החינוך, האגף להכשרה אקדמית",
+    types: ["loan", "population"],
+    scope: "national",
+    amounts: amount(
+      "הלוואה מותנית שהופכת למענק בכפוף לסיום הלימודים ולהוראה במוסד בפיקוח המשרד. בחוזרים שפורסמו למסלולים מסוימים צוין סכום של כ־5,800 ₪ לשנה; המקצועות והסכומים מתעדכנים בחוזר שנתי — לא אומתו כאן כמספר אחיד לכל מסלול.",
+      { min: 5800, uncertain: true },
+    ),
+    cadence: "annual",
+    deadline: CHECK_ANNUALLY,
+    whoItsForHe:
+      "סטודנטים המתכשרים להוראה (תואר בחינוך או תעודת הוראה). חלק מהמסלולים מוגבלים למקצועות נדרשים לפי חוזר המערך המסייע של אותה שנה. ההגשה דרך מוסד ההכשרה.",
+    documentsHe: [...DOCS_BASIC, "אישור לימודים בתוכנית הכשרה להוראה"],
+    howToApplyHe: "דרך דיקן / מדור מלגות במוסד ההכשרה, לפי חוזר משרד החינוך לאותה שנה.",
+    applyUrl: "https://www.smkb.ac.il/students/students-dean/scholarship/assistive/",
+    notesHe:
+      "אין כפל מלגות בתוך המערך המסייע. סטודנטים שכבר יש להם תעודת הוראה או שעובדים כמורים בפועל עשויים שלא להיות זכאים — יש לאמת בחוזר.",
+    lastVerified: VERIFIED,
+    sourceUrls: [
+      "https://www.smkb.ac.il/students/students-dean/scholarship/assistive/",
+      "https://education.huji.ac.il/sites/default/files/education/files/ministry_of_education_scholarship_students_2025-6_1.pdf",
+    ],
+    eligibility: allOf(
+      anyOf(
+        { type: "degreeLevelIn", values: ["teaching_certificate"] },
+        { type: "fieldOfStudyIn", values: ["education"] },
+      ),
+    ),
   }),
 ];
