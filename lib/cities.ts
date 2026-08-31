@@ -1,10 +1,10 @@
 /**
- * Approximate national-priority / geographic-periphery localities.
- * Used as a helper when the student did not explicitly mark periphery.
- * Source basis: common National Priority Area A/B and Negev/Galilee development towns.
- * Not a legal determination — the profile's explicit flag always wins.
+ * Social/geographic periphery localities for *private* funds (ISEF, Gruss, etc.).
+ * Not a legal determination of national-priority areas (ייעוד 45/46).
+ * Jerusalem, Ashdod, Hadera, Lod, Ramla, Yavne and similar central cities
+ * are intentionally absent — they must not count as national-priority.
  */
-const PERIPHERY_CITIES = new Set([
+const SOCIAL_PERIPHERY_CITIES = new Set([
   "באר שבע",
   "אילת",
   "דימונה",
@@ -12,7 +12,6 @@ const PERIPHERY_CITIES = new Set([
   "אופקים",
   "נתיבות",
   "שדרות",
-  "קרית גת",
   "קריית גת",
   "אשקלון",
   "ירוחם",
@@ -25,17 +24,13 @@ const PERIPHERY_CITIES = new Set([
   "לקיה",
   "ערערה בנגב",
   "קריית מלאכי",
-  "קרית מלאכי",
-  "אשדוד",
   "קריית שמונה",
-  "קרית שמונה",
   "צפת",
   "טבריה",
   "עכו",
   "נהריה",
   "כרמיאל",
   "מעלות-תרשיחא",
-  "מעלות תרשיחא",
   "שלומי",
   "חצור הגלילית",
   "בית שאן",
@@ -49,29 +44,14 @@ const PERIPHERY_CITIES = new Set([
   "מגדל העמק",
   "יקנעם",
   "יקנעם עילית",
-  "מגדל",
   "קצרין",
   "מטולה",
   "קריית ים",
-  "קרית ים",
   "קריית אתא",
   "טירת כרמל",
   "אור עקיבא",
-  "חדרה",
-  "פרדס חנה-כרכור",
-  "זכרון יעקב",
-  "בנימינה",
-  "לוד",
-  "רמלה",
-  "יבנה",
-  "גדרה",
-  "קריית עקרון",
-  "ירושלים",
   "אריאל",
-  "מעלה אדומים",
   "בית שמש",
-  "מודיעין עילית",
-  "ביתר עילית",
   "אום אל-פחם",
   "באקה אל-גרביה",
   "טייבה",
@@ -154,7 +134,7 @@ export const CITY_SUGGESTIONS = [
   "טייבה",
   "אור יהודה",
   "גבעתיים",
-  "קרית אונו",
+  "קריית אונו",
   "רמת השרון",
   "יבנה",
   "נס ציונה",
@@ -169,7 +149,85 @@ export const CITY_SUGGESTIONS = [
   "קריית מוצקין",
 ];
 
+/** Canonical city name for matching (aliases + spelling variants). */
+export function normalizeCityName(city: string): string {
+  let s = city.trim().replace(/[־–—]/g, "-").replace(/\s+/g, " ");
+  s = s.replace(/קרית/g, "קריית");
+  s = s.replace(/\s*-\s*/g, "-");
+  const compact = s.replace(/[-\s]/g, "");
+  if (compact === "תלאביב" || compact === "תלאביביפו") return "תל אביב-יפו";
+  if (compact === "מעלותתרשיחא") return "מעלות-תרשיחא";
+  if (compact === "נצרתעילית") return "נוף הגליל";
+  return s;
+}
+
+export function citiesMatch(a: string, b: string): boolean {
+  return normalizeCityName(a) === normalizeCityName(b);
+}
+
+export function cityInList(city: string, values: string[]): boolean {
+  const needle = normalizeCityName(city);
+  return values.some((v) => normalizeCityName(v) === needle);
+}
+
 export function isPeripheryCity(city: string): boolean {
-  const trimmed = city.trim();
-  return PERIPHERY_CITIES.has(trimmed);
+  return SOCIAL_PERIPHERY_CITIES.has(normalizeCityName(city.trim()));
+}
+
+export function isTelAvivCity(city: string | null | undefined): boolean {
+  if (!city) return false;
+  return normalizeCityName(city) === "תל אביב-יפו";
+}
+
+export function isJerusalemCity(city: string | null | undefined): boolean {
+  if (!city) return false;
+  return normalizeCityName(city) === "ירושלים";
+}
+
+export function cityNeedsNeighborhood(city: string | null | undefined): boolean {
+  return isTelAvivCity(city) || isJerusalemCity(city);
+}
+
+/** South Tel Aviv / Jaffa quarters named on the municipal scholarship page. */
+export const TEL_AVIV_SOUTH_NEIGHBORHOODS = [
+  "שפירא",
+  "קריית שלום",
+  "התקווה",
+  "יפו",
+  "נווה עופר",
+  "כפר שלם",
+  "עזרא",
+  "ארגזים",
+  "פלורנטין",
+  "נווה שאנן",
+  "יד אליהו",
+  "גבעת התמרים",
+  "עג'מי",
+  "גבעת עלייה",
+  "נווה גולן",
+];
+
+export const JERUSALEM_NEIGHBORHOOD_SUGGESTIONS = [
+  "קטמון",
+  "רחביה",
+  "טלביה",
+  "בית הכרם",
+  "גילה",
+  "פסגת זאב",
+  "רמות",
+  "עין כרם",
+  "ארנונה",
+  "בקעה",
+  "המושבה הגרמנית",
+  "נחלאות",
+  "קריית יובל",
+  "קריית מנחם",
+  "הר נוף",
+  "בית וגן",
+  "גבעת שאול",
+];
+
+export function neighborhoodMatches(name: string, values: string[]): boolean {
+  const needle = normalizeCityName(name);
+  return values.some((v) => normalizeCityName(v) === needle);
 }

@@ -33,6 +33,11 @@ const LABELS: Record<string, string> = {
   lower_middle: "הכנסה בינונית-נמוכה",
   middle: "הכנסה בינונית",
   high: "הכנסה גבוהה",
+  under_8k: "עד 8,000 ₪ לחודש",
+  band_8_15k: "כ־8,000–15,000 ₪ לחודש",
+  band_15_25k: "כ־15,000–25,000 ₪ לחודש",
+  band_25_40k: "כ־25,000–40,000 ₪ לחודש",
+  over_40k: "מעל 40,000 ₪ לחודש",
   idf: "שירות צבאי (צה״ל)",
   national: "שירות לאומי",
   civil: "שירות אזרחי",
@@ -74,6 +79,13 @@ const LABELS: Record<string, string> = {
   hometown: "עיר מוצא",
   peripheryResidence: "מגורים בפריפריה",
   peripheryHometown: "מוצא מפריפריה",
+  nationalPriorityResidence: "כתובת רשומה באזור עדיפות לאומית (5 מתוך 6 שנים)",
+  neighborhood: "שכונה / רובע",
+  bagrutAverage: "ממוצע בגרות",
+  psychometric: "פסיכומטרי",
+  sechem: "סכם",
+  householdSize: "מספר נפשות במשק הבית",
+  householdIncomeBand: "הכנסת משק הבית (סדר גודל)",
   age: "גיל",
   gender: "מגדר",
   familyFlags: "מצב משפחתי",
@@ -117,8 +129,36 @@ export function scholarshipTypeLabel(key: string): string {
   return TYPE_LABELS[key] ?? key;
 }
 
+const SCOPE_LABELS: Record<string, string> = {
+  national: "ארצי",
+  institution: "מוסדי",
+  municipal: "עירוני",
+  regional: "אזורי",
+};
+
+export function scholarshipScopeLabel(key: string): string {
+  return SCOPE_LABELS[key] ?? key;
+}
+
 export function profileFieldLabel(field: ProfileField): string {
   return LABELS[field] ?? field;
+}
+
+export function formatProfileValueHe(
+  field: ProfileField,
+  value: unknown,
+): string {
+  if (value === null || value === undefined || (Array.isArray(value) && value.length === 0)) {
+    return "דולג / לא צוין";
+  }
+  if (typeof value === "boolean") return value ? "כן" : "לא";
+  if (Array.isArray(value)) return value.map((x) => fieldLabelHe(String(x))).join(", ");
+  if (field === "institution") {
+    return INSTITUTIONS.find((i) => i.id === value)?.nameHe ?? String(value);
+  }
+  if (field === "yearOfStudy") return `שנה ${value}`;
+  if (typeof value === "number") return String(value);
+  return fieldLabelHe(String(value));
 }
 
 function joinHe(values: string[]): string {
@@ -151,14 +191,24 @@ export function predicateLabelHe(pred: Predicate): string {
       return "היקף לימודים מלא (כ־60% ומעלה / 12 שעות שבועיות)";
     case "cityIn":
       return `מגורים ב: ${pred.values.join(", ")}`;
+    case "neighborhoodIn":
+      return `שכונה / רובע: ${pred.values.join(", ")}`;
     case "periphery":
       return pred.of === "hometown"
-        ? "מוצא מאזור עדיפות לאומית / פריפריה"
+        ? "מוצא מפריפריה חברתית / גיאוגרפית"
         : pred.of === "either"
-          ? "מגורים או מוצא בפריפריה"
-          : "מגורים באזור עדיפות לאומית / פריפריה";
+          ? "מגורים או מוצא בפריפריה חברתית / גיאוגרפית"
+          : "מגורים בפריפריה חברתית / גיאוגרפית";
+    case "nationalPriority":
+      return "כתובת רשומה באזור עדיפות לאומית בחמש מתוך שש השנים שקדמו ללימודים";
     case "incomeAtMost":
-      return `מצב כלכלי עד ${fieldLabelHe(pred.value)}`;
+      return `מצב כלכלי עד ${fieldLabelHe(pred.value)} (לפי הכנסה לנפש)`;
+    case "minBagrut":
+      return `ממוצע בגרות ${pred.value} לפחות`;
+    case "minPsychometric":
+      return `פסיכומטרי ${pred.value} לפחות`;
+    case "minSechem":
+      return `סכם ${pred.value} לפחות`;
     case "hasSocialBenefit":
       return "קבלת גמלה / סיוע מסוציאלי";
     case "serviceIn":

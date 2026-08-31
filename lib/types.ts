@@ -44,6 +44,16 @@ export const INCOME_BANDS = [
 ] as const;
 export type IncomeBand = (typeof INCOME_BANDS)[number];
 
+/** Order-of-magnitude monthly household income. Per-capita is derived internally. */
+export const HOUSEHOLD_INCOME_BANDS = [
+  "under_8k",
+  "band_8_15k",
+  "band_15_25k",
+  "band_25_40k",
+  "over_40k",
+] as const;
+export type HouseholdIncomeBand = (typeof HOUSEHOLD_INCOME_BANDS)[number];
+
 export const SERVICE_TYPES = [
   "idf",
   "national",
@@ -110,6 +120,13 @@ export type ScholarshipType = (typeof SCHOLARSHIP_TYPES)[number];
 export const SCOPE_TYPES = ["national", "institution", "municipal", "regional"] as const;
 export type ScholarshipScope = (typeof SCOPE_TYPES)[number];
 
+/** How the matcher should present a record even when predicates pass. */
+export const SCHOLARSHIP_TREATMENTS = ["standard", "scoreBased", "checkAtInstitution"] as const;
+export type ScholarshipTreatment = (typeof SCHOLARSHIP_TREATMENTS)[number];
+
+export const CATALOG_KINDS = ["scholarship", "tip"] as const;
+export type CatalogKind = (typeof CATALOG_KINDS)[number];
+
 export const CADENCES = [
   "annual",
   "one_time",
@@ -136,6 +153,18 @@ export type StudentProfile = {
   hometown?: string | null;
   peripheryResidence?: boolean | null;
   peripheryHometown?: boolean | null;
+  /**
+   * Legal national-priority address: registered address in 5 of the 6 years
+   * before studies. Never inferred from a city list (ייעוד 45/46).
+   */
+  nationalPriorityResidence?: boolean | null;
+  /** Neighborhood / quarter — required for some Tel Aviv and Jerusalem funds. */
+  neighborhood?: string | null;
+  bagrutAverage?: number | null;
+  psychometric?: number | null;
+  sechem?: number | null;
+  householdSize?: number | null;
+  householdIncomeBand?: HouseholdIncomeBand | null;
   age?: number | null;
   gender?: Gender | null;
   familyFlags?: FamilyFlag[] | null;
@@ -189,8 +218,13 @@ export type Predicate =
   | { type: "minAverage"; value: number; labelHe?: string }
   | { type: "studyLoadFull"; labelHe?: string }
   | { type: "cityIn"; values: string[]; of?: "residence" | "hometown" | "either"; labelHe?: string }
+  | { type: "neighborhoodIn"; values: string[]; labelHe?: string }
   | { type: "periphery"; of?: "residence" | "hometown" | "either"; labelHe?: string }
+  | { type: "nationalPriority"; labelHe?: string }
   | { type: "incomeAtMost"; value: IncomeBand; labelHe?: string }
+  | { type: "minBagrut"; value: number; labelHe?: string }
+  | { type: "minPsychometric"; value: number; labelHe?: string }
+  | { type: "minSechem"; value: number; labelHe?: string }
   | { type: "hasSocialBenefit"; values?: SocialBenefit[]; labelHe?: string }
   | { type: "serviceIn"; values: ServiceType[]; labelHe?: string }
   | { type: "combatRole"; value?: boolean; labelHe?: string }
@@ -237,9 +271,18 @@ export type Scholarship = {
   coverageNoteHe?: string;
   lastVerified: string;
   sourceUrls: string[];
+  /** True when at least one sourceUrl is an official domain (not a news aggregator). */
+  officialSource?: boolean;
   eligibility: Rule;
   /** Institutions this scholarship is tied to; empty/omitted = national or not institution-specific. */
   institutionIds?: string[];
+  /** Default `scholarship`. Tips are listed separately and not counted as scholarships. */
+  kind?: CatalogKind;
+  /**
+   * `scoreBased`: never «eligible now» — award is a scored lottery/scale.
+   * `checkAtInstitution`: skeleton dean/city-hall record; never auto-eligible.
+   */
+  treatment?: ScholarshipTreatment;
 };
 
 export type EvalStatus = "pass" | "fail" | "unknown";
@@ -250,11 +293,17 @@ export type CriterionResult = {
   status: EvalStatus;
   detailHe: string;
   field?: ProfileField;
+  /** Group headers are not counted as extra fails vs failCount. */
+  group?: boolean;
 };
 
 export type RuleEval = {
   status: EvalStatus;
   failCount: number;
+  /** Failures of identity predicates (institution, sector, gender, city, oleh, service, …). */
+  immutableFailCount: number;
+  /** Failures the student could still change (volunteer, load, average, mechina, …). */
+  mutableFailCount: number;
   criteria: CriterionResult[];
 };
 
@@ -268,3 +317,13 @@ export type ScholarshipMatch = {
   failed: CriterionResult[];
   unknown: CriterionResult[];
 };
+
+export const TRACKING_STATUSES = ["in_progress", "submitted", "accepted"] as const;
+export type TrackingStatus = (typeof TRACKING_STATUSES)[number];
+
+export type TrackingEntry = {
+  status: TrackingStatus;
+  updatedAt: string;
+};
+
+export type ScholarshipTracking = Record<string, TrackingEntry>;

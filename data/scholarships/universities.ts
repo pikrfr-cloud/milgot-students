@@ -5,6 +5,7 @@ import {
   DOCS_INCOME,
   STEM,
   VERIFIED,
+  admissionExcellence,
   allOf,
   amount,
   deadline,
@@ -56,6 +57,7 @@ export const UNIVERSITIES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://deanstudents.tau.ac.il/financial-aid/special-scholarships"],
     institutionIds: ["tau"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["tau"] }),
   }),
   s({
@@ -88,6 +90,7 @@ export const UNIVERSITIES: Scholarship[] = [
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "yearOfStudyIn", values: [1] },
       { type: "fieldOfStudyIn", values: STEM },
+      admissionExcellence(),
     ),
   }),
   s({
@@ -111,6 +114,7 @@ export const UNIVERSITIES: Scholarship[] = [
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "yearOfStudyMin", value: 1 },
       { type: "fieldOfStudyIn", values: STEM },
+      { type: "minAverage", value: 80 },
     ),
   }),
   s({
@@ -135,7 +139,7 @@ export const UNIVERSITIES: Scholarship[] = [
     howToApplyHe: "היחידה לסיוע כלכלי באתר דיקן הסטודנטים.",
     applyUrl: "https://studean.huji.ac.il/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://en.studean.huji.ac.il/book/export/html/38285"],
+    sourceUrls: ["https://studean.huji.ac.il/"],
     institutionIds: ["huji"],
     eligibility: allOf(
       { type: "institutionIn", values: ["huji"] },
@@ -163,6 +167,7 @@ export const UNIVERSITIES: Scholarship[] = [
       { type: "institutionIn", values: ["huji"] },
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "yearOfStudyIn", values: [1] },
+      admissionExcellence(),
     ),
   }),
   s({
@@ -178,7 +183,7 @@ export const UNIVERSITIES: Scholarship[] = [
     documentsHe: ["גיליון ציונים"],
     howToApplyHe: "לפי נוהל הפקולטה; חלקם אוטומטיים.",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://info-overseas.huji.ac.il/financial-information"],
+    sourceUrls: ["https://info.huji.ac.il/"],
     institutionIds: ["huji"],
     eligibility: allOf(
       { type: "institutionIn", values: ["huji"] },
@@ -236,6 +241,7 @@ export const UNIVERSITIES: Scholarship[] = [
       { type: "institutionIn", values: ["technion"] },
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "yearOfStudyIn", values: [1] },
+      { type: "minPsychometric", value: 700 },
     ),
   }),
   s({
@@ -278,6 +284,7 @@ export const UNIVERSITIES: Scholarship[] = [
       { type: "institutionIn", values: ["bgu"] },
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "yearOfStudyIn", values: [1] },
+      admissionExcellence(),
     ),
   }),
   s({
@@ -317,6 +324,7 @@ export const UNIVERSITIES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://dekanat.haifa.ac.il/"],
     institutionIds: ["haifa"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["haifa"] }),
   }),
   s({
@@ -336,7 +344,7 @@ export const UNIVERSITIES: Scholarship[] = [
     howToApplyHe: "דרך אוניברסיטת חיפה / הקרן.",
     notesHe: "תוכנית סלקטיבית ארוכת טווח, לא מלגת סיוע רגילה.",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://www.haifa.ac.il/"],
     institutionIds: ["haifa"],
     eligibility: allOf(
       { type: "institutionIn", values: ["haifa"] },
@@ -389,6 +397,7 @@ export const UNIVERSITIES: Scholarship[] = [
       { type: "institutionIn", values: ["biu"] },
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "yearOfStudyIn", values: [1] },
+      admissionExcellence(),
     ),
   }),
   s({
@@ -412,6 +421,7 @@ export const UNIVERSITIES: Scholarship[] = [
       { type: "institutionIn", values: ["biu"] },
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "yearOfStudyIn", values: [1] },
+      admissionExcellence(),
     ),
   }),
   s({
@@ -481,6 +491,7 @@ export const UNIVERSITIES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.runi.ac.il/"],
     institutionIds: ["reichman"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["reichman"] }),
   }),
   s({
@@ -549,6 +560,30 @@ export const UNIVERSITIES: Scholarship[] = [
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "yearOfStudyIn", values: [1] },
       { type: "incomeAtMost", value: "lower_middle" },
+    ),
+  }),
+  s({
+    id: "technion-graduate-school",
+    nameHe: "מלגות בית הספר ללימודים מתקדמים — הטכניון",
+    funderHe: "בית הספר ללימודים מתקדמים, הטכניון",
+    types: ["research", "merit"],
+    scope: "institution",
+    amounts: amount("מלגת קיום / פטור לפי דרגה ומסלול; סכום לא אומת כמספר אחיד", { uncertain: true }),
+    cadence: "monthly",
+    deadline: deadline("כחלק מקבלה לתוכנית או לפי קול קורא בבית הספר ללימודים מתקדמים", {
+      kind: "rolling",
+    }),
+    whoItsForHe: "סטודנטים לתואר שני ושלישי בטכניון. התנאים לפי המחלקה ובית הספר — בדקו במקור.",
+    documentsHe: ["קבלה לתוכנית / גיליון ציונים לפי הנחיות"],
+    howToApplyHe: "בית הספר ללימודים מתקדמים בטכניון.",
+    applyUrl: "https://graduate.technion.ac.il/",
+    lastVerified: VERIFIED,
+    sourceUrls: ["https://graduate.technion.ac.il/"],
+    institutionIds: ["technion"],
+    treatment: "checkAtInstitution",
+    eligibility: allOf(
+      { type: "institutionIn", values: ["technion"] },
+      { type: "degreeLevelIn", values: ["ma", "phd"] },
     ),
   }),
 ];
