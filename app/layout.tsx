@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description:
     "ממלאים פרופיל פעם אחת ומקבלים דוח מפורט: כל המלגות שעומדים בתנאיהן, מה חסר לאישור, ומה כמעט מתאים. בלי התחברות, הנתונים נשארים במכשיר.",
   applicationName: "מלגות לסטודנטים",
-  icons: { icon: "/favicon.svg" },
+  icons: { icon: "/milgot-students/favicon.svg" },
 };
 
 export const viewport: Viewport = {
