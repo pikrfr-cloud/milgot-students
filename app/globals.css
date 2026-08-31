@@ -1,6 +1,9 @@
 @import "tailwindcss";
 
 :root {
+  /* System stack so static export does not fetch Google Fonts at build time. */
+  --font-assistant: "Segoe UI", Tahoma, "Arial Hebrew", "Noto Sans Hebrew", Arial, sans-serif;
+  --font-frank: "Times New Roman", Georgia, "David Libre", David, serif;
   --paper: #f3eee3;
   --paper-deep: #e7dfd0;
   --ink: #1c1814;

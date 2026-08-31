@@ -15,14 +15,18 @@ npm install
 npm run dev
 ```
 
-פתחו [http://localhost:3000](http://localhost:3000).
+פתחו [http://localhost:3000/milgot-students/](http://localhost:3000/milgot-students/).
 
 ```bash
 npm test          # Vitest — matcher + catalog integrity
-npm run build     # production build
+npm run build     # static export → out/
 ```
 
 דרישות: Node 20+.
+
+האתר מפורסם כ־GitHub Pages מ־`out/` בכתובת
+[https://pikrfr-cloud.github.io/milgot-students/](https://pikrfr-cloud.github.io/milgot-students/).
+ב־Settings → Pages יש לבחור Source: GitHub Actions.
 
 ---
 
@@ -102,7 +106,7 @@ s({
 
 ## מחסנית / Stack
 
-Next.js (App Router) + TypeScript + Tailwind CSS v4. ממשק עברית מלא, `dir="rtl"`, פונטים Assistant ו־Frank Ruhl Libre.
+Next.js (App Router) static export + TypeScript + Tailwind CSS v4. ממשק עברית מלא, `dir="rtl"`, מחסנית פונטים עברית (Segoe UI / Times New Roman / Arial Hebrew).
 
 ייצוא הדוח: הדפסה לדפדפן / שמירה כ־PDF (גיליון הדפסה עברי).
 
