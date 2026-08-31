@@ -149,6 +149,7 @@ export function ProfileWizard() {
   const [ready, setReady] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const appliedFocus = useRef(false);
   const focus = searchParams.get("focus") as ProfileField | null;
 
   useEffect(() => {
@@ -163,7 +164,8 @@ export function ProfileWizard() {
   }, [profile, ready]);
 
   useEffect(() => {
-    if (!ready || !focus) return;
+    if (!ready || !focus || appliedFocus.current) return;
+    appliedFocus.current = true;
     const target = FIELD_STEP[focus];
     // eslint-disable-next-line react-hooks/set-state-in-effect -- deep-link from a results card
     if (target != null) setStep(target);
@@ -174,8 +176,9 @@ export function ProfileWizard() {
         behavior: reduce ? "auto" : "smooth",
         block: "center",
       });
+      router.replace("/profile/", { scroll: false });
     });
-  }, [focus, ready]);
+  }, [focus, ready, router]);
 
   const selectedInstitution = useMemo(
     () => INSTITUTIONS_FOR_SELECT.find((i) => i.id === profile.institution),
@@ -186,7 +189,7 @@ export function ProfileWizard() {
   const showReservist = profile.service === "idf";
   const showYearsInIsrael = profile.isOleh === true;
   const showMechina = profile.degreeLevel !== "phd";
-  const showDegreeAverage = profile.yearOfStudy !== 1 && profile.degreeLevel !== "prep";
+  const showDegreeAverage = Number(profile.yearOfStudy) !== 1 && profile.degreeLevel !== "prep";
   const needNeighborhood = cityNeedsNeighborhood(profile.cityOfResidence);
   const neighborhoodSuggestions = isTelAvivCity(profile.cityOfResidence)
     ? TEL_AVIV_SOUTH_NEIGHBORHOODS
@@ -229,7 +232,9 @@ export function ProfileWizard() {
       <p className="text-sm text-ink-soft">
         שלב {step + 1} מתוך {STEPS.length}
       </p>
-      <h1 className="mt-1 font-display text-3xl text-forest-deep">{STEPS[step].title}</h1>
+      <h1 className="mt-1 font-display text-3xl text-forest-deep" aria-live="polite">
+        {STEPS[step].title}
+      </h1>
       {process.env.NODE_ENV === "development" ? (
         <button
           type="button"
@@ -267,7 +272,7 @@ export function ProfileWizard() {
         </ul>
       ) : null}
 
-      <div className="mt-8 space-y-6 rounded-3xl border border-line bg-card p-6 sm:p-8">
+      <div className="mt-8 space-y-6 rounded-3xl border border-line bg-card p-6 sm:p-8" key={STEPS[step].id}>
         {step === 0 && (
           <>
             <Field field="institution" label="מוסד לימודים">
