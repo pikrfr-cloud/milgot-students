@@ -15,8 +15,9 @@ import {
   type StudentProfile,
 } from "./types";
 import { INSTITUTIONS } from "./institutions";
-import { isPeripheryCity } from "./cities";
+import { cityInList, isPeripheryCity } from "./cities";
 import { fieldLabelHe, predicateLabelHe } from "./labels";
+import { isDeadlineClosed } from "./format";
 
 function isUnknown(value: unknown): boolean {
   return value === null || value === undefined;
@@ -31,6 +32,35 @@ function incomeRank(band: IncomeBand): number {
   return INCOME_BANDS.indexOf(band);
 }
 
+/** Identity / not reasonably changeable this cycle. Failures → not eligible. */
+const IMMUTABLE_TYPES = new Set<Predicate["type"]>([
+  "institutionIn",
+  "institutionNotIn",
+  "sectorIn",
+  "genderIn",
+  "cityIn",
+  "isOleh",
+  "yearsInIsraelMax",
+  "yearsInIsraelMin",
+  "serviceIn",
+  "degreeLevelIn",
+  "hasDisability",
+  "familyFlagIn",
+  "combatRole",
+  "loneSoldier",
+  "firstGeneration",
+  "incomeAtMost",
+  "ageMin",
+  "ageMax",
+  "yearsSinceDischargeMax",
+  "periphery",
+  "nationalPriority",
+]);
+
+function isImmutablePredicate(pred: Predicate): boolean {
+  return IMMUTABLE_TYPES.has(pred.type);
+}
+
 function cityMatches(
   profile: StudentProfile,
   values: string[],
@@ -39,7 +69,7 @@ function cityMatches(
   const res = profile.cityOfResidence;
   const home = profile.hometown;
   const match = (city: string | null | undefined) =>
-    !isUnknown(city) && values.includes(city as string);
+    !isUnknown(city) && cityInList(city as string, values);
 
   if (of === "residence") {
     if (isUnknown(res)) return "unknown";
@@ -159,6 +189,8 @@ function fieldFor(pred: Predicate): ProfileField | undefined {
       return pred.of === "hometown" ? "hometown" : "cityOfResidence";
     case "periphery":
       return pred.of === "hometown" ? "peripheryHometown" : "peripheryResidence";
+    case "nationalPriority":
+      return "nationalPriorityResidence";
     case "incomeAtMost":
       return "incomeBand";
     case "hasSocialBenefit":
@@ -236,6 +268,8 @@ function evalPredicate(pred: Predicate, profile: StudentProfile): EvalStatus {
       return cityMatches(profile, pred.values, pred.of ?? "residence");
     case "periphery":
       return peripheryMatches(profile, pred.of ?? "residence");
+    case "nationalPriority":
+      return boolPred(profile.nationalPriorityResidence, true);
     case "incomeAtMost": {
       if (isUnknown(profile.incomeBand)) return "unknown";
       return incomeRank(profile.incomeBand as IncomeBand) <= incomeRank(pred.value)
@@ -310,6 +344,20 @@ function nextId(prefix: string): string {
   return `${prefix}-${seq}`;
 }
 
+function failSplit(
+  status: EvalStatus,
+  immutable: boolean,
+): Pick<RuleEval, "failCount" | "immutableFailCount" | "mutableFailCount"> {
+  if (status !== "fail") {
+    return { failCount: 0, immutableFailCount: 0, mutableFailCount: 0 };
+  }
+  return {
+    failCount: 1,
+    immutableFailCount: immutable ? 1 : 0,
+    mutableFailCount: immutable ? 0 : 1,
+  };
+}
+
 function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
   if (isPredicate(rule)) {
     const status = evalPredicate(rule, profile);
@@ -323,7 +371,7 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
     };
     return {
       status,
-      failCount: status === "fail" ? 1 : 0,
+      ...failSplit(status, isImmutablePredicate(rule)),
       criteria: [criterion],
     };
   }
@@ -332,6 +380,7 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
     const inner = evalRule(rule.rule, profile);
     const status: EvalStatus =
       inner.status === "pass" ? "fail" : inner.status === "fail" ? "pass" : "unknown";
+    const innerImmutable = isPredicate(rule.rule) && isImmutablePredicate(rule.rule);
     const criteria = inner.criteria.map((c) => ({
       ...c,
       id: nextId("n"),
@@ -347,7 +396,7 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
     }));
     return {
       status,
-      failCount: status === "fail" ? 1 : 0,
+      ...failSplit(status, innerImmutable),
       criteria,
     };
   }
@@ -357,45 +406,69 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
     const anyPass = children.some((c) => c.status === "pass");
     const anyUnknown = children.some((c) => c.status === "unknown");
     const status: EvalStatus = anyPass ? "pass" : anyUnknown ? "unknown" : "fail";
-    const passing = children.filter((c) => c.status === "pass");
-    const relevant = anyPass
-      ? passing
-      : anyUnknown
-        ? children.filter((c) => c.status !== "fail")
-        : children;
-    const criteria = relevant.flatMap((c) => c.criteria);
-    if (rule.labelHe) {
-      criteria.unshift({
-        id: nextId("any"),
-        labelHe: rule.labelHe,
+
+    const summary: CriterionResult = {
+      id: nextId("any"),
+      labelHe: rule.labelHe ?? "לפחות אחד מהמסלולים",
+      status,
+      group: true,
+      detailHe:
+        status === "pass"
+          ? "לפחות אחד מהתנאים בקבוצה מתקיים."
+          : status === "unknown"
+            ? "חסר פרט כדי לאשר אם אחד מהמסלולים מתקיים."
+            : "אף אחד מהמסלולים בקבוצה אינו מתקיים.",
+    };
+
+    if (status === "pass") {
+      const passing = children.filter((c) => c.status === "pass");
+      return {
         status,
-        detailHe:
-          status === "pass"
-            ? "לפחות אחד מהתנאים בקבוצה מתקיים."
-            : status === "unknown"
-              ? "חסר פרט כדי לאשר אם אחד מהמסלולים מתקיים."
-              : "אף אחד מהמסלולים בקבוצה אינו מתקיים.",
-      });
+        failCount: 0,
+        immutableFailCount: 0,
+        mutableFailCount: 0,
+        criteria: [summary, ...passing.flatMap((c) => c.criteria)],
+      };
     }
+    if (status === "unknown") {
+      const relevant = children.filter((c) => c.status !== "fail");
+      return {
+        status,
+        failCount: 0,
+        immutableFailCount: 0,
+        mutableFailCount: 0,
+        criteria: [summary, ...relevant.flatMap((c) => c.criteria)],
+      };
+    }
+
+    const blockedImmutably = children.every((c) => c.immutableFailCount > 0);
+    const leaf: CriterionResult = {
+      id: nextId("any-fail"),
+      labelHe: rule.labelHe ?? "לפחות אחד מהמסלולים",
+      status: "fail",
+      detailHe: "אף אחד מהמסלולים בקבוצה אינו מתקיים.",
+    };
     return {
       status,
-      failCount: status === "fail" ? 1 : 0,
-      criteria,
+      ...failSplit("fail", blockedImmutably),
+      criteria: [leaf],
     };
   }
 
-  // allOf
   const children = rule.rules.map((r) => evalRule(r, profile));
   const anyFail = children.some((c) => c.status === "fail");
   const anyUnknown = children.some((c) => c.status === "unknown");
   const status: EvalStatus = anyFail ? "fail" : anyUnknown ? "unknown" : "pass";
   const failCount = children.reduce((sum, c) => sum + c.failCount, 0);
+  const immutableFailCount = children.reduce((sum, c) => sum + c.immutableFailCount, 0);
+  const mutableFailCount = children.reduce((sum, c) => sum + c.mutableFailCount, 0);
   const criteria = children.flatMap((c) => c.criteria);
   if (rule.labelHe) {
     criteria.unshift({
       id: nextId("all"),
       labelHe: rule.labelHe,
       status,
+      group: true,
       detailHe:
         status === "pass"
           ? "כל התנאים בקבוצה מתקיימים."
@@ -404,40 +477,124 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
             : "לא כל התנאים בקבוצה מתקיימים.",
     });
   }
-  return { status, failCount, criteria };
+  return { status, failCount, immutableFailCount, mutableFailCount, criteria };
 }
 
 const NEAR_MISS_MAX = 2;
 
 export function bucketFromEval(evaluation: RuleEval): MatchBucket {
+  if (evaluation.immutableFailCount > 0) return "ineligible";
   if (evaluation.failCount === 0 && evaluation.status === "pass") return "eligible";
   if (evaluation.failCount === 0) return "needInfo";
-  if (evaluation.failCount <= NEAR_MISS_MAX) return "nearMiss";
+  if (evaluation.mutableFailCount <= NEAR_MISS_MAX) return "nearMiss";
   return "ineligible";
+}
+
+export type MatchOptions = {
+  asOf?: Date;
+};
+
+function leafCriteria(evaluation: RuleEval, status: EvalStatus): CriterionResult[] {
+  return evaluation.criteria.filter((c) => c.status === status && !c.group);
+}
+
+function applyPostEval(
+  scholarship: Scholarship,
+  evaluation: RuleEval,
+  bucket: MatchBucket,
+  asOf: Date,
+): { bucket: MatchBucket; evaluation: RuleEval } {
+  const extra: CriterionResult[] = [];
+
+  if (bucket === "eligible" && isDeadlineClosed(scholarship.deadline, asOf)) {
+    extra.push({
+      id: nextId("deadline"),
+      labelHe: "מועד ההגשה",
+      status: "fail",
+      detailHe: "המועד שפורסם כבר עבר. בדקו אם ייפתח מחזור חדש באתר הרשמי.",
+    });
+    return {
+      bucket: "ineligible",
+      evaluation: {
+        ...evaluation,
+        status: "fail",
+        failCount: evaluation.failCount + 1,
+        immutableFailCount: evaluation.immutableFailCount + 1,
+        criteria: [...evaluation.criteria, ...extra],
+      },
+    };
+  }
+
+  if (bucket === "eligible" && scholarship.treatment === "scoreBased") {
+    extra.push({
+      id: nextId("score"),
+      labelHe: "ניקוד השוואתי",
+      status: "unknown",
+      detailHe:
+        "הזכאות נקבעת לפי ניקוד מול כלל הפונים, לא לפי סף בינארי. אי אפשר לאשר זכאות מהפרופיל בלבד.",
+    });
+    return {
+      bucket: "needInfo",
+      evaluation: {
+        ...evaluation,
+        status: "unknown",
+        criteria: [...evaluation.criteria, ...extra],
+      },
+    };
+  }
+
+  if (bucket === "eligible" && scholarship.treatment === "checkAtInstitution") {
+    extra.push({
+      id: nextId("check"),
+      labelHe: "בדיקה במוסד / ברשות",
+      status: "unknown",
+      detailHe:
+        "רשומה זו מציינת שקיים מסלול דיקן או עירייה, בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «זכאים עכשיו».",
+    });
+    return {
+      bucket: "needInfo",
+      evaluation: {
+        ...evaluation,
+        status: "unknown",
+        criteria: [...evaluation.criteria, ...extra],
+      },
+    };
+  }
+
+  return { bucket, evaluation };
 }
 
 export function matchScholarship(
   scholarship: Scholarship,
   profile: StudentProfile,
+  options: MatchOptions = {},
 ): ScholarshipMatch {
   seq = 0;
+  const asOf = options.asOf ?? new Date();
   const evaluation = evalRule(scholarship.eligibility, profile);
-  const bucket = bucketFromEval(evaluation);
+  const rawBucket = bucketFromEval(evaluation);
+  const { bucket, evaluation: finalEval } = applyPostEval(
+    scholarship,
+    evaluation,
+    rawBucket,
+    asOf,
+  );
   return {
     scholarship,
     bucket,
-    eval: evaluation,
-    passed: evaluation.criteria.filter((c) => c.status === "pass"),
-    failed: evaluation.criteria.filter((c) => c.status === "fail"),
-    unknown: evaluation.criteria.filter((c) => c.status === "unknown"),
+    eval: finalEval,
+    passed: leafCriteria(finalEval, "pass"),
+    failed: leafCriteria(finalEval, "fail"),
+    unknown: leafCriteria(finalEval, "unknown"),
   };
 }
 
 export function matchAll(
   scholarships: Scholarship[],
   profile: StudentProfile,
+  options: MatchOptions = {},
 ): ScholarshipMatch[] {
-  return scholarships.map((s) => matchScholarship(s, profile));
+  return scholarships.map((s) => matchScholarship(s, profile, options));
 }
 
 export function groupMatches(matches: ScholarshipMatch[]) {

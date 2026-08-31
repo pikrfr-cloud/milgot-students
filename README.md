@@ -38,7 +38,7 @@ npm run build     # static export → out/
 
 - `institutionIn`, `degreeLevelIn`, `yearOfStudyIn`
 - `minAverage`, `fieldOfStudyIn`, `studyLoadFull`
-- `periphery`, `cityIn`
+- `periphery`, `nationalPriority`, `cityIn`
 - `serviceIn`, `combatRole`, `reservistDaysMin`
 - `sectorIn`, `isOleh`, `hasDisability`
 - `incomeAtMost`, `familyFlagIn`, `willingToVolunteer`
@@ -47,10 +47,10 @@ npm run build     # static export → out/
 
 | מצב | משמעות |
 | --- | --- |
-| כל הכללים עוברים | **זכאים עכשיו** |
-| אין כישלון, אבל שדה שדולג נדרש | **חסר פרט לאישור** — המלגה לא נפסלת |
-| כישלון ב־1–2 קריטריונים | **כמעט זכאים**, עם הפער המדויק |
-| 3+ כישלונות | **לא זכאים** (מוסתר כברירת מחדל, ניתן לחיפוש) |
+| כל הכללים עוברים והמועד פתוח | **זכאים עכשיו** |
+| אין כישלון, אבל שדה שדולג נדרש; או מלגת ניקוד / דיקן-שלד | **חסר פרט לאישור** |
+| כישלון רק בתנאים שניתן לשנות (התנדבות, היקף, ממוצע, מילואים, מכינה…) | **כמעט זכאים** |
+| כישלון בתנאי זהות (מוסד, קהילה, מגדר, עיר, עולה, סוג שירות) או מועד שעבר | **לא זכאים** |
 
 שדה `null` / דילוג **לעולם לא נחשב לכישלון**.
 

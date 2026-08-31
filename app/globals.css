@@ -105,4 +105,11 @@ textarea:focus-visible {
   .print-break {
     break-inside: avoid;
   }
+  /* Open every <details> so criteria and documents print. */
+  details {
+    display: block !important;
+  }
+  details > *:not(summary) {
+    display: block !important;
+  }
 }

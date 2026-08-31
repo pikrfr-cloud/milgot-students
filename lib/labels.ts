@@ -74,6 +74,7 @@ const LABELS: Record<string, string> = {
   hometown: "עיר מוצא",
   peripheryResidence: "מגורים בפריפריה",
   peripheryHometown: "מוצא מפריפריה",
+  nationalPriorityResidence: "כתובת רשומה באזור עדיפות לאומית (5 מתוך 6 שנים)",
   age: "גיל",
   gender: "מגדר",
   familyFlags: "מצב משפחתי",
@@ -117,6 +118,17 @@ export function scholarshipTypeLabel(key: string): string {
   return TYPE_LABELS[key] ?? key;
 }
 
+const SCOPE_LABELS: Record<string, string> = {
+  national: "ארצי",
+  institution: "מוסדי",
+  municipal: "עירוני",
+  regional: "אזורי",
+};
+
+export function scholarshipScopeLabel(key: string): string {
+  return SCOPE_LABELS[key] ?? key;
+}
+
 export function profileFieldLabel(field: ProfileField): string {
   return LABELS[field] ?? field;
 }
@@ -153,10 +165,12 @@ export function predicateLabelHe(pred: Predicate): string {
       return `מגורים ב: ${pred.values.join(", ")}`;
     case "periphery":
       return pred.of === "hometown"
-        ? "מוצא מאזור עדיפות לאומית / פריפריה"
+        ? "מוצא מפריפריה חברתית / גיאוגרפית"
         : pred.of === "either"
-          ? "מגורים או מוצא בפריפריה"
-          : "מגורים באזור עדיפות לאומית / פריפריה";
+          ? "מגורים או מוצא בפריפריה חברתית / גיאוגרפית"
+          : "מגורים בפריפריה חברתית / גיאוגרפית";
+    case "nationalPriority":
+      return "כתובת רשומה באזור עדיפות לאומית בחמש מתוך שש השנים שקדמו ללימודים";
     case "incomeAtMost":
       return `מצב כלכלי עד ${fieldLabelHe(pred.value)}`;
     case "hasSocialBenefit":

@@ -12,7 +12,6 @@ import {
   OUTSTANDING,
   SECTORS,
   SERVICE_TYPES,
-  SOCIAL_BENEFITS,
 } from "@/lib/types";
 import { INSTITUTIONS_FOR_SELECT } from "@/lib/institutions";
 import { CITY_SUGGESTIONS } from "@/lib/cities";
@@ -70,11 +69,11 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="block">
+    <div className="block">
       <span className="block text-sm font-medium text-ink">{label}</span>
       {hint ? <span className="mt-1 block text-sm text-ink-soft leading-relaxed">{hint}</span> : null}
       <div className="mt-2">{children}</div>
-    </label>
+    </div>
   );
 }
 
@@ -121,16 +120,18 @@ export function ProfileWizard() {
         שלב {step + 1} מתוך {STEPS.length}
       </p>
       <h1 className="mt-1 font-display text-3xl text-forest-deep">{STEPS[step].title}</h1>
-      <button
-        type="button"
-        className="mt-2 text-sm text-ink-soft underline underline-offset-4"
-        onClick={() => {
-          setProfile(DEMO_PERIPHERY_TAU);
-          setStep(STEPS.length - 1);
-        }}
-      >
-        מילוי דוגמה: שנה א׳ בתל אביב מהפריפריה
-      </button>
+      {process.env.NODE_ENV === "development" ? (
+        <button
+          type="button"
+          className="mt-2 text-sm text-ink-soft underline underline-offset-4"
+          onClick={() => {
+            setProfile(DEMO_PERIPHERY_TAU);
+            setStep(STEPS.length - 1);
+          }}
+        >
+          מילוי דוגמה: שנה א׳ בתל אביב מהפריפריה
+        </button>
+      ) : null}
       <ol className="mt-4 flex flex-wrap gap-2" aria-label="התקדמות בטופס">
         {STEPS.map((s, i) => (
           <li key={s.id}>
@@ -155,7 +156,7 @@ export function ProfileWizard() {
               <select
                 className={inputClass}
                 value={profile.institution ?? ""}
-                onChange={(e) => patch({ institution: e.target.value || null, campus: null })}
+                onChange={(e) => patch({ institution: e.target.value || null })}
               >
                 <option value="">בחירה / דילוג</option>
                 {INSTITUTIONS_FOR_SELECT.map((i) => (
@@ -165,22 +166,6 @@ export function ProfileWizard() {
                 ))}
               </select>
             </Field>
-            {selectedInstitution?.campuses?.length ? (
-              <Field label="קמפוס (אם רלוונטי)">
-                <select
-                  className={inputClass}
-                  value={profile.campus ?? ""}
-                  onChange={(e) => patch({ campus: e.target.value || null })}
-                >
-                  <option value="">לא צוין</option>
-                  {selectedInstitution.campuses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nameHe}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            ) : null}
             <Field label="שלב התואר">
               <select
                 className={inputClass}
@@ -212,14 +197,6 @@ export function ProfileWizard() {
                   </option>
                 ))}
               </select>
-            </Field>
-            <Field label="פקולטה / חוג" hint="טקסט חופשי, למשל «מדעי המחשב» או «עבודה סוציאלית».">
-              <input
-                className={inputClass}
-                value={profile.faculty ?? ""}
-                onChange={(e) => patch({ faculty: e.target.value || null })}
-                placeholder="אופציונלי"
-              />
             </Field>
             <Field label="קבוצת תחום לימוד" hint="משמש להתאמת מלגות STEM, רפואה, חינוך וכו׳.">
               <select
@@ -320,8 +297,8 @@ export function ProfileWizard() {
               />
             </Field>
             <Field
-              label="האם אתם גרים בפריפריה / אזור עדיפות לאומית?"
-              hint="אם לא בטוחים — דלגו. נשתמש בעיר כעזר בלבד, והדגל המפורש שלכם גובר."
+              label="האם אתם גרים בפריפריה חברתית או גיאוגרפית?"
+              hint="למלגות קרנות פרטיות (אייסף, גרוס ועוד). אם לא בטוחים — דלגו. הדגל המפורש גובר על העיר. זו אינה קביעה משפטית של אזור עדיפות לאומית."
             >
               <select
                 className={inputClass}
@@ -349,6 +326,31 @@ export function ProfileWizard() {
               >
                 <option value="">לא יודע/ת</option>
                 <option value="yes">כן</option>
+                <option value="no">לא</option>
+              </select>
+            </Field>
+            <Field
+              label="כתובת רשומה באזור עדיפות לאומית — 5 מתוך 6 שנים?"
+              hint="נדרש לייעוד 45/46 של משרד הביטחון. לא מספיק לגור היום בעיר מסוימת, ולא לפי רשימת ערים בקטלוג. אם תדלגו — המלגות יופיעו תחת «חסר פרט» ולא כזכאות."
+            >
+              <select
+                className={inputClass}
+                value={
+                  profile.nationalPriorityResidence === true
+                    ? "yes"
+                    : profile.nationalPriorityResidence === false
+                      ? "no"
+                      : ""
+                }
+                onChange={(e) =>
+                  patch({
+                    nationalPriorityResidence:
+                      e.target.value === "" ? null : e.target.value === "yes",
+                  })
+                }
+              >
+                <option value="">לא יודע/ת</option>
+                <option value="yes">כן, 5 מתוך 6 השנים שקדמו ללימודים</option>
                 <option value="no">לא</option>
               </select>
             </Field>
@@ -406,31 +408,6 @@ export function ProfileWizard() {
                 <SkipButton onClick={() => patch({ familyFlags: null })} />
               </div>
             </fieldset>
-            <Field label="שעות עבודה בשבוע (בערך)">
-              <input
-                className={inputClass}
-                type="number"
-                min={0}
-                max={80}
-                value={profile.employmentHours ?? ""}
-                onChange={(e) =>
-                  patch({ employmentHours: e.target.value === "" ? null : Number(e.target.value) })
-                }
-              />
-            </Field>
-            <Field label="שעות התנדבות בשנה (אם כבר יש)">
-              <input
-                className={inputClass}
-                type="number"
-                min={0}
-                value={profile.volunteerHoursPerYear ?? ""}
-                onChange={(e) =>
-                  patch({
-                    volunteerHoursPerYear: e.target.value === "" ? null : Number(e.target.value),
-                  })
-                }
-              />
-            </Field>
             <Field
               label="האם אתם פתוחים להתנדבות כחלק ממלגה?"
               hint="מלגות כמו פר״ח דורשות חונכות. אם תדלגו — המלגות האלה יופיעו תחת «חסר פרט»."
@@ -453,19 +430,6 @@ export function ProfileWizard() {
                 <option value="">לא יודע/ת</option>
                 <option value="yes">כן, פתוח/ה להתנדבות</option>
                 <option value="no">לא מעוניין/ת במלגות התנדבות</option>
-              </select>
-            </Field>
-            <Field label="האם אתם בפר״ח כבר עכשיו?">
-              <select
-                className={inputClass}
-                value={profile.hasPerach === true ? "yes" : profile.hasPerach === false ? "no" : ""}
-                onChange={(e) =>
-                  patch({ hasPerach: e.target.value === "" ? null : e.target.value === "yes" })
-                }
-              >
-                <option value="">לא רלוונטי / לא יודע/ת</option>
-                <option value="yes">כן</option>
-                <option value="no">לא</option>
               </select>
             </Field>
             <fieldset>
@@ -679,31 +643,6 @@ export function ProfileWizard() {
                 ))}
               </select>
             </Field>
-            <fieldset>
-              <legend className="text-sm font-medium">גמלאות ביטוח לאומי (אם יש)</legend>
-              <div className="mt-2 grid gap-2">
-                {SOCIAL_BENEFITS.map((b) => (
-                  <label key={b} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={profile.socialBenefits?.includes(b) ?? false}
-                      onChange={(e) => {
-                        const current = profile.socialBenefits ?? [];
-                        patch({
-                          socialBenefits: e.target.checked
-                            ? [...current, b]
-                            : current.filter((x) => x !== b),
-                        });
-                      }}
-                    />
-                    {fieldLabelHe(b)}
-                  </label>
-                ))}
-              </div>
-              <div className="mt-2">
-                <SkipButton onClick={() => patch({ socialBenefits: null })} />
-              </div>
-            </fieldset>
           </>
         )}
 

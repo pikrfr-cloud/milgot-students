@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { SCHOLARSHIPS } from "@/data/scholarships";
+import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
 import { groupMatches, matchAll } from "@/lib/matcher";
 import { loadProfile, profileIsEmpty } from "@/lib/profile-storage";
 import type { ScholarshipMatch, ScholarshipScope, StudentProfile } from "@/lib/types";
@@ -26,9 +26,24 @@ export function ResultsView() {
     setProfile(loadProfile());
   }, []);
 
+  useEffect(() => {
+    const openAll = () => {
+      document.querySelectorAll("details").forEach((el) => {
+        el.setAttribute("open", "");
+      });
+    };
+    window.addEventListener("beforeprint", openAll);
+    return () => window.removeEventListener("beforeprint", openAll);
+  }, []);
+
   const grouped = useMemo(() => {
     if (!profile) return null;
     return groupMatches(matchAll(SCHOLARSHIPS, profile));
+  }, [profile]);
+
+  const tipMatches = useMemo(() => {
+    if (!profile) return [];
+    return matchAll(TIPS, profile).filter((m) => m.bucket === "eligible" || m.bucket === "needInfo");
   }, [profile]);
 
   function applyFilters(list: ScholarshipMatch[]) {
@@ -51,7 +66,8 @@ export function ResultsView() {
     next = [...next].sort((a, b) => {
       if (sort === "name") return a.scholarship.nameHe.localeCompare(b.scholarship.nameHe, "he");
       if (sort === "deadline") {
-        return deadlineSortValue(a.scholarship.deadline) - deadlineSortValue(b.scholarship.deadline);
+        const now = new Date();
+        return deadlineSortValue(a.scholarship.deadline, now) - deadlineSortValue(b.scholarship.deadline, now);
       }
       return amountSortValue(b.scholarship.amounts) - amountSortValue(a.scholarship.amounts);
     });
@@ -131,25 +147,41 @@ export function ResultsView() {
         <input
           className="rounded-xl border border-line px-3 py-2"
           placeholder="חיפוש לפי שם או קרן"
+          aria-label="חיפוש מלגות לפי שם או קרן"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
             if (e.target.value.trim()) setShowIneligible(true);
           }}
         />
-        <select className="rounded-xl border border-line px-3 py-2" value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+        <select
+          className="rounded-xl border border-line px-3 py-2"
+          value={sort}
+          aria-label="מיון תוצאות"
+          onChange={(e) => setSort(e.target.value as SortKey)}
+        >
           <option value="amount">מיון לפי סכום</option>
           <option value="deadline">מיון לפי מועד</option>
           <option value="name">מיון לפי שם</option>
         </select>
-        <select className="rounded-xl border border-line px-3 py-2" value={scope} onChange={(e) => setScope(e.target.value as typeof scope)}>
+        <select
+          className="rounded-xl border border-line px-3 py-2"
+          value={scope}
+          aria-label="סינון לפי היקף"
+          onChange={(e) => setScope(e.target.value as typeof scope)}
+        >
           <option value="all">כל ההיקפים</option>
           <option value="national">ארצי</option>
           <option value="institution">מוסדי</option>
           <option value="municipal">עירוני</option>
           <option value="regional">אזורי</option>
         </select>
-        <select className="rounded-xl border border-line px-3 py-2" value={type} onChange={(e) => setType(e.target.value)}>
+        <select
+          className="rounded-xl border border-line px-3 py-2"
+          value={type}
+          aria-label="סינון לפי סוג מלגה"
+          onChange={(e) => setType(e.target.value)}
+        >
           <option value="all">כל הסוגים</option>
           <option value="need">סיוע כלכלי</option>
           <option value="merit">הצטיינות</option>
@@ -161,6 +193,7 @@ export function ResultsView() {
         <select
           className="rounded-xl border border-line px-3 py-2"
           value={minAmount}
+          aria-label="סינון לפי סכום מינימלי"
           onChange={(e) => setMinAmount(Number(e.target.value))}
         >
           <option value={0}>כל הסכומים</option>
@@ -192,7 +225,10 @@ export function ResultsView() {
 
       <section id="near-miss" className="mt-10 scroll-mt-28">
         <h2 className="font-display text-2xl">כמעט זכאים ({nearMiss.length})</h2>
-        <p className="mt-1 text-sm text-ink-soft">פער של קריטריון אחד או שניים — כדי ששום דבר לא יישכח.</p>
+        <p className="mt-1 text-sm text-ink-soft">
+          פער בקריטריונים שניתן לשנות (התנדבות, היקף לימודים, ממוצע, מילואים, מכינה). כישלון בזהות
+          — מוסד, קהילה, מגדר, עיר, עולה, סוג שירות — מופיע תחת לא זכאים.
+        </p>
         <div className="mt-4 grid gap-4">
           {nearMiss.length ? nearMiss.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
         </div>
@@ -220,6 +256,20 @@ export function ResultsView() {
           <p className="mt-3 text-sm text-ink-soft no-print">לחצו «הצג» כדי לחפש גם כאן.</p>
         )}
       </section>
+
+      {tipMatches.length > 0 ? (
+        <section id="tips" className="mt-10 scroll-mt-28">
+          <h2 className="font-display text-2xl">טיפים והפניות ({tipMatches.length})</h2>
+          <p className="mt-1 text-sm text-ink-soft">
+            אלה אינן מלגות בקטלוג — הפניות לדיקן, לזכויות או למעטפת. לא נספרות כמלגות.
+          </p>
+          <div className="mt-4 grid gap-4">
+            {tipMatches.map((m) => (
+              <ScholarshipCard key={m.scholarship.id} match={m} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

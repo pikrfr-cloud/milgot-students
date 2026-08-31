@@ -110,6 +110,13 @@ export type ScholarshipType = (typeof SCHOLARSHIP_TYPES)[number];
 export const SCOPE_TYPES = ["national", "institution", "municipal", "regional"] as const;
 export type ScholarshipScope = (typeof SCOPE_TYPES)[number];
 
+/** How the matcher should present a record even when predicates pass. */
+export const SCHOLARSHIP_TREATMENTS = ["standard", "scoreBased", "checkAtInstitution"] as const;
+export type ScholarshipTreatment = (typeof SCHOLARSHIP_TREATMENTS)[number];
+
+export const CATALOG_KINDS = ["scholarship", "tip"] as const;
+export type CatalogKind = (typeof CATALOG_KINDS)[number];
+
 export const CADENCES = [
   "annual",
   "one_time",
@@ -136,6 +143,11 @@ export type StudentProfile = {
   hometown?: string | null;
   peripheryResidence?: boolean | null;
   peripheryHometown?: boolean | null;
+  /**
+   * Legal national-priority address: registered address in 5 of the 6 years
+   * before studies. Never inferred from a city list (ייעוד 45/46).
+   */
+  nationalPriorityResidence?: boolean | null;
   age?: number | null;
   gender?: Gender | null;
   familyFlags?: FamilyFlag[] | null;
@@ -190,6 +202,7 @@ export type Predicate =
   | { type: "studyLoadFull"; labelHe?: string }
   | { type: "cityIn"; values: string[]; of?: "residence" | "hometown" | "either"; labelHe?: string }
   | { type: "periphery"; of?: "residence" | "hometown" | "either"; labelHe?: string }
+  | { type: "nationalPriority"; labelHe?: string }
   | { type: "incomeAtMost"; value: IncomeBand; labelHe?: string }
   | { type: "hasSocialBenefit"; values?: SocialBenefit[]; labelHe?: string }
   | { type: "serviceIn"; values: ServiceType[]; labelHe?: string }
@@ -240,6 +253,13 @@ export type Scholarship = {
   eligibility: Rule;
   /** Institutions this scholarship is tied to; empty/omitted = national or not institution-specific. */
   institutionIds?: string[];
+  /** Default `scholarship`. Tips are listed separately and not counted as scholarships. */
+  kind?: CatalogKind;
+  /**
+   * `scoreBased`: never «eligible now» — award is a scored lottery/scale.
+   * `checkAtInstitution`: skeleton dean/city-hall record; never auto-eligible.
+   */
+  treatment?: ScholarshipTreatment;
 };
 
 export type EvalStatus = "pass" | "fail" | "unknown";
@@ -250,11 +270,17 @@ export type CriterionResult = {
   status: EvalStatus;
   detailHe: string;
   field?: ProfileField;
+  /** Group headers are not counted as extra fails vs failCount. */
+  group?: boolean;
 };
 
 export type RuleEval = {
   status: EvalStatus;
   failCount: number;
+  /** Failures of identity predicates (institution, sector, gender, city, oleh, service, …). */
+  immutableFailCount: number;
+  /** Failures the student could still change (volunteer, load, average, mechina, …). */
+  mutableFailCount: number;
   criteria: CriterionResult[];
 };
 

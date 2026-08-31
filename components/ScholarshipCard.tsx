@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ScholarshipMatch } from "@/lib/types";
-import { formatAmount, formatDeadline, matchHeadline } from "@/lib/format";
+import { deadlineStatus, formatAmount, formatDeadline, matchHeadline, scopeLabelHe } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { INSTITUTIONS } from "@/lib/institutions";
 
@@ -38,13 +38,17 @@ export function ScholarshipCard({
         <div>
           <dt className="text-ink-soft">מועד</dt>
           <dd>
+            {deadlineStatus(s.deadline).labelHe}
+            {" · "}
             {formatDeadline(s.deadline)}
             {s.deadline.uncertain ? " · לא ודאי" : ""}
           </dd>
         </div>
         <div>
           <dt className="text-ink-soft">סוג</dt>
-          <dd>{s.types.map(scholarshipTypeLabel).join(", ")}</dd>
+          <dd>
+            {s.types.map(scholarshipTypeLabel).join(", ")} · {scopeLabelHe(s.scope)}
+          </dd>
         </div>
         {inst ? (
           <div className="sm:col-span-2">
@@ -54,6 +58,19 @@ export function ScholarshipCard({
         ) : null}
       </dl>
       <p className="mt-3 text-sm leading-relaxed">{s.whoItsForHe}</p>
+      {s.sourceUrls.length > 0 ? (
+        <p className="mt-2 text-xs text-ink-soft">
+          מקורות:{" "}
+          {s.sourceUrls.map((url, i) => (
+            <span key={url}>
+              {i > 0 ? " · " : null}
+              <a className="underline underline-offset-2 break-all" href={url} target="_blank" rel="noreferrer">
+                {new URL(url).hostname.replace(/^www\./, "")}
+              </a>
+            </span>
+          ))}
+        </p>
+      ) : null}
 
       <details className="mt-4" open={defaultOpen}>
         <summary className="cursor-pointer text-sm font-medium text-forest">פירוט קריטריונים ומסמכים</summary>
@@ -112,6 +129,20 @@ export function ScholarshipCard({
                 קישור להגשה / מידע
               </a>
             </p>
+          ) : null}
+          {s.sourceUrls.length > 0 ? (
+            <section>
+              <h4 className="font-medium">מקורות רשמיים</h4>
+              <ul className="mt-1 list-disc pr-5 break-all">
+                {s.sourceUrls.map((url) => (
+                  <li key={url}>
+                    <a className="underline underline-offset-4" href={url} target="_blank" rel="noreferrer">
+                      {url}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ) : null}
           {s.notesHe ? <p className="text-ink-soft">{s.notesHe}</p> : null}
           {s.amounts.uncertain || s.deadline.uncertain ? (

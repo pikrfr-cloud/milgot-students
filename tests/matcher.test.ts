@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { matchAll, matchScholarship } from "@/lib/matcher";
 import { SCHOLARSHIPS } from "@/data/scholarships";
+import { TIPS, TIP_IDS } from "@/data/tips";
+import { citiesMatch, isPeripheryCity } from "@/lib/cities";
+import { deadlineSortValue, deadlineStatus, isDeadlineClosed } from "@/lib/format";
+import { deadline } from "@/data/scholarships/helpers";
 import type { StudentProfile } from "@/lib/types";
 
 const byId = (id: string) => {
@@ -102,6 +106,37 @@ const olehStudent: StudentProfile = {
   sectors: ["jewish_general"],
 };
 
+/** Fully filled ordinary profile from the P0 review. */
+export const ordinaryColmanProfile: StudentProfile = {
+  institution: "colman",
+  degreeLevel: "ba",
+  yearOfStudy: 2,
+  fieldOfStudy: "business",
+  cityOfResidence: "ראשון לציון",
+  hometown: "ראשון לציון",
+  peripheryResidence: false,
+  peripheryHometown: false,
+  nationalPriorityResidence: false,
+  service: "idf",
+  yearsSinceDischarge: 3,
+  combatRole: false,
+  reservistDaysLastYear: 0,
+  loneSoldier: false,
+  willingToVolunteer: false,
+  incomeBand: "middle",
+  studyLoad: "full",
+  average: 82,
+  age: 24,
+  gender: "male",
+  sectors: ["jewish_general"],
+  isOleh: false,
+  hasDisability: false,
+  firstGeneration: false,
+  completedMechina: false,
+  familyFlags: [],
+  outstanding: [],
+};
+
 function bucketOf(profile: StudentProfile, id: string) {
   return matchScholarship(byId(id), profile).bucket;
 }
@@ -120,7 +155,25 @@ describe("catalog integrity", () => {
       expect(s.sourceUrls.length).toBeGreaterThan(0);
       expect(s.eligibility).toBeTruthy();
       expect(s.lastVerified.startsWith("2026")).toBe(true);
+      expect(s.kind ?? "scholarship").toBe("scholarship");
     }
+  });
+
+  it("does not count the 7 tip records as scholarships", () => {
+    const expected = [
+      "single-parent-need-note",
+      "orphan-funds-generic",
+      "large-family-need",
+      "sports-excellence-generic",
+      "arts-excellence-generic",
+      "aluma-haredi-support",
+      "mifal-hapayis-volunteering",
+    ];
+    for (const id of expected) {
+      expect(SCHOLARSHIPS.find((s) => s.id === id)).toBeUndefined();
+    }
+    expect([...TIP_IDS].sort()).toEqual([...expected].sort());
+    expect(TIPS.every((t) => t.kind === "tip")).toBe(true);
   });
 });
 
@@ -151,21 +204,28 @@ describe("first-year BA at TAU from the periphery", () => {
   const matches = matchAll(SCHOLARSHIPS, tauPeripheryFirstYear);
   const eligible = new Set(matches.filter((m) => m.bucket === "eligible").map((m) => m.scholarship.id));
 
-  it("is eligible for yeud 45 (lives in periphery) and not yeud 44 (studies at TAU)", () => {
-    expect(eligible.has("yeud-45")).toBe(true);
+  it("does not auto-qualify yeud 45 from a city/periphery flag; yeud 44 is not TAU", () => {
+    expect(eligible.has("yeud-45")).toBe(false);
+    expect(bucketOf(tauPeripheryFirstYear, "yeud-45")).toBe("needInfo");
     expect(bucketOf(tauPeripheryFirstYear, "yeud-44")).not.toBe("eligible");
   });
 
-  it("is eligible for Perach, Mil-GO, TAU aid, and ISEF path when first-gen + periphery", () => {
-    expect(eligible.has("perach")).toBe(true);
-    expect(eligible.has("mil-go")).toBe(true);
-    expect(eligible.has("tau-financial-aid")).toBe(true);
-    expect(eligible.has("isef")).toBe(true);
+  it("is eligible for yeud 45 when 5-of-6 national-priority address is attested", () => {
+    expect(
+      bucketOf({ ...tauPeripheryFirstYear, nationalPriorityResidence: true }, "yeud-45"),
+    ).toBe("eligible");
   });
 
-  it("is not eligible for Irtikaa or Tena (wrong community)", () => {
-    expect(bucketOf(tauPeripheryFirstYear, "irtikaa")).not.toBe("eligible");
-    expect(bucketOf(tauPeripheryFirstYear, "tena")).not.toBe("eligible");
+  it("is eligible for Perach and TAU aid; mil-go is score-based not binary eligible", () => {
+    expect(eligible.has("perach")).toBe(true);
+    expect(eligible.has("mil-go")).toBe(false);
+    expect(bucketOf(tauPeripheryFirstYear, "mil-go")).toBe("needInfo");
+    expect(eligible.has("tau-financial-aid")).toBe(true);
+  });
+
+  it("is not eligible for Irtikaa or Tena (wrong community — immutable)", () => {
+    expect(bucketOf(tauPeripheryFirstYear, "irtikaa")).toBe("ineligible");
+    expect(bucketOf(tauPeripheryFirstYear, "tena")).toBe("ineligible");
     expect(matchScholarship(byId("tena"), tauPeripheryFirstYear).failed.some((c) => c.field === "sectors")).toBe(
       true,
     );
@@ -186,7 +246,7 @@ describe("MA STEM at Technion", () => {
   it("matches Technion graduate-relevant and national volunteering funds", () => {
     expect(bucketOf(technionMaStem, "technion-financial-aid")).not.toBe("eligible");
     expect(bucketOf(technionMaStem, "perach")).toBe("eligible");
-    expect(bucketOf(technionMaStem, "technion-schulich-entrepreneurship")).toBe("nearMiss");
+    expect(bucketOf(technionMaStem, "technion-schulich-entrepreneurship")).toBe("ineligible");
   });
 
   it("does not match BA-only national aid as eligible", () => {
@@ -209,19 +269,19 @@ describe("Arab first-year student at Haifa in CS", () => {
     expect(bucketOf(arabHaifaBa, "marom")).not.toBe("eligible");
   });
 
-  it("is a near-miss for yeud 45 because of no military/national service", () => {
+  it("is not eligible for yeud 45 because of no military/national service (immutable)", () => {
     const match = matchScholarship(byId("yeud-45"), arabHaifaBa);
-    expect(["nearMiss", "ineligible"]).toContain(match.bucket);
+    expect(match.bucket).toBe("ineligible");
     expect(match.failed.some((c) => c.field === "service")).toBe(true);
   });
 });
 
 describe("Haredi college student", () => {
-  it("is eligible for Tena and not Irtikaa", () => {
+  it("is eligible for Tena and not Irtikaa; dean skeleton is check-at-institution", () => {
     expect(bucketOf(harediCollege, "tena")).toBe("eligible");
-    expect(bucketOf(harediCollege, "aluma-haredi-support")).toBe("eligible");
     expect(bucketOf(harediCollege, "irtikaa")).not.toBe("eligible");
-    expect(bucketOf(harediCollege, "ono-dean")).toBe("eligible");
+    expect(bucketOf(harediCollege, "ono-dean")).toBe("needInfo");
+    expect(TIPS.some((t) => t.id === "aluma-haredi-support")).toBe(true);
   });
 });
 
@@ -238,9 +298,103 @@ describe("near-miss counting", () => {
   it("counts a single failed conjunct as near-miss", () => {
     const almost = matchScholarship(byId("yeud-45"), {
       ...tauPeripheryFirstYear,
+      nationalPriorityResidence: true,
       yearOfStudy: 2,
     });
     expect(almost.bucket).toBe("nearMiss");
     expect(almost.eval.failCount).toBe(1);
+    expect(almost.failed.length).toBe(almost.eval.failCount);
+  });
+
+  it("keeps anyOf failCount in sync with failed.length", () => {
+    const match = matchScholarship(byId("gruss"), {
+      ...ordinaryColmanProfile,
+      willingToVolunteer: true,
+      yearsSinceDischarge: 2,
+      studyLoad: "full",
+    });
+    expect(match.eval.failCount).toBe(match.failed.length);
+  });
+});
+
+describe("ordinary Colman BA year-2 profile near-miss cap", () => {
+  it("has at most 15 near-misses", () => {
+    const matches = matchAll(SCHOLARSHIPS, ordinaryColmanProfile);
+    const near = matches.filter((m) => m.bucket === "nearMiss");
+    expect(near.length).toBeLessThanOrEqual(15);
+  });
+
+  it("does not treat colman dean skeleton or rishon city-hall as eligible now", () => {
+    expect(bucketOf(ordinaryColmanProfile, "colman-aid")).toBe("needInfo");
+    expect(bucketOf(ordinaryColmanProfile, "rishon-muni")).toBe("needInfo");
+  });
+
+  it("sends wrong-institution and wrong-community failures to ineligible", () => {
+    expect(bucketOf(ordinaryColmanProfile, "tau-financial-aid")).toBe("ineligible");
+    expect(bucketOf(ordinaryColmanProfile, "irtikaa")).toBe("ineligible");
+    expect(bucketOf(ordinaryColmanProfile, "tena")).toBe("ineligible");
+  });
+});
+
+describe("city aliases", () => {
+  it("treats תל אביב as תל אביב-יפו and קרית as קריית", () => {
+    expect(citiesMatch("תל אביב", "תל אביב-יפו")).toBe(true);
+    expect(citiesMatch("קרית גת", "קריית גת")).toBe(true);
+    expect(citiesMatch("קרית שמונה", "קריית שמונה")).toBe(true);
+    expect(citiesMatch("קריית גת", "קריית שמונה")).toBe(false);
+  });
+
+  it("matches Tel Aviv municipal aid when the profile uses the short city name", () => {
+    const match = matchScholarship(byId("telaviv-south-neighborhoods"), {
+      cityOfResidence: "תל אביב",
+      hometown: "תל אביב",
+      studyLoad: "full",
+    });
+    expect(match.failed.some((c) => c.field === "cityOfResidence")).toBe(false);
+    expect(match.passed.some((c) => c.field === "cityOfResidence" || c.field === "hometown")).toBe(true);
+  });
+});
+
+describe("past deadlines are not eligible now", () => {
+  it("does not bucket a closed-deadline match as eligible", () => {
+    const closed = {
+      ...byId("perach"),
+      deadline: deadline("נסגר", { date: "2020-01-01", kind: "fixed" as const }),
+    };
+    const match = matchScholarship(closed, {
+      degreeLevel: "ba",
+      willingToVolunteer: true,
+    });
+    expect(match.bucket).not.toBe("eligible");
+    expect(match.bucket).toBe("ineligible");
+    expect(isDeadlineClosed(closed.deadline, new Date("2026-08-31"))).toBe(true);
+  });
+
+  it("sorts closed dates after upcoming ones", () => {
+    const past = deadline("עבר", { date: "2020-01-01", kind: "fixed" as const });
+    const future = deadline("עתיד", { date: "2026-12-17", kind: "fixed" as const });
+    const asOf = new Date("2026-08-31T12:00:00Z");
+    expect(deadlineStatus(past, asOf).kind).toBe("closed");
+    expect(deadlineStatus(future, asOf).kind).toBe("open");
+    expect(deadlineSortValue(future, asOf)).toBeLessThan(deadlineSortValue(past, asOf));
+  });
+});
+
+describe("national-priority vs social periphery", () => {
+  it("does not treat Jerusalem as yeud-45 eligible from the city list", () => {
+    const jerusalem = {
+      ...tauPeripheryFirstYear,
+      cityOfResidence: "ירושלים",
+      hometown: "ירושלים",
+      peripheryResidence: true,
+    };
+    expect(bucketOf(jerusalem, "yeud-45")).toBe("needInfo");
+    expect(bucketOf({ ...jerusalem, nationalPriorityResidence: true }, "yeud-45")).toBe("eligible");
+  });
+
+  it("does not list Jerusalem, Ashdod, Hadera, Lod, Ramla, or Yavne as social-periphery cities", () => {
+    for (const city of ["ירושלים", "אשדוד", "חדרה", "לוד", "רמלה", "יבנה"]) {
+      expect(isPeripheryCity(city)).toBe(false);
+    }
   });
 });

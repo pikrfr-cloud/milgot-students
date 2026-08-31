@@ -165,6 +165,7 @@ export const MUNICIPAL: Scholarship[] = [
     coverageNoteHe: "פרטי הסכום והמועד לא אומתו לקול קורא תשפ״ז — מסומן כלא ודאי.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.haifa.muni.il/"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "cityIn", values: ["חיפה"] }),
   }),
   s({
@@ -183,6 +184,7 @@ export const MUNICIPAL: Scholarship[] = [
     coverageNoteHe: "יש לבדוק קול קורא עדכני; הסכום אינו אחיד.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.beer-sheva.muni.il/"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "cityIn", values: ["באר שבע"] }),
   }),
   s({
@@ -200,6 +202,7 @@ export const MUNICIPAL: Scholarship[] = [
     applyUrl: "https://www.ashdod.muni.il/",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.ashdod.muni.il/"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "cityIn", values: ["אשדוד"] }),
   }),
   s({
@@ -217,6 +220,7 @@ export const MUNICIPAL: Scholarship[] = [
     applyUrl: "https://www.netanya.muni.il/",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.netanya.muni.il/"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "cityIn", values: ["נתניה"] }),
   }),
   s({
@@ -234,6 +238,7 @@ export const MUNICIPAL: Scholarship[] = [
     applyUrl: "https://www.petah-tikva.muni.il/",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.petah-tikva.muni.il/"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "cityIn", values: ["פתח תקווה"] }),
   }),
   s({
@@ -251,6 +256,7 @@ export const MUNICIPAL: Scholarship[] = [
     applyUrl: "https://www.rishonlezion.muni.il/",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.rishonlezion.muni.il/"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "cityIn", values: ["ראשון לציון"] }),
   }),
   s({

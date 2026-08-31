@@ -56,6 +56,7 @@ export const UNIVERSITIES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://deanstudents.tau.ac.il/financial-aid/special-scholarships"],
     institutionIds: ["tau"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["tau"] }),
   }),
   s({
@@ -317,6 +318,7 @@ export const UNIVERSITIES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://dekanat.haifa.ac.il/"],
     institutionIds: ["haifa"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["haifa"] }),
   }),
   s({
@@ -481,6 +483,7 @@ export const UNIVERSITIES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.runi.ac.il/"],
     institutionIds: ["reichman"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["reichman"] }),
   }),
   s({

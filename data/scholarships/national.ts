@@ -22,33 +22,33 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "מל״ג / ות״ת, מופעלת על ידי פר״ח ומכון דוידסון",
     types: ["need"],
     scope: "national",
-    amounts: amount("מדרגות ידועות: עד כ־12,480 ₪; גם 10,000 / 7,500 / 4,000 ₪ לפי ניקוד", {
-      min: 4000,
-      max: 12480,
-      uncertain: true,
-    }),
+    treatment: "scoreBased",
+    amounts: amount(
+      "תואר ראשון/מכינה: 5,000 / 7,500 / 10,000 / 12,480 ₪ לפי ניקוד. הנדסאי/טכנאי (מה״ט): 3,000 / 4,500 / 6,000 / 8,600 ₪",
+      { min: 3000, max: 12480 },
+    ),
     cadence: "annual",
-    deadline: deadline("הרשמה לתשפ״ז טרם פורסמה במועד האימות; לתשפ״ו ההרשמה נסגרה. בדרך כלל בחורף.", {
-      kind: "annual_window",
-      windowHe: "חורף–אביב, מתפרסם על ידי המל״ג",
+    deadline: deadline("הרשמה לתשפ״ז טרם פורסמה באתר מיל־GO ובאתר המל״ג; לתשפ״ו ההרשמה נסגרה.", {
+      kind: "varies",
+      windowHe: "מתפרסם מדי שנה באתר cua.org.il",
       uncertain: true,
     }),
     whoItsForHe:
-      "סטודנטים לתואר ראשון, מכינה קדם־אקדמית, הנדסאים או טכנאים במוסד מוכר, ללא תואר קודם, בהיקף לימודים משמעותי, על בסיס קריטריונים סוציו־אקונומיים.",
+      "סטודנטים לתואר ראשון, מכינה קדם־אקדמית, הנדסאים או טכנאים במוסד מוכר, ללא תואר קודם, בהיקף לימודים משמעותי. הזכאות נקבעת בניקוד השוואתי (הכנסה לנפש 40%, נסיבות ייחודיות 20%, אשכול 18%, שירות 10%, מילואים 10%, עדיפות לאומית 2%) — לא סף בינארי.",
     documentsHe: [...DOCS_BASIC, ...DOCS_INCOME, ...DOCS_BANK, "מסמכי משפחה לפי הנחיות המערכת"],
-    howToApplyHe: "הגשה מקוונת באתר מיל־GO כשההרשמה נפתחת. יש לעקוב אחרי פרסום המל״ג.",
-    applyUrl: "https://che.org.il/en/scholarships-grants-students-faculty/student-scholarships/",
+    howToApplyHe: "הגשה מקוונת באתר מיל־GO (cua.org.il) כשההרשמה נפתחת.",
+    applyUrl: "https://www.cua.org.il/",
     notesHe:
-      "מחליפה את קרן הסיוע של משרד החינוך. אין כפל מלא עם מלגות ממשלתיות מסוימות. סכומי המדרגות עלולים להתעדכן.",
+      "מחליפה את קרן הסיוע של משרד החינוך. אין כפל מלא עם מלגות ממשלתיות מסוימות. מדרגות הסכום פורסמו באתר המל״ג ובאתר מיל־GO; גובה המענק האישי תלוי בניקוד.",
     lastVerified: VERIFIED,
     sourceUrls: [
-      "https://www.study.co.il/%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%9E%D7%A9%D7%A8%D7%93-%D7%94%D7%97%D7%99%D7%A0%D7%95%D7%9A/",
-      "https://che.org.il/en/scholarships-grants-students-faculty/student-scholarships/",
+      "https://www.cua.org.il/",
+      "https://www.cua.org.il/about",
+      "https://che.org.il/scholarships/milgo/",
     ],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "prep", "practical_engineer"] },
       { type: "studyLoadFull" },
-      { type: "incomeAtMost", value: "lower_middle" },
     ),
   }),
   s({
@@ -66,14 +66,14 @@ export const NATIONAL: Scholarship[] = [
     deadline: CHECK_ANNUALLY,
     whoItsForHe: "סטודנטים העומדים בקריטריונים הסוציו־אקונומיים של קרן הסיוע, בנוסף או במקום מענק.",
     documentsHe: [...DOCS_BASIC, ...DOCS_INCOME],
-    howToApplyHe: "בדרך כלל באותה מערכת כמו מיל־GO, כשההרשמה נפתחת.",
-    applyUrl: "https://che.org.il/en/scholarships-grants-students-faculty/student-scholarships/",
-    notesHe: "סכום ההלוואה ההיסטורי שפורסם על ידי המל״ג הוא 7,000 ₪; יש לאמת בעת ההגשה.",
+    howToApplyHe: "בדרך כלל באותה מערכת כמו מיל־GO (cua.org.il), כשההרשמה נפתחת.",
+    applyUrl: "https://www.cua.org.il/",
+    notesHe: "סכום ההלוואה ההיסטורי שפורסם הוא כ־7,000 ₪; יש לאמת בעת ההגשה. לא זכאות אוטומטית.",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://che.org.il/en/scholarships-grants-students-faculty/student-scholarships/"],
+    sourceUrls: ["https://www.cua.org.il/", "https://che.org.il/scholarships/milgo/"],
+    treatment: "scoreBased",
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "prep", "practical_engineer"] },
-      { type: "incomeAtMost", value: "middle" },
     ),
   }),
   s({
@@ -176,11 +176,11 @@ export const NATIONAL: Scholarship[] = [
       kind: "fixed",
     }),
     whoItsForHe:
-      "חיילים משוחררים ומסיימי שירות לאומי־אזרחי תושבי אזורי עדיפות לאומית, המתחילים שנה א׳ לתואר ראשון במוסד מוכר.",
+      "חיילים משוחררים ומסיימי שירות לאומי־אזרחי שכתובתם הרשומה בחמש מתוך שש השנים שקדמו לתחילת הלימודים היא באזור עדיפות לאומית כהגדרתו בחוק, המתחילים שנה א׳ לתואר ראשון במוסד מוכר. לא נקבעת זכאות לפי רשימת ערים בקטלוג.",
     documentsHe: [...DOCS_BASIC, ...DOCS_SERVICE, "הוכחת מגורים באזור עדיפות לאומית"],
     howToApplyHe: "הגשה באזור האישי באתר האגף לחיילים משוחררים.",
     applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria45.aspx",
-    notesHe: "המלגה מועברת לפיקדון האישי. אין כפל עם ייעוד 44/46.",
+    notesHe: "המלגה מועברת לפיקדון האישי. אין כפל עם ייעוד 44/46. כתובת רשומה 5 מתוך 6 שנים נבדקת באגף — לא לפי עיר מגורים נוכחית.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria45.aspx"],
     eligibility: allOf(
@@ -188,7 +188,7 @@ export const NATIONAL: Scholarship[] = [
       { type: "yearOfStudyIn", values: [1] },
       { type: "serviceIn", values: ["idf", "national", "civil"] },
       { type: "yearsSinceDischargeMax", value: 5 },
-      { type: "periphery", of: "residence" },
+      { type: "nationalPriority" },
     ),
   }),
   s({
@@ -206,7 +206,7 @@ export const NATIONAL: Scholarship[] = [
       kind: "fixed",
     }),
     whoItsForHe:
-      "בוגרי מכינה קדם־אקדמית תושבי אזורי עדיפות לאומית, הלומדים לתואר ראשון במוסד מוכר.",
+      "בוגרי מכינה קדם־אקדמית במימון הקרן שכתובתם הרשומה בחמש מתוך שש השנים שקדמו ללימודים היא באזור עדיפות לאומית, הלומדים לתואר ראשון במוסד מוכר. לא נקבעת זכאות לפי רשימת ערים בקטלוג.",
     documentsHe: [...DOCS_BASIC, ...DOCS_SERVICE, "אישור סיום מכינה קדם־אקדמית", "הוכחת מגורים"],
     howToApplyHe: "הגשה באזור האישי באתר האגף לחיילים משוחררים.",
     applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria46.aspx",
@@ -216,7 +216,7 @@ export const NATIONAL: Scholarship[] = [
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "serviceIn", values: ["idf", "national", "civil"] },
-      { type: "periphery", of: "residence" },
+      { type: "nationalPriority" },
       { type: "completedMechina" },
     ),
   }),
@@ -387,28 +387,115 @@ export const NATIONAL: Scholarship[] = [
   }),
   s({
     id: "reservist-tuition-grant",
-    nameHe: "מענק שכר לימוד לסטודנטים משרתי מילואים",
-    funderHe: "צה״ל / מערך הסיוע למשרתי מילואים",
+    nameHe: "החזר שיעורים פרטיים / קורס חוזר למשרתי מילואים",
+    funderHe: "צה״ל — קרן הסיוע למילואים (מערך משולם)",
     types: ["service"],
     scope: "national",
-    amounts: amount("מענק חד־פעמי; תנאי הסף והסכום מתעדכנים לפי שנת לימודים וימי שמ״פ (פורסמו מדרגות בסביבות 2,000–3,000 ₪ להחזרי עזר)", {
-      min: 2000,
-      max: 3000,
-      uncertain: true,
-    }),
+    amounts: amount(
+      "תשפ״ו: עד 3,000 ₪ במדרג א׳+/א׳, עד 2,500 ₪ במדרג ב׳, עד 2,000 ₪ במדרגים ג׳–ה׳; תשפ״ד/ה׳: עד 3,000 ₪ ללוחמים ב־100+ ימים, עד 2,000 ₪ לכלל המשרתים ב־21+ ימים",
+      { min: 2000, max: 3000 },
+    ),
     cadence: "one_time",
-    deadline: CHECK_ANNUALLY,
+    deadline: deadline("הגשה בפורטל המילואים לפי שנת הלימודים הרלוונטית", {
+      kind: "rolling",
+    }),
     whoItsForHe:
-      "סטודנטים במוסדות מוכרים ששירתו היקף ימי מילואים שנקבע בשנת הלימודים הרלוונטית.",
-    documentsHe: ["אישור לימודים", "אישור ימי מילואים"],
-    howToApplyHe: "דרך המערכת הייעודית שמפורסמת לחיילי מילואים (מערך משולם / פורטל מילואים).",
-    applyUrl: "https://www.miluim.idf.il/",
-    notesHe: "התנאים לשנת תשפ״ו כללו ספי ימים ספציפיים. יש לבדוק את הקול הקורא העדכני.",
+      "סטודנטים ששירתו במילואים ומבקשים החזר עבור שיעורים פרטיים (או קורס חוזר/ביטול קורס למי שאינם במוסד מל״ג/אומנות/מה״ט). לתשפ״ו: לפחות 21 ימי שמ״פ בשנת הלימודים (צו 8 בלבד בין 27.10–31.12.2025; כל סוג צו מ־1.1.2026).",
+    documentsHe: [
+      "אישור לימודים רשמי ועדכני לשנת הלימודים",
+      "קבלות/חשבוניות מס (לא אישור בכתב יד)",
+    ],
+    howToApplyHe: "פנייה בפורטל קרן הסיוע למילואים (מערך משולם).",
+    applyUrl: "https://mushlam-frontend.wiz.digital.idf.il/m/v2fnx2a8lp",
+    notesHe:
+      "זה החזר עזר לימודי, לא מענק שכר לימוד. מענק שכר הלימוד של חרבות ברזל מתועד ברשומה נפרדת.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://mushlam-frontend.wiz.digital.idf.il/m/v2fnx2a8lp"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma", "phd", "practical_engineer", "teaching_certificate"] },
       { type: "reservistDaysMin", value: 21 },
+    ),
+  }),
+  s({
+    id: "iron-swords-reservist",
+    nameHe: "מלגת חרבות ברזל — מענק שכר לימוד למשרתי מילואים",
+    funderHe: "צה״ל — קרן הסיוע למילואים (מערך משולם)",
+    types: ["service"],
+    scope: "national",
+    amounts: amount(
+      "תשפ״ו: אחוז משכר לימוד אוניברסיטאי 12,017 ₪ לפי מדרג היחידה (א׳+ עד 100%, א׳ עד 85%, ב׳ עד 65%, ג׳–ד׳ עד 30%, ה׳ עד 22%), ולא יותר מהתשלום בפועל. תשפ״ה: לוחם עד 11,653 ₪ / אחרים עד 3,495 ₪. תשפ״ד: לוחם עד 11,296 ₪ / אחרים עד 3,388.80 ₪",
+      { min: 2644, max: 12017 },
+    ),
+    cadence: "one_time",
+    deadline: deadline("הגשה בפורטל המילואים לפי שנת הלימודים (תשפ״ד / תשפ״ה / תשפ״ו)", {
+      kind: "rolling",
+    }),
+    whoItsForHe:
+      "סטודנטים במוסדות מל״ג, מוסדות אומנות או מה״ט ששירתו במילואים במלחמת חרבות ברזל. לתשפ״ו: לפחות 50 ימי שמ״פ בין 23.10.2025–30.9.2026 (צו 8 עד סוף 2025; כל סוג שמ״פ מ־1.1.2026). לתשפ״ה: 50 ימים בצו 8; לתשפ״ד: 60 ימים בצו 8.",
+    documentsHe: [
+      "אישור לימודים רשמי לשנת הלימודים",
+      "גיליון תשלומים / מצב חשבון המעיד על שכ״ל ועל תשלום בפועל",
+    ],
+    howToApplyHe: "הגשה בפורטל קרן הסיוע למילואים. אין כפל עם מלגת ממדים ללימודים באותה שנת לימודים.",
+    applyUrl: "https://mushlam-frontend.wiz.digital.idf.il/m/v2fnx2a8lp",
+    notesHe:
+      "לא יתאפשר כפל מלגות במימון המדינה, למעט מלגת הצטיינות או התנדבות. המדרג הקובע הוא המדרג שבו בוצעו מרבית הימים. גובה המענק האישי תלוי במדרג היחידה ובתשלום בפועל.",
+    lastVerified: VERIFIED,
+    sourceUrls: [
+      "https://mushlam-frontend.wiz.digital.idf.il/m/v2fnx2a8lp",
+      "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/UniformToStudies.aspx",
+    ],
+    eligibility: allOf(
+      { type: "degreeLevelIn", values: ["ba", "ma", "phd", "practical_engineer", "teaching_certificate"] },
+      { type: "reservistDaysMin", value: 50 },
+    ),
+  }),
+  s({
+    id: "mod-uniform-to-studies",
+    nameHe: "ממדים ללימודים",
+    funderHe: "האגף לחיילים משוחררים ומילואים, משרד הביטחון",
+    types: ["service", "population"],
+    scope: "national",
+    amounts: amount(
+      "עד 100% משכר הלימוד האוניברסיטאי (תקרת תשפ״ו 12,017 ₪). במהלך התואר החזר שנתי עד 85% (10,214.45 ₪ בתשפ״ו); השלמה ל־100% בשנה האחרונה",
+      { min: 10214, max: 12017 },
+    ),
+    cadence: "multi_year",
+    deadline: deadline("הרשמה לתשפ״ו: 3.11.2025–31.10.2026 (הוארכה); העלאת מסמכים עד 31.10.2026", {
+      date: "2026-10-31",
+      kind: "fixed",
+    }),
+    whoItsForHe:
+      "חיילות וחיילים משוחררים ששירתו שירות מלא ותקין: לוחמות ולוחמים בעלי תעודת שחרור בכבוד־זהב, או אוכלוסיות ייחודיות (זכאי תשמ״ש הורים / תשלומי משפחה, חיילים בודדים שהוכרו עד תום השירות, בני מיעוטים, החברה הערבית/הדרוזית/הצ׳רקסית, עולים שהוגדרו כך בשירות). תואר ראשון, שני או לימודי תעודה באמנות במוסד מוכר. הגשה ראשונה עד 5 שנים מהשחרור (עם הארכות לקבע/מכינה).",
+    documentsHe: [
+      ...DOCS_BASIC,
+      ...DOCS_SERVICE,
+      "אישור לימודים רשמי לשנה הנוכחית",
+      "גיליון תשלומים מפורט (לא קבלות)",
+    ],
+    howToApplyHe:
+      "האזור האישי באתר האגף לחיילים משוחררים: הטבות ומלגות ← מלגות ← ממדים ללימודים. חתימה דיגיטלית על כתב התחייבות.",
+    applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/UniformToStudies.aspx",
+    notesHe:
+      "ללא חובת התנדבות. אין כפל עם מלגת חרבות ברזל באותה שנת לימודים. עם ייעוד 44 — מימוש ממדים משנה ב׳ בלבד. עם ייעוד 45 ניתן לשלב (85% לחשבון, 15% לפיקדון).",
+    lastVerified: VERIFIED,
+    sourceUrls: [
+      "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/UniformToStudies.aspx",
+    ],
+    eligibility: allOf(
+      { type: "degreeLevelIn", values: ["ba", "ma"] },
+      { type: "serviceIn", values: ["idf"] },
+      { type: "yearsSinceDischargeMax", value: 5 },
+      {
+        op: "anyOf",
+        labelHe: "לוחם/ת (תעודת זהב) או אוכלוסייה ייחודית",
+        rules: [
+          { type: "combatRole" },
+          { type: "loneSoldier" },
+          { type: "sectorIn", values: ["arab", "druze", "circassian", "bedouin"] },
+          { type: "isOleh" },
+        ],
+      },
     ),
   }),
   s({

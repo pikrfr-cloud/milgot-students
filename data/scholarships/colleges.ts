@@ -102,8 +102,9 @@ export const COLLEGES: Scholarship[] = [
     howToApplyHe: "דיקן הסטודנטים SCE.",
     applyUrl: "https://www.sce.ac.il/",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
+    sourceUrls: ["https://www.sce.ac.il/"],
     institutionIds: ["sce"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["sce"] }),
   }),
   s({
@@ -171,6 +172,7 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://scholarships.ono.ac.il/"],
     institutionIds: ["ono"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["ono"] }),
   }),
   s({
@@ -210,6 +212,7 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.hit.ac.il/"],
     institutionIds: ["hit"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["hit"] }),
   }),
   s({
@@ -249,6 +252,7 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.yvc.ac.il/"],
     institutionIds: ["yvc"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["yvc"] }),
   }),
   s({
@@ -269,6 +273,7 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.study.co.il/%D7%A9%D7%A0%D7%AA-%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99%D7%9D-%D7%90%D7%A7%D7%93%D7%9E%D7%99%D7%AA-%D7%97%D7%99%D7%A0%D7%9D/"],
     institutionIds: ["wgalil"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["wgalil"] }),
   }),
   s({
@@ -287,6 +292,7 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.achva.ac.il/"],
     institutionIds: ["achva"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["achva"] }),
   }),
   s({
@@ -305,6 +311,7 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.zefat.ac.il/"],
     institutionIds: ["zefat"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["zefat"] }),
   }),
   s({
@@ -323,6 +330,7 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.braude.ac.il/"],
     institutionIds: ["braude"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["braude"] }),
   }),
   s({
@@ -362,6 +370,7 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.colman.ac.il/"],
     institutionIds: ["colman"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["colman"] }),
   }),
   s({
@@ -380,6 +389,7 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.ash-college.ac.il/"],
     institutionIds: ["ashkelon"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["ashkelon"] }),
   }),
   s({
@@ -419,6 +429,7 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.pac.ac.il/"],
     institutionIds: ["pac"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["pac"] }),
   }),
 ];
