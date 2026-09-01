@@ -159,7 +159,7 @@ export const NATIONAL: Scholarship[] = [
       "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/List-of-Educational-Institutions-for-Periphery-44.aspx",
     ],
     institutionIds: PERIPHERY_STUDY_INSTITUTIONS,
-    excludes: ["yeud-45", "yeud-46"],
+    excludes: ["yeud-45", "yeud-46", "mod-uniform-to-studies"],
     eligibility: allOf(
       { type: "institutionIn", values: PERIPHERY_STUDY_INSTITUTIONS },
       { type: "degreeLevelIn", values: ["ba"] },
@@ -499,7 +499,7 @@ export const NATIONAL: Scholarship[] = [
     sourceUrls: [
       "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/UniformToStudies.aspx",
     ],
-    excludes: ["iron-swords-reservist", "yeud-46"],
+    excludes: ["iron-swords-reservist", "yeud-46", "yeud-44"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma"] },
       { type: "serviceIn", values: ["idf"] },

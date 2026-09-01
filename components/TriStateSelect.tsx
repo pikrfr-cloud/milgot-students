@@ -8,6 +8,7 @@ export function TriStateSelect({
   noLabel = "לא",
   unknownLabel = "לא יודע/ת",
   id,
+  labelledBy,
 }: {
   value: boolean | null | undefined;
   onChange: (next: boolean | null) => void;
@@ -16,11 +17,13 @@ export function TriStateSelect({
   noLabel?: string;
   unknownLabel?: string;
   id?: string;
+  labelledBy?: string;
 }) {
   const encoded = value === true ? "yes" : value === false ? "no" : "";
   return (
     <select
       id={id}
+      aria-labelledby={labelledBy}
       className={className}
       value={encoded}
       onChange={(e) => onChange(e.target.value === "" ? null : e.target.value === "yes")}

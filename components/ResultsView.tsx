@@ -11,6 +11,7 @@ import { amountSortValue, deadlineSortValue, deadlineStatus, shouldHideIcs } fro
 import { fieldLabelHe } from "@/lib/labels";
 import { profileFocusHref } from "@/lib/profile-fields";
 import { CoverageNote } from "@/components/CoverageNote";
+import { CatalogAgeBanner } from "@/components/CatalogAgeBanner";
 import { EmptyBucket, ScholarshipCard } from "@/components/ScholarshipCard";
 import { useTracking } from "@/components/TrackingProvider";
 import { downloadCombinedIcs } from "@/lib/ics";
@@ -337,7 +338,7 @@ export function ResultsView() {
         <h2 className="font-display text-2xl">
           {HE.buckets.eligible} ({eligible.length})
         </h2>
-        <p className="mt-1 text-sm text-ink-soft">כל הכללים המובְנים מתקיימים לפי הפרופיל.</p>
+        <p className="mt-1 text-sm text-ink-soft">{HE.buckets.eligibleHint}</p>
         <div className="mt-4 grid gap-4">
           {eligible.length ? eligible.map((m, i) => (
             <ScholarshipCard key={m.scholarship.id} match={m} defaultOpen={i === 0} />
@@ -362,8 +363,8 @@ export function ResultsView() {
           {HE.buckets.nearMiss} ({nearMiss.length})
         </h2>
         <p className="mt-1 text-sm text-ink-soft">
-          פער בקריטריונים שניתן לשנות (התנדבות, היקף לימודים, ממוצע, ימי מילואים). כישלון בזהות
-          — מוסד, קהילה, מגדר, עיר, תחום לימוד, שנת לימוד, מכינה, נתוני קבלה, עולה, סוג שירות — מופיע תחת לא זכאים.
+          פער בקריטריונים שניתן לשנות (התנדבות, היקף לימודים, ממוצע). כישלון בזהות
+          — מוסד, קהילה, מגדר, עיר, תחום לימוד, שנת לימוד, מכינה, נתוני קבלה, עולה, סוג שירות, ימי מילואים — מופיע תחת לא זכאים.
         </p>
         <div className="mt-4 grid gap-4">
           {nearMiss.length ? nearMiss.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
@@ -470,7 +471,8 @@ export function ResultsView() {
         </section>
       ) : null}
 
-      <CoverageNote className="mt-12" />
+      <CatalogAgeBanner className="mt-12" />
+      <CoverageNote className="mt-4" />
     </div>
   );
 }

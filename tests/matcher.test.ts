@@ -3,7 +3,7 @@ import { matchAll, matchScholarship } from "@/lib/matcher";
 import { SCHOLARSHIPS } from "@/data/scholarships";
 import { TIPS, TIP_IDS } from "@/data/tips";
 import { citiesMatch, isPeripheryCity, neighborhoodMatches } from "@/lib/cities";
-import { deadlineSortValue, deadlineStatus, isDeadlineClosed, matchHeadline, shouldHideIcs } from "@/lib/format";
+import { catalogAgeBanner, deadlineSortValue, deadlineStatus, isDeadlineClosed, matchHeadline, shouldHideIcs } from "@/lib/format";
 import { allOf, anyOf, collectInstitutionIn, deadline, not } from "@/data/scholarships/helpers";
 import { mostUrgentOpen, partialKnownAmountSum } from "@/lib/match-insights";
 import { bestSourceGrade, gradeSourceUrl, hasOfficialSource, isValidHttpUrl } from "@/lib/sources";
@@ -340,18 +340,19 @@ describe("ordinary Colman BA year-2 profile near-miss cap", () => {
     const matches = matchAll(SCHOLARSHIPS, ordinaryColmanProfile);
     const near = matches.filter((m) => m.bucket === "nearMiss");
     const ids = near.map((m) => m.scholarship.id).sort();
-    expect(ids).toEqual([
-      "eilim",
-      "iron-swords-reservist",
-      "nuis-community",
-      "perach",
-      "perach-reserves",
-      "reservist-tuition-grant",
-      "sahlav",
-    ]);
+    expect(ids).toEqual(["eilim", "nuis-community", "perach", "sahlav"]);
     for (const m of near) {
       expect(m.failed.some((c) => c.field === "fieldOfStudy")).toBe(false);
       expect(m.eval.immutableFailCount).toBe(0);
+    }
+  });
+
+  it("sends 0 reservist days to ineligible for miluim grants (immutable), not near-miss", () => {
+    for (const id of ["iron-swords-reservist", "perach-reserves", "reservist-tuition-grant"] as const) {
+      const match = matchScholarship(byId(id), ordinaryColmanProfile);
+      expect(match.bucket, id).toBe("ineligible");
+      expect(match.eval.immutableFailCount, id).toBeGreaterThan(0);
+      expect(match.failed.some((c) => c.field === "reservistDaysLastYear"), id).toBe(true);
     }
   });
 
@@ -924,5 +925,45 @@ describe("partialKnownAmountSum skips sparse catalogs", () => {
       expect(result).not.toBeNull();
       expect(result!.counted).toBe(numbered.length);
     }
+  });
+});
+
+describe("catalog age banner", () => {
+  const asOf = new Date("2026-09-01T12:00:00+03:00");
+
+  it("is quiet when lastVerified is 2026-08 (under 60 days)", () => {
+    expect(catalogAgeBanner("2026-08", asOf)).toBeNull();
+  });
+
+  it("shows months when lastVerified is older than 60 days", () => {
+    expect(catalogAgeBanner("2026-06", asOf)).toBe("הקטלוג אומת לפני 3 חודשים");
+    expect(catalogAgeBanner("2026-01-15", asOf)).toMatch(/^הקטלוג אומת לפני \d+ חודשים$/);
+  });
+});
+
+describe("olim student authority is not a fake age-30 gate", () => {
+  it("uses checkAtAuthority and has no ageMax predicate", () => {
+    const s = byId("olim-student-authority");
+    expect(s.treatment).toBe("checkAtAuthority");
+    expect(JSON.stringify(s.eligibility)).not.toContain('"ageMax"');
+  });
+});
+
+describe("selective treatment only on records that already describe interviews", () => {
+  it("tags Rothschild ambassadors as selective; does not invent tags on Atidim/Gruss/Eilim", () => {
+    expect(byId("rothschild-ambassadors").treatment).toBe("selective");
+    expect(byId("rothschild-ambassadors").documentsHe.some((d) => d.includes("ראיון"))).toBe(true);
+    expect(byId("atidim-industry").treatment).not.toBe("selective");
+    expect(byId("gruss").treatment).not.toBe("selective");
+    expect(byId("eilim").treatment).not.toBe("selective");
+    expect(byId("heznek-academy").treatment).not.toBe("selective");
+    expect(byId("impact-fidf").treatment).not.toBe("selective");
+  });
+});
+
+describe("bidirectional excludes already claimed in card text", () => {
+  it("keeps yeud-44 and memadim excluding each other", () => {
+    expect(byId("yeud-44").excludes).toContain("mod-uniform-to-studies");
+    expect(byId("mod-uniform-to-studies").excludes).toContain("yeud-44");
   });
 });

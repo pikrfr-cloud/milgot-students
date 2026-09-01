@@ -10,6 +10,7 @@ import {
 import type { ProfileField } from "@/lib/types";
 import { fieldDomId } from "@/lib/profile-fields";
 import { CityPicker } from "@/components/CityPicker";
+import { TriStateSelect } from "@/components/TriStateSelect";
 
 export function Field({
   field,
@@ -36,6 +37,12 @@ export function Field({
     if (!isValidElement(child) || !labelId) return child;
     if (child.type === CityPicker) {
       return cloneElement(child as ReactElement<{ labelledBy?: string }>, { labelledBy: labelId });
+    }
+    if (child.type === TriStateSelect) {
+      return cloneElement(
+        child as ReactElement<{ id?: string; labelledBy?: string }>,
+        { id: defaultControlId, labelledBy: labelId },
+      );
     }
     if (child.type === "select" || child.type === "input") {
       return cloneElement(

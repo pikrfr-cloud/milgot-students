@@ -120,6 +120,9 @@ export function CatalogExplorer({
                 {status.kind === "closed" ? (
                   <span className="rounded-full bg-gold/20 px-2 py-0.5 text-ink">{HE.buckets.closedCycle}</span>
                 ) : null}
+                {s.treatment === "selective" ? (
+                  <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{HE.buckets.selective}</span>
+                ) : null}
                 {s.deadline.windowHe ? (
                   <span className="rounded-full bg-paper-deep px-2 py-0.5">{s.deadline.windowHe}</span>
                 ) : null}

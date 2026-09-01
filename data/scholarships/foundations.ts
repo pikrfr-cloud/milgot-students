@@ -130,6 +130,7 @@ export const FOUNDATIONS: Scholarship[] = [
     applyUrl: "https://www.rhcf.org.il/",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.rhcf.org.il/"],
+    treatment: "selective",
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "willingToVolunteer" },

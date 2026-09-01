@@ -80,6 +80,7 @@ const IMMUTABLE_TYPES = new Set<Predicate["type"]>([
   "periphery",
   "nationalPriority",
   "neighborhoodIn",
+  "reservistDaysMin",
 ]);
 
 function isImmutablePredicate(pred: Predicate): boolean {
@@ -669,8 +670,8 @@ function applyPostEval(
         labelHe: atAuthority ? "בדיקה ברשות המוסמכת" : "בדיקה במוסד / ברשות",
         status: "unknown",
         detailHe: atAuthority
-          ? "רשומה זו מציינת מסלול שיקום או מימון ברשות (ביטוח לאומי / משרד), בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «זכאים עכשיו»."
-          : "רשומה זו מציינת שקיים מסלול דיקן או עירייה, בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «זכאים עכשיו».",
+          ? "רשומה זו מציינת מסלול שיקום או מימון ברשות (ביטוח לאומי / משרד), בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «עומדים בתנאי הסף»."
+          : "רשומה זו מציינת שקיים מסלול דיקן או עירייה, בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «עומדים בתנאי הסף».",
       });
       return {
         bucket: "checkAtInstitution",

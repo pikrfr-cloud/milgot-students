@@ -2,6 +2,8 @@ import { CoverageNote } from "@/components/CoverageNote";
 import { CATALOG_STATS } from "@/data/scholarships";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { HE } from "@/lib/i18n/he";
+import { ExternalLink } from "@/components/ExternalLink";
 
 export const metadata: Metadata = {
   title: "אודות ואיך זה עובד",
@@ -26,9 +28,10 @@ export default function AboutPage() {
       </p>
       <p className="mt-3">
         שדה שדולג בפרופיל לעולם לא נחשב לכישלון. אם הכלל דורש את השדה — המלגה עוברת לקטגוריית «חסר
-        פרט לאישור». כישלון בתנאי זהות (מוסד, קהילה, מגדר, עיר, תחום לימוד, שנת לימוד, מכינה, נתוני קבלה, עולה, סוג שירות) מופיע תחת «לא
-        זכאים». כישלון בתנאים שניתן לשנות (התנדבות, היקף לימודים, ממוצע, ימי מילואים) — «כמעט
-        זכאים». מועד שהסתיים למחזור שפורסם, כשהשאר מתאים או חסר פרט, מופיע תחת «נסגר למחזור זה — מתאים למחזור הבא» ולא מוסתר.
+        פרט לאישור». כישלון בתנאי זהות (מוסד, קהילה, מגדר, עיר, תחום לימוד, שנת לימוד, מכינה, נתוני
+        קבלה, עולה, סוג שירות, ימי מילואים שכבר נעשו) מופיע תחת «לא זכאים». כישלון בתנאים שניתן לשנות
+        (התנדבות, היקף לימודים, ממוצע) — «כמעט זכאים». מועד שהסתיים למחזור שפורסם, כשהשאר מתאים או
+        חסר פרט, מופיע תחת «נסגר למחזור זה — מתאים למחזור הבא» ולא מוסתר.
       </p>
       <h2 className="mt-8 font-display text-2xl">פרטיות</h2>
       <p className="mt-3">
@@ -45,6 +48,13 @@ export default function AboutPage() {
         ולא כ«חסר פרט» בלי שדה למילוי.
       </p>
       <CoverageNote className="mt-4" />
+      <h2 className="mt-8 font-display text-2xl">קוד פתוח ויצירת קשר</h2>
+      <p className="mt-3">{HE.legal.contactGithub}</p>
+      <p className="mt-3">
+        <ExternalLink className="underline underline-offset-4 ltr-isolate" href={HE.legal.githubRepoUrl}>
+          {HE.legal.githubRepoUrl.replace(/^https?:\/\//, "")}
+        </ExternalLink>
+      </p>
       <p className="mt-4">
         <Link href="/accessibility" className="underline underline-offset-4">
           הצהרת נגישות

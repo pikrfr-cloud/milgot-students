@@ -20,7 +20,9 @@ export const HE = {
   },
 
   buckets: {
-    eligible: "זכאים עכשיו",
+    eligible: "עומדים בתנאי הסף",
+    eligibleHint: "התנאים שבקטלוג מתקיימים — לא אישור זכייה ולא הגשה בשמכם.",
+    selective: "מיון תחרותי",
     closedCycle: "נסגר למחזור זה",
     closedCycleLong: "נסגר למחזור זה — מתאים למחזור הבא",
     needInfo: "חסר פרט לאישור",
@@ -77,7 +79,7 @@ export const HE = {
     urgentTitle: "הדחופות ביותר להגשה",
     urgentNone: "אין כרגע מלגות עם מועד הגשה מפורסם שעדיין פתוח.",
     fillFieldUnlock: "מלא שדה {field} ותפתח ~{n} מלגות",
-    partialSum: "הערכה חלקית, רק מלגות עם סכום ידוע",
+    catalogAge: "הקטלוג אומת לפני {n} חודשים",
   },
 
   legal: {
@@ -87,6 +89,10 @@ export const HE = {
     deletionRight: "אפשר למחוק את כל הנתונים השמורים במכשיר בכל עת.",
     identityUnpublished:
       "פרטי זהות של מפעיל האתר וכתובת דוא״ל ליצירת קשר עדיין לא פורסמו. אין חשבון משתמש, והנתונים נשארים במכשיר זה בלבד.",
+    githubRepoUrl: "https://github.com/pikrfr-cloud/milgot-students",
+    githubIssuesUrl: "https://github.com/pikrfr-cloud/milgot-students/issues",
+    contactGithub:
+      "פניות, דיווחי תקלות ונגישות: Issues במאגר GitHub הציבורי. פרטי זהות של המפעיל עדיין לא פורסמו, ואין דוא״ל באתר.",
   },
 
   errors: {

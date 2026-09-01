@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { HE } from "@/lib/i18n/he";
+import { ExternalLink } from "@/components/ExternalLink";
 
 export const metadata: Metadata = {
   title: "הצהרת נגישות",
@@ -27,7 +29,9 @@ export default function AccessibilityPage() {
         <li>סימון פוקוס גלוי לשדות, כפתורים וקישורים.</li>
         <li>
           שדות האשף מקושרים לתווית באמצעות <code>htmlFor</code> ו־<code>aria-labelledby</code> על תיבות
-          הבחירה והקלט. קבוצות תיבות סימון משתמשות ב־<code>fieldset</code>/<code>legend</code>.
+          הבחירה, השדות התלת־מצביים (כן / לא / לא יודע) והקלט. קבוצות תיבות סימון משתמשות ב־
+          <code>fieldset</code>/<code>legend</code> במקום <code>htmlFor</code> לשדה יחיד. אין לכל שדה
+          מאפיין <code>name</code> — הטופס לא נשלח לשרת, והשמירה היא מקומית במכשיר.
         </li>
         <li>בחירת עיר: ניווט במקלדת (חצים), <code>aria-activedescendant</code>, והרשימה לא נסגרת כשהפוקוס עובר אליה.</li>
         <li>מעבר לשלב הבא באשף מעביר את הפוקוס לכותרת השלב.</li>
@@ -52,9 +56,11 @@ export default function AccessibilityPage() {
 
       <h2 className="mt-8 font-display text-2xl">פנייה בנושא נגישות</h2>
       <p className="mt-3">
-        אין לנו כתובת דוא״ל ייעודית לנגישות באתר זה. אם נתקלתם בחסם, אפשר לפתוח דיווח במאגר הקוד
-        הפתוח של הפרויקט ב־GitHub (הקישור מופיע בדף האודות / במאגר הציבורי), ולציין את העמוד, הדפדפן
-        והטכנולוגיה המסייעת. נשתדל לתקן במסגרת עדכוני הקטלוג והקוד.
+        אין כתובת דוא״ל ייעודית לנגישות באתר זה. {HE.legal.contactGithub} אפשר לפתוח Issue ב־
+        <ExternalLink className="underline underline-offset-4 ltr-isolate" href={HE.legal.githubIssuesUrl}>
+          GitHub
+        </ExternalLink>
+        {' '}ולציין את העמוד, הדפדפן והטכנולוגיה המסייעת. נשתדל לתקן במסגרת עדכוני הקטלוג והקוד.
       </p>
       <p className="mt-3 text-sm text-ink-soft">
         הצהרה זו מתארת את מצב האתר במועד העדכון. היא אינה מחליפה ייעוץ משפטי ואינה מהווה אישור

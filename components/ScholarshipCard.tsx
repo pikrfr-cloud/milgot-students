@@ -260,6 +260,9 @@ export function ScholarshipCard({
             {HE.buckets.checkAtInstitutionLong}
           </span>
         ) : null}
+        {s.treatment === "selective" ? (
+          <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{HE.buckets.selective}</span>
+        ) : null}
         <span className={`rounded-full px-2 py-0.5 ${level === "official_page" ? levelStyle.official_page : level === "institution_site" ? levelStyle.institution_site : levelStyle.indirect}`}>
           {sourceLevelLabelHe(level)}
         </span>
