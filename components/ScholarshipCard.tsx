@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ScholarshipMatch, SourceLevel, TrackingStatus } from "@/lib/types";
-import { deadlineStatus, formatAmount, formatDeadline, matchHeadline, scopeLabelHe, shouldHideIcs } from "@/lib/format";
+import { formatAmount, formatDeadline, isVerificationStale, matchHeadline, publicDeadlineLabelHe, scopeLabelHe, shouldHideIcs, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { INSTITUTIONS } from "@/lib/institutions";
 import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
@@ -14,6 +14,7 @@ import { TRACKING_STATUSES } from "@/lib/types";
 import { ExternalLink } from "@/components/ExternalLink";
 import { HeWithEn } from "@/components/HeWithEn";
 import { useTracking } from "@/components/TrackingProvider";
+import { scholarshipPagePath } from "@/lib/catalog-routes";
 import { HE } from "@/lib/i18n/he";
 
 const bucketStyle: Record<string, string> = {
@@ -53,7 +54,6 @@ export function ScholarshipCard({
   const unknownFields = [
     ...new Map(match.unknown.filter((c) => c.field).map((c) => [c.field, c])).values(),
   ];
-  const due = deadlineStatus(s.deadline);
   const hideIcs = shouldHideIcs(s.deadline);
   const unknownNotes = match.unknown.filter((c) => !c.field && !c.group);
 
@@ -243,7 +243,9 @@ export function ScholarshipCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-display text-xl text-forest-deep">
-            <HeWithEn text={s.nameHe} />
+            <Link href={scholarshipPagePath(s.id)} className="underline-offset-4 hover:underline">
+              <HeWithEn text={s.nameHe} />
+            </Link>
           </h3>
           <p className="mt-1 text-sm text-ink-soft">
             <HeWithEn text={s.funderHe} />
@@ -266,7 +268,12 @@ export function ScholarshipCard({
         <span className={`rounded-full px-2 py-0.5 ${level === "official_page" ? levelStyle.official_page : level === "institution_site" ? levelStyle.institution_site : levelStyle.indirect}`}>
           {sourceLevelLabelHe(level)}
         </span>
-        <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">{due.labelHe}</span>
+        {isVerificationStale(s.lastVerified) ? (
+          <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{STALE_VERIFICATION_LABEL_HE}</span>
+        ) : null}
+        <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">
+          {publicDeadlineLabelHe(s.deadline, s.lastVerified)}
+        </span>
         {s.deadline.windowHe ? (
           <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">{s.deadline.windowHe}</span>
         ) : null}
@@ -284,7 +291,7 @@ export function ScholarshipCard({
         <div>
           <dt className="text-ink-soft">מועד</dt>
           <dd>
-            {due.labelHe}
+            {publicDeadlineLabelHe(s.deadline, s.lastVerified)}
             {" · "}
             {formatDeadline(s.deadline)}
             {s.deadline.uncertain ? " · לא ודאי" : ""}

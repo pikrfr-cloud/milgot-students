@@ -6,8 +6,10 @@ import { HE } from "@/lib/i18n/he";
 
 const links = [
   { href: "/", label: HE.nav.home },
+  { href: "/profile/fast", label: HE.nav.fastReport },
   { href: "/profile", label: HE.nav.profile },
   { href: "/results", label: HE.nav.results },
+  { href: "/my-list", label: HE.nav.myList },
   { href: "/catalog", label: HE.nav.catalog },
   { href: "/about", label: HE.nav.about },
   { href: "/accessibility", label: HE.nav.accessibility },

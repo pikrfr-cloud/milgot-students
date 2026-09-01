@@ -77,6 +77,8 @@ const OFFICIAL_HOSTS = new Set([
   "aluma.org.il",
   "www.aluma.org.il",
   "mushlam-frontend.wiz.digital.idf.il",
+  "rashi.org.il",
+  "www.rashi.org.il",
 ]);
 
 const HOMEPAGE_PATHS = new Set(["", "/", "/he", "/en", "/he/", "/en/", "/home", "/home/", "/index.html"]);

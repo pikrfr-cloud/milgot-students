@@ -16,11 +16,13 @@ export function Field({
   field,
   label,
   hint,
+  unlockCount,
   children,
 }: {
   field?: ProfileField;
   label: string;
   hint?: string;
+  unlockCount?: number;
   children: ReactNode;
 }) {
   const rootId = field ? fieldDomId(field) : undefined;
@@ -59,6 +61,11 @@ export function Field({
         {label}
       </label>
       {hint ? <span className="mt-1 block text-sm text-ink-soft leading-relaxed">{hint}</span> : null}
+      {unlockCount != null && unlockCount > 0 ? (
+        <span className="mt-1 block text-sm text-info">
+          מלא שדה זה ותפתח ~{unlockCount} מלגות
+        </span>
+      ) : null}
       <div className="mt-2">{labelled}</div>
     </div>
   );

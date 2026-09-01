@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import type { ProfileField, StudentProfile } from "@/lib/types";
 import {
   DEGREE_LEVELS,
@@ -80,6 +81,22 @@ const tapBtn =
   "min-h-11 min-w-11 inline-flex items-center justify-center rounded-full px-5 py-2";
 const inputClass =
   "w-full min-h-11 rounded-xl border border-line bg-card px-3 py-2.5 text-ink placeholder:text-ink-soft/70";
+
+function UnlockField({
+  field,
+  profile,
+  unlocks,
+  ...props
+}: Parameters<typeof Field>[0] & {
+  field: ProfileField;
+  profile: StudentProfile;
+  unlocks: Map<ProfileField, number>;
+}) {
+  const v = profile[field];
+  const empty = v === null || v === undefined || (Array.isArray(v) && v.length === 0);
+  const n = empty ? unlocks.get(field) : undefined;
+  return <Field field={field} unlockCount={n && n > 0 ? n : undefined} {...props} />;
+}
 
 function SkipButton({ onClick }: { onClick: () => void }) {
   return (
@@ -196,6 +213,18 @@ export function ProfileWizard() {
     return missingFieldUnlocks(matchAll(SCHOLARSHIPS, profile)).slice(0, 3);
   }, [profile, step]);
 
+  const unlockByField = useMemo(() => {
+    const entries = missingFieldUnlocks(matchAll(SCHOLARSHIPS, profile));
+    return new Map(entries.map((u) => [u.field, u.count]));
+  }, [profile]);
+
+  function fieldUnlock(field: ProfileField): number | undefined {
+    const v = profile[field];
+    if (!(v === null || v === undefined || (Array.isArray(v) && v.length === 0))) return undefined;
+    const n = unlockByField.get(field);
+    return n && n > 0 ? n : undefined;
+  }
+
   const filledFields = WIZARD_FIELDS.filter((f) => {
     const v = profile[f];
     return !(v === null || v === undefined || (Array.isArray(v) && v.length === 0));
@@ -261,6 +290,12 @@ export function ProfileWizard() {
       >
         {STEPS[step].title}
       </h1>
+      <p className="mt-2 text-sm text-ink-soft">
+        השלמת פרופיל מלא — המשך מהדוח המהיר, לא מבוי סתום.{" "}
+        <Link href="/profile/fast/" className="underline underline-offset-4">
+          {HE.nav.fastReport}
+        </Link>
+      </p>
       {process.env.NODE_ENV === "development" ? (
         <button
           type="button"
@@ -301,7 +336,10 @@ export function ProfileWizard() {
       <div className="mt-8 space-y-6 rounded-3xl border border-line bg-card p-6 sm:p-8" key={STEPS[step].id}>
         {step === 0 && (
           <>
-            <Field field="institution" label="מוסד לימודים">
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="institution" label="מוסד לימודים">
               <select
                 className={inputClass}
                 value={profile.institution ?? ""}
@@ -318,8 +356,11 @@ export function ProfileWizard() {
                   </optgroup>
                 ))}
               </select>
-            </Field>
-            <Field field="degreeLevel" label="שלב התואר">
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="degreeLevel" label="שלב התואר">
               <select
                 className={inputClass}
                 value={profile.degreeLevel ?? ""}
@@ -334,8 +375,11 @@ export function ProfileWizard() {
                   </option>
                 ))}
               </select>
-            </Field>
-            <Field field="yearOfStudy" label="שנת לימוד">
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="yearOfStudy" label="שנת לימוד">
               <select
                 className={inputClass}
                 value={profile.yearOfStudy ?? ""}
@@ -350,8 +394,11 @@ export function ProfileWizard() {
                   </option>
                 ))}
               </select>
-            </Field>
-            <Field field="fieldOfStudy" label="קבוצת תחום לימוד" hint="משמש להתאמת מלגות STEM, רפואה, חינוך וכו׳.">
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="fieldOfStudy" label="קבוצת תחום לימוד" hint="משמש להתאמת מלגות STEM, רפואה, חינוך וכו׳.">
               <select
                 className={inputClass}
                 value={profile.fieldOfStudy ?? ""}
@@ -366,9 +413,12 @@ export function ProfileWizard() {
                   </option>
                 ))}
               </select>
-            </Field>
+            </UnlockField>
             {showDegreeAverage ? (
-              <Field field="average" label="ממוצע ציונים בתואר (0–100, אם ידוע)">
+              <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="average" label="ממוצע ציונים בתואר (0–100, אם ידוע)">
                 <input
                   className={inputClass}
                   type="number"
@@ -382,13 +432,15 @@ export function ProfileWizard() {
                   }
                   placeholder="אופציונלי"
                 />
-              </Field>
+              </UnlockField>
             ) : (
               <p className="text-sm text-ink-soft">
                 בשנה א׳ / מכינה לא נשאל ממוצע תואר — נתוני קבלה למטה משמשים למלגות הצטיינות.
               </p>
             )}
-            <Field
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
               field="bagrutAverage"
               label="ממוצע בגרות (אם ידוע)"
               hint="למלגות הצטיינות לשנה א׳. אפשר לדלג."
@@ -406,8 +458,11 @@ export function ProfileWizard() {
                 }
                 placeholder="אופציונלי"
               />
-            </Field>
-            <Field field="psychometric" label="ציון פסיכומטרי (אם ידוע)">
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="psychometric" label="ציון פסיכומטרי (אם ידוע)">
               <input
                 className={inputClass}
                 type="number"
@@ -420,8 +475,11 @@ export function ProfileWizard() {
                 }
                 placeholder="אופציונלי"
               />
-            </Field>
-            <Field field="sechem" label="סכם / ציון התאמה (אם ידוע)" hint="אם המוסד מחשב סכם — הזינו אותו. אחרת דלגו.">
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="sechem" label="סכם / ציון התאמה (אם ידוע)" hint="אם המוסד מחשב סכם — הזינו אותו. אחרת דלגו.">
               <input
                 className={inputClass}
                 type="number"
@@ -434,8 +492,11 @@ export function ProfileWizard() {
                 }
                 placeholder="אופציונלי"
               />
-            </Field>
-            <Field field="studyLoad" label="היקף לימודים" hint="מלגות רבות דורשות כ־60% משרה או 12 שעות שבועיות. אפשר גם למלא נק״ז למטה.">
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="studyLoad" label="היקף לימודים" hint="מלגות רבות דורשות כ־60% משרה או 12 שעות שבועיות. אפשר גם למלא נק״ז למטה.">
               <select
                 className={inputClass}
                 value={profile.studyLoad ?? ""}
@@ -447,8 +508,10 @@ export function ProfileWizard() {
                 <option value="full">היקף מלא</option>
                 <option value="partial">היקף חלקי</option>
               </select>
-            </Field>
-            <Field
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
               field="weeklyHours"
               label="שעות שבועיות / נק״ז (אם ידוע)"
               hint="מלגת שכונות דרום בת״א ומלגת דיקן ספיר דורשות 10 שעות. היקף מלא נגזר מ־12 ומעלה."
@@ -466,9 +529,11 @@ export function ProfileWizard() {
                 placeholder="אופציונלי"
               />
               <SkipButton onClick={() => patch({ weeklyHours: null })} />
-            </Field>
+            </UnlockField>
             {showMechina ? (
-              <Field
+              <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
                 field="completedMechina"
                 label="האם סיימתם מכינה קדם-אקדמית?"
                 hint="נדרש למלגות ייעודיות כמו ייעוד 46. אם תדלגו — המלגה תופיע תחת «חסר פרט»."
@@ -478,14 +543,17 @@ export function ProfileWizard() {
                   value={profile.completedMechina}
                   onChange={(v) => patch({ completedMechina: v })}
                 />
-              </Field>
+              </UnlockField>
             ) : null}
           </>
         )}
 
         {step === 1 && (
           <>
-            <Field field="cityOfResidence" label="עיר מגורים נוכחית">
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="cityOfResidence" label="עיר מגורים נוכחית">
               <CityPicker
                 id="city-residence"
                 value={profile.cityOfResidence ?? ""}
@@ -499,8 +567,11 @@ export function ProfileWizard() {
                 placeholder="הקלידו לחיפוש, למשל באר שבע"
               />
               <SkipButton onClick={() => patch({ cityOfResidence: null, neighborhood: null })} />
-            </Field>
-            <Field field="hometown" label="עיר מוצא / גדלתם בה">
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="hometown" label="עיר מוצא / גדלתם בה">
               <CityPicker
                 id="city-hometown"
                 value={profile.hometown ?? ""}
@@ -508,9 +579,11 @@ export function ProfileWizard() {
                 suggestions={CITY_SUGGESTIONS}
                 placeholder="אופציונלי"
               />
-            </Field>
+            </UnlockField>
             {needNeighborhood ? (
-              <Field
+              <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
                 field="neighborhood"
                 label="שכונה / רובע"
                 hint={
@@ -527,9 +600,11 @@ export function ProfileWizard() {
                   placeholder="למשל שפירא / יפו"
                 />
                 <SkipButton onClick={() => patch({ neighborhood: null })} />
-              </Field>
+              </UnlockField>
             ) : null}
-            <Field
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
               field="peripheryResidence"
               label="האם אתם גרים בפריפריה חברתית או גיאוגרפית?"
               hint="למלגות קרנות פרטיות (אייסף, גרוס ועוד). אם לא בטוחים — דלגו. הדגל המפורש גובר על העיר. זו אינה קביעה משפטית של אזור עדיפות לאומית."
@@ -539,15 +614,20 @@ export function ProfileWizard() {
                 value={profile.peripheryResidence}
                 onChange={(v) => patch({ peripheryResidence: v })}
               />
-            </Field>
-            <Field field="peripheryHometown" label="האם המוצא הוא מפריפריה?">
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="peripheryHometown" label="האם המוצא הוא מפריפריה?">
               <TriStateSelect
                 className={inputClass}
                 value={profile.peripheryHometown}
                 onChange={(v) => patch({ peripheryHometown: v })}
               />
-            </Field>
-            <Field
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
               field="nationalPriorityResidence"
               label="כתובת רשומה באזור עדיפות לאומית — 5 מתוך 6 שנים?"
               hint="נדרש לייעוד 45/46 של משרד הביטחון. לא מספיק לגור היום בעיר מסוימת, ולא לפי רשימת ערים בקטלוג. אם תדלגו — המלגות יופיעו תחת «חסר פרט» ולא כזכאות."
@@ -558,13 +638,16 @@ export function ProfileWizard() {
                 onChange={(v) => patch({ nationalPriorityResidence: v })}
                 yesLabel="כן, 5 מתוך 6 השנים שקדמו ללימודים"
               />
-            </Field>
+            </UnlockField>
           </>
         )}
 
         {step === 2 && (
           <>
-            <Field field="age" label="גיל">
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="age" label="גיל">
               <input
                 className={inputClass}
                 type="number"
@@ -574,8 +657,11 @@ export function ProfileWizard() {
                 value={profile.age ?? ""}
                 onChange={(e) => patch({ age: e.target.value === "" ? null : Number(e.target.value) })}
               />
-            </Field>
-            <Field field="gender" label="מגדר" hint="נשאל רק כי חלק מהקרנות מוגבלות לפי מגדר.">
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="gender" label="מגדר" hint="נשאל רק כי חלק מהקרנות מוגבלות לפי מגדר.">
               <select
                 className={inputClass}
                 value={profile.gender ?? ""}
@@ -588,7 +674,7 @@ export function ProfileWizard() {
                   </option>
                 ))}
               </select>
-            </Field>
+            </UnlockField>
             <fieldset id={fieldDomId("familyFlags")}>
               <legend className="text-sm font-medium">מצב משפחתי (אפשר כמה)</legend>
               <div className="mt-2 grid gap-1">
@@ -610,7 +696,9 @@ export function ProfileWizard() {
               </div>
               <SkipButton onClick={() => patch({ familyFlags: null })} />
             </fieldset>
-            <Field
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
               field="willingToVolunteer"
               label="האם אתם פתוחים להתנדבות כחלק ממלגה?"
               hint="מלגות כמו פר״ח דורשות חונכות. אם תדלגו — המלגות האלה יופיעו תחת «חסר פרט»."
@@ -622,7 +710,7 @@ export function ProfileWizard() {
                 yesLabel="כן, פתוח/ה להתנדבות"
                 noLabel="לא מעוניין/ת במלגות התנדבות"
               />
-            </Field>
+            </UnlockField>
             <fieldset id={fieldDomId("outstanding")}>
               <legend className="text-sm font-medium">פעילות בולטת</legend>
               <div className="mt-2 grid gap-1">
@@ -648,7 +736,10 @@ export function ProfileWizard() {
 
         {step === 3 && (
           <>
-            <Field field="service" label="שירות צבאי / לאומי / אזרחי">
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="service" label="שירות צבאי / לאומי / אזרחי">
               <select
                 className={inputClass}
                 value={profile.service ?? ""}
@@ -663,18 +754,24 @@ export function ProfileWizard() {
                   </option>
                 ))}
               </select>
-            </Field>
+            </UnlockField>
             {showServiceDetails ? (
               <>
-                <Field field="combatRole" label="שירות במערך לוחם או תומך לחימה?">
+                <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="combatRole" label="שירות במערך לוחם או תומך לחימה?">
                   <TriStateSelect
                     className={inputClass}
                     value={profile.combatRole}
                     onChange={(v) => patch({ combatRole: v })}
                     unknownLabel="לא יודע/ת / לא רלוונטי"
                   />
-                </Field>
-                <Field field="yearsSinceDischarge" label="כמה שנים עברו מאז השחרור?">
+                </UnlockField>
+                <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="yearsSinceDischarge" label="כמה שנים עברו מאז השחרור?">
                   <input
                     className={inputClass}
                     type="number"
@@ -688,14 +785,17 @@ export function ProfileWizard() {
                       })
                     }
                   />
-                </Field>
-                <Field field="loneSoldier" label="האם שירתתם כחייל/ת בודד/ה?">
+                </UnlockField>
+                <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="loneSoldier" label="האם שירתתם כחייל/ת בודד/ה?">
                   <TriStateSelect
                     className={inputClass}
                     value={profile.loneSoldier}
                     onChange={(v) => patch({ loneSoldier: v })}
                   />
-                </Field>
+                </UnlockField>
               </>
             ) : (
               <p className="text-sm text-ink-soft">
@@ -703,7 +803,10 @@ export function ProfileWizard() {
               </p>
             )}
             {showReservist ? (
-              <Field field="reservistDaysLastYear" label="ימי מילואים בשנה האחרונה (בערך)">
+              <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="reservistDaysLastYear" label="ימי מילואים בשנה האחרונה (בערך)">
                 <input
                   className={inputClass}
                   type="number"
@@ -716,7 +819,7 @@ export function ProfileWizard() {
                     })
                   }
                 />
-              </Field>
+              </UnlockField>
             ) : null}
           </>
         )}
@@ -725,6 +828,9 @@ export function ProfileWizard() {
           <>
             <fieldset id={fieldDomId("sectors")}>
               <legend className="text-sm font-medium">שיוך קהילתי</legend>
+              {fieldUnlock("sectors") ? (
+                <p className="mt-1 text-sm text-info">מלא שדה זה ותפתח ~{fieldUnlock("sectors")} מלגות</p>
+              ) : null}
               <p className="mt-1 text-sm text-ink-soft leading-relaxed">
                 שואלים רק כי קיימות מלגות ייעודיות (למשל אירתקאא, טנא, מרום). השדה אופציונלי לחלוטין.
                 אם תדלגו — מלגות שדורשות שיוך יופיעו תחת «חסר פרט לאישור».
@@ -748,15 +854,21 @@ export function ProfileWizard() {
               </div>
               <SkipButton onClick={() => patch({ sectors: null })} />
             </fieldset>
-            <Field field="isOleh" label="עולה חדש/ה או בעל/ת סטטוס עולה?">
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="isOleh" label="עולה חדש/ה או בעל/ת סטטוס עולה?">
               <TriStateSelect
                 className={inputClass}
                 value={profile.isOleh}
                 onChange={(v) => onOlehChange(v)}
               />
-            </Field>
+            </UnlockField>
             {showYearsInIsrael ? (
-              <Field field="yearsInIsrael" label="שנים בארץ">
+              <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="yearsInIsrael" label="שנים בארץ">
                 <input
                   className={inputClass}
                   type="number"
@@ -768,16 +880,21 @@ export function ProfileWizard() {
                     patch({ yearsInIsrael: e.target.value === "" ? null : Number(e.target.value) })
                   }
                 />
-              </Field>
+              </UnlockField>
             ) : null}
-            <Field field="firstGeneration" label="דור ראשון להשכלה גבוהה?">
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="firstGeneration" label="דור ראשון להשכלה גבוהה?">
               <TriStateSelect
                 className={inputClass}
                 value={profile.firstGeneration}
                 onChange={(v) => patch({ firstGeneration: v })}
               />
-            </Field>
-            <Field
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
               field="hasDisability"
               label="מוגבלות מוכרת?"
               hint="למשל נכות רפואית לצורך שיקום מקצועי. השדה רגיש ואופציונלי."
@@ -793,9 +910,11 @@ export function ProfileWizard() {
                 }
                 unknownLabel="מעדיף/ה לא לציין"
               />
-            </Field>
+            </UnlockField>
             {profile.hasDisability === true ? (
-              <Field
+              <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
                 field="disabilityRecognizedBy"
                 label="מי מכיר במוגבלות / במסלול השיקום?"
                 hint="נדרש להבחין בין שיקום ביטוח לאומי, נכי צה״ל, נפגעי איבה ונפגעי עבודה. בלי הבחנה — המלגות יופיעו תחת «חסר פרט»."
@@ -817,9 +936,11 @@ export function ProfileWizard() {
                     </option>
                   ))}
                 </select>
-              </Field>
+              </UnlockField>
             ) : null}
-            <Field
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
               field="householdSize"
               label="כמה נפשות במשק הבית?"
               hint={HOUSEHOLD_INCOME_HINT_HE}
@@ -836,8 +957,11 @@ export function ProfileWizard() {
                 }
               />
               <SkipButton onClick={() => patch({ householdSize: null })} />
-            </Field>
-            <Field field="householdIncomeBand" label="הכנסת משק הבית לחודש (סדר גודל)">
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
+              field="householdIncomeBand" label="הכנסת משק הבית לחודש (סדר גודל)">
               <select
                 className={inputClass}
                 value={profile.householdIncomeBand ?? ""}
@@ -856,7 +980,7 @@ export function ProfileWizard() {
                   </option>
                 ))}
               </select>
-            </Field>
+            </UnlockField>
             {derivedIncome ? (
               <p className="text-sm text-ink-soft">
                 הערכה פנימית להכנסה לנפש: {fieldLabelHe(derivedIncome)}. זו אינה נוסחת הקרן.
@@ -937,6 +1061,9 @@ export function ProfileWizard() {
                     className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line/60 pb-2"
                   >
                     <dt className="text-ink-soft">{fieldLabelHe(field)}</dt>
+                    {fieldUnlock(field) ? (
+                      <dd className="w-full text-info">מלא שדה זה ותפתח ~{fieldUnlock(field)} מלגות</dd>
+                    ) : null}
                     <button
                       type="button"
                       className="min-h-11 text-sm text-forest underline underline-offset-4"

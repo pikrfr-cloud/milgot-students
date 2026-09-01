@@ -40,6 +40,15 @@ export const FIELD_STEP: Partial<Record<ProfileField, number>> = {
   incomeBand: 4,
 };
 
+/** Five fields for the fast report («דוח מהיר»). */
+export const FAST_REPORT_FIELDS: ProfileField[] = [
+  "institution",
+  "degreeLevel",
+  "yearOfStudy",
+  "cityOfResidence",
+  "service",
+];
+
 export const HIGH_IMPACT_FIELDS: ProfileField[] = [
   "institution",
   "degreeLevel",

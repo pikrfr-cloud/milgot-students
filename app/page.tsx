@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CATALOG_STATS } from "@/data/scholarships";
 import { CoverageNote } from "@/components/CoverageNote";
+import { WaitlistForm } from "@/components/WaitlistForm";
 import { HE } from "@/lib/i18n/he";
 
 export const metadata: Metadata = {
@@ -28,10 +29,16 @@ export default function HomePage() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/profile"
+              href="/profile/fast"
               className="rounded-full bg-clay px-6 py-3 text-white font-medium hover:bg-clay-deep"
             >
-              להתחיל את הפרופיל
+              {HE.actions.fastReport}
+            </Link>
+            <Link
+              href="/profile"
+              className="rounded-full border border-white/30 px-6 py-3 text-white hover:bg-white/10"
+            >
+              {HE.actions.completeProfile}
             </Link>
             <Link
               href="/catalog"
@@ -84,12 +91,16 @@ export default function HomePage() {
           </ol>
           <CoverageNote className="mt-8" />
           <Link
-            href="/profile"
+            href="/profile/fast"
             className="mt-6 inline-flex rounded-full bg-forest px-6 py-3 text-white hover:bg-forest-deep"
           >
-            מילוי הפרופיל
+            {HE.actions.fastReport}
           </Link>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-16">
+        <WaitlistForm />
       </section>
     </div>
   );

@@ -2,16 +2,44 @@ import type { StudentProfile } from "./types";
 import { parseStudentProfile } from "./profile-schema";
 
 export const PROFILE_STORAGE_KEY = "milgot-profile-v1";
+/** Envelope version in localStorage. Bump when adding fields; migrate instead of wiping. */
+export const PROFILE_SCHEMA_VERSION = 2;
 
 export const emptyProfile: StudentProfile = {};
+
+export type StoredProfileEnvelope = {
+  schemaVersion: number;
+  profile: StudentProfile;
+};
+
+function looksLikeEnvelope(data: unknown): data is { profile: unknown } {
+  if (!data || typeof data !== "object") return false;
+  const o = data as Record<string, unknown>;
+  return "profile" in o && ("schemaVersion" in o || "version" in o || "exportedAt" in o);
+}
+
+/**
+ * Load a stored profile without wiping unknown/new fields.
+ * v1 was a raw StudentProfile JSON; v2+ is `{ schemaVersion, profile }`.
+ */
+export function migrateStoredProfile(data: unknown): StudentProfile {
+  if (data == null) return {};
+  if (looksLikeEnvelope(data)) {
+    return parseStudentProfile(data.profile) ?? {};
+  }
+  return parseStudentProfile(data) ?? {};
+}
+
+export function serializeProfile(profile: StudentProfile): StoredProfileEnvelope {
+  return { schemaVersion: PROFILE_SCHEMA_VERSION, profile };
+}
 
 export function loadProfile(): StudentProfile {
   if (typeof window === "undefined") return {};
   try {
     const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
     if (!raw) return {};
-    const data = JSON.parse(raw) as unknown;
-    return parseStudentProfile(data) ?? {};
+    return migrateStoredProfile(JSON.parse(raw) as unknown);
   } catch {
     return {};
   }
@@ -20,7 +48,7 @@ export function loadProfile(): StudentProfile {
 export function saveProfile(profile: StudentProfile): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(serializeProfile(profile)));
   } catch {
     // quota / private mode
   }
@@ -36,16 +64,21 @@ export function clearProfile(): void {
 }
 
 export function exportProfileJson(profile: StudentProfile): string {
-  return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), profile }, null, 2);
+  return JSON.stringify(
+    {
+      schemaVersion: PROFILE_SCHEMA_VERSION,
+      version: PROFILE_SCHEMA_VERSION,
+      exportedAt: new Date().toISOString(),
+      profile,
+    },
+    null,
+    2,
+  );
 }
 
 export function parseImportedProfile(raw: string): StudentProfile | null {
   try {
-    const data = JSON.parse(raw) as { profile?: unknown } | unknown;
-    if (data && typeof data === "object" && "profile" in (data as object)) {
-      return parseStudentProfile((data as { profile: unknown }).profile);
-    }
-    return parseStudentProfile(data);
+    return migrateStoredProfile(JSON.parse(raw) as unknown);
   } catch {
     return null;
   }

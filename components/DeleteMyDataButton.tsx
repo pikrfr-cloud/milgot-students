@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { HE } from "@/lib/i18n/he";
 import { clearProfile } from "@/lib/profile-storage";
 import { clearTracking } from "@/lib/tracking";
+import { clearWaitlist } from "@/lib/waitlist";
 
 export function DeleteMyDataButton() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export function DeleteMyDataButton() {
         if (!window.confirm(HE.profile.deleteConfirm)) return;
         clearProfile();
         clearTracking();
+        clearWaitlist();
         router.push("/");
       }}
     >

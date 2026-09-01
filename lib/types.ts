@@ -369,6 +369,10 @@ export type TrackingStatus = (typeof TRACKING_STATUSES)[number];
 export type TrackingEntry = {
   status: TrackingStatus;
   updatedAt: string;
+  /** Required-document texts the student checked off (localStorage only). */
+  documentsChecked?: string[];
+  /** Amount received, only meaningful when status is `accepted` (localStorage only). */
+  acceptedAmountIls?: number | null;
 };
 
 export type ScholarshipTracking = Record<string, TrackingEntry>;

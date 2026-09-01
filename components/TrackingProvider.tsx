@@ -2,11 +2,18 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { ScholarshipTracking, TrackingStatus } from "@/lib/types";
-import { loadTracking, setTrackingStatus } from "@/lib/tracking";
+import {
+  loadTracking,
+  setTrackingAcceptedAmount,
+  setTrackingDocuments,
+  setTrackingStatus,
+} from "@/lib/tracking";
 
 type TrackingContextValue = {
   tracking: ScholarshipTracking;
   setStatus: (id: string, status: TrackingStatus | null) => void;
+  setDocuments: (id: string, documentsChecked: string[]) => void;
+  setAcceptedAmount: (id: string, amount: number | null) => void;
   ready: boolean;
 };
 
@@ -26,7 +33,18 @@ export function TrackingProvider({ children }: { children: ReactNode }) {
     setTracking((prev) => setTrackingStatus(prev, id, status));
   }, []);
 
-  const value = useMemo(() => ({ tracking, setStatus, ready }), [tracking, setStatus, ready]);
+  const setDocuments = useCallback((id: string, documentsChecked: string[]) => {
+    setTracking((prev) => setTrackingDocuments(prev, id, documentsChecked));
+  }, []);
+
+  const setAcceptedAmount = useCallback((id: string, amount: number | null) => {
+    setTracking((prev) => setTrackingAcceptedAmount(prev, id, amount));
+  }, []);
+
+  const value = useMemo(
+    () => ({ tracking, setStatus, setDocuments, setAcceptedAmount, ready }),
+    [tracking, setStatus, setDocuments, setAcceptedAmount, ready],
+  );
 
   return <TrackingContext.Provider value={value}>{children}</TrackingContext.Provider>;
 }
@@ -37,6 +55,8 @@ export function useTracking(): TrackingContextValue {
     return {
       tracking: {},
       setStatus: () => {},
+      setDocuments: () => {},
+      setAcceptedAmount: () => {},
       ready: false,
     };
   }
