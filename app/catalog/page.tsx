@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CoverageNote } from "@/components/CoverageNote";
+import { CatalogAgeBanner } from "@/components/CatalogAgeBanner";
 import { CATALOG_STATS } from "@/data/scholarships";
 import { CatalogExplorer } from "@/components/CatalogExplorer";
 import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
@@ -19,6 +20,7 @@ export default function CatalogPage() {
         הומצאו מלגות.
       </p>
       <CoverageNote className="mt-3" />
+      <CatalogAgeBanner className="mt-3" />
       <CatalogExplorer scholarships={SCHOLARSHIPS} tips={TIPS} />
     </div>
   );

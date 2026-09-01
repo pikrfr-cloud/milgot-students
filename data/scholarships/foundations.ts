@@ -63,6 +63,7 @@ export const FOUNDATIONS: Scholarship[] = [
       date: "2026-12-11",
       kind: "annual_window",
       uncertain: true,
+      opensAt: "2026-09-15",
     }),
     whoItsForHe:
       "חיילים משוחררים (או מסיימי שירות לאומי/אזרחי) עד 5 שנים מהשחרור, הלומדים 12 שעות שבועיות לפחות, שמימשו חלק מהפיקדון, ואינם ממומנים במלואם ממקור אחר. אוכלוסיות יעד: פריפריה, חיילים בודדים, החברה הערבית/דרוזית/צ׳רקסית, חרדים, יוצאי אתיופיה.",
@@ -129,6 +130,7 @@ export const FOUNDATIONS: Scholarship[] = [
     applyUrl: "https://www.rhcf.org.il/",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.rhcf.org.il/"],
+    treatment: "selective",
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "willingToVolunteer" },

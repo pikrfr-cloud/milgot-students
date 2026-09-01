@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CATALOG_STATS } from "@/data/scholarships";
 import { HE } from "@/lib/i18n/he";
+import { ExternalLink } from "@/components/ExternalLink";
 
 export function SiteFooter() {
   return (
@@ -11,6 +12,13 @@ export function SiteFooter() {
           <p className="mt-2 text-white/75 leading-relaxed">
             {HE.legal.notOfficial}
           </p>
+          <p className="mt-2 text-white/75 leading-relaxed">{HE.legal.contactGithub}</p>
+          <ExternalLink
+            className="mt-2 inline-block underline underline-offset-4 text-white/90 ltr-isolate"
+            href={HE.legal.githubRepoUrl}
+          >
+            GitHub
+          </ExternalLink>
         </div>
         <div>
           <p className="font-medium">פרטיות</p>

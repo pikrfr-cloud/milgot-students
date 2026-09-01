@@ -20,11 +20,15 @@ export const HE = {
   },
 
   buckets: {
-    eligible: "זכאים עכשיו",
+    eligible: "עומדים בתנאי הסף",
+    eligibleHint: "התנאים שבקטלוג מתקיימים — לא אישור זכייה ולא הגשה בשמכם.",
+    selective: "מיון תחרותי",
     closedCycle: "נסגר למחזור זה",
     closedCycleLong: "נסגר למחזור זה — מתאים למחזור הבא",
     needInfo: "חסר פרט לאישור",
     nearMiss: "כמעט זכאים",
+    checkAtInstitution: "לבדוק במוסד",
+    checkAtInstitutionLong: "יש לבדוק במוסד/ברשות",
     ineligible: "לא זכאים",
     myList: "הרשימה שלי",
     tips: "טיפים והפניות",
@@ -72,6 +76,10 @@ export const HE = {
     iphonePrint: "באייפון: שתפו → הדפסה, או בחרו «שמירה כ‑PDF» בתיבת ההדפסה.",
     afterFilter: " (לפי הסינון הנוכחי)",
     printSummary: "סיכום להדפסה",
+    urgentTitle: "הדחופות ביותר להגשה",
+    urgentNone: "אין כרגע מלגות עם מועד הגשה מפורסם שעדיין פתוח.",
+    fillFieldUnlock: "מלא שדה {field} ותפתח ~{n} מלגות",
+    catalogAge: "הקטלוג אומת לפני {n} חודשים",
   },
 
   legal: {
@@ -79,8 +87,12 @@ export const HE = {
       "הדוח אינו החלטת זכאות רשמית של הקרן או של רשות. תמיד יש לאמת באתר המלגה לפני הגשה.",
     localOnly: "הנתונים נשמרים ב־localStorage במכשיר זה בלבד ואינם נשלחים לשרת.",
     deletionRight: "אפשר למחוק את כל הנתונים השמורים במכשיר בכל עת.",
-    todoBusiness:
-      "TODO(human): למלא שם עוסק / עמותה, ח.פ. אם קיים, וכתובת דוא״ל ליצירת קשר — בלי להמציא מזהה.",
+    identityUnpublished:
+      "פרטי זהות של מפעיל האתר וכתובת דוא״ל ליצירת קשר עדיין לא פורסמו. אין חשבון משתמש, והנתונים נשארים במכשיר זה בלבד.",
+    githubRepoUrl: "https://github.com/pikrfr-cloud/milgot-students",
+    githubIssuesUrl: "https://github.com/pikrfr-cloud/milgot-students/issues",
+    contactGithub:
+      "פניות, דיווחי תקלות ונגישות: Issues במאגר GitHub הציבורי. פרטי זהות של המפעיל עדיין לא פורסמו, ואין דוא״ל באתר.",
   },
 
   errors: {

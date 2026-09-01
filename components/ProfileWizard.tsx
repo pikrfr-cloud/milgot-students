@@ -38,6 +38,7 @@ import { TriStateSelect } from "@/components/TriStateSelect";
 import { DeleteMyDataButton } from "@/components/DeleteMyDataButton";
 import { HE } from "@/lib/i18n/he";
 import { matchAll } from "@/lib/matcher";
+import { missingFieldUnlocks } from "@/lib/match-insights";
 import { SCHOLARSHIPS } from "@/data/scholarships";
 import { DISABILITY_AUTHORITIES } from "@/lib/types";
 
@@ -192,18 +193,7 @@ export function ProfileWizard() {
   const hints = validationHints(profile);
   const topUnblock = useMemo(() => {
     if (step !== 5) return [];
-    const matches = matchAll(SCHOLARSHIPS, profile);
-    const counts = new Map<ProfileField, number>();
-    for (const m of matches) {
-      if (m.bucket !== "needInfo") continue;
-      const seen = new Set<ProfileField>();
-      for (const c of m.unknown) {
-        if (!c.field || seen.has(c.field)) continue;
-        seen.add(c.field);
-        counts.set(c.field, (counts.get(c.field) ?? 0) + 1);
-      }
-    }
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+    return missingFieldUnlocks(matchAll(SCHOLARSHIPS, profile)).slice(0, 3);
   }, [profile, step]);
 
   const filledFields = WIZARD_FIELDS.filter((f) => {
@@ -893,7 +883,7 @@ export function ProfileWizard() {
               <div className="rounded-2xl bg-info/5 p-4 text-sm">
                 <p className="font-medium">{HE.review.topUnblock}</p>
                 <ul className="mt-2 space-y-1">
-                  {topUnblock.map(([field, n]) => (
+                  {topUnblock.map(({ field, count }) => (
                     <li key={field}>
                       <button
                         type="button"
@@ -902,7 +892,7 @@ export function ProfileWizard() {
                       >
                         {fieldLabelHe(field)}
                       </button>
-                      {` — ${n} מלגות`}
+                      {` — ${count} מלגות`}
                     </li>
                   ))}
                 </ul>

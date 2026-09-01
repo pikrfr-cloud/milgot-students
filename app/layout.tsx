@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     template: `%s · ${HE.siteName}`,
   },
   description:
-    "ממלאים פרופיל פעם אחת ומקבלים דוח מפורט: כל המלגות שעומדים בתנאיהן, מה חסר לאישור, ומה כמעט מתאים. בלי התחברות, הנתונים נשארים במכשיר.",
+    "ממלאים פרופיל פעם אחת ומקבלים דוח מול הקטלוג: מי עומד בתנאי הסף, מה חסר לאישור, ומה כמעט מתאים. בלי התחברות, הנתונים נשארים במכשיר.",
   applicationName: HE.siteName,
   icons: { icon: "/milgot-students/favicon.svg" },
   openGraph: {

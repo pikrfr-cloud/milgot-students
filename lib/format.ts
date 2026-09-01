@@ -95,6 +95,25 @@ export function isDeadlineClosed(deadline: Deadline, asOf: Date = new Date()): b
   return deadlineStatus(deadline, asOf).kind === "closed";
 }
 
+const CATALOG_STALE_DAYS = 60;
+
+/** Quiet banner when catalog lastVerified (YYYY-MM or YYYY-MM-DD) is older than 60 days. */
+export function catalogAgeBanner(lastVerified: string, asOf: Date = new Date()): string | null {
+  const iso = /^\d{4}-\d{2}$/.test(lastVerified) ? `${lastVerified}-01` : lastVerified;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+  const daysOld = -daysUntilIsoDate(iso, asOf);
+  if (daysOld <= CATALOG_STALE_DAYS) return null;
+  const months = Math.max(1, Math.round(daysOld / 30));
+  return `הקטלוג אומת לפני ${months} חודשים`;
+}
+
+/** ICS is for a dated window that is currently open (or closing soon), not closed/not-yet-open. */
+export function shouldHideIcs(deadline: Deadline, asOf: Date = new Date()): boolean {
+  if (!deadline.date) return true;
+  const kind = deadlineStatus(deadline, asOf).kind;
+  return kind === "closed" || kind === "notYetOpen";
+}
+
 export function amountSortValue(amount: Amount): number | null {
   const n = amount.maxIls ?? amount.minIls;
   return n == null ? null : n;
@@ -144,17 +163,15 @@ export function matchHeadline(match: ScholarshipMatch): string {
   if (match.bucket === "closedCycle") {
     return "נסגר למחזור זה — מתאים למחזור הבא";
   }
+  if (match.bucket === "checkAtInstitution") {
+    return "יש לבדוק במוסד/ברשות";
+  }
   const treatment = match.scholarship.treatment;
   if (treatment === "scoreBased" && (match.bucket === "needInfo" || match.bucket === "eligible")) {
     return "סיכוי לפי ניקוד — לא זכאות אוטומטית";
   }
-  if (
-    (treatment === "checkAtInstitution" || treatment === "checkAtAuthority") &&
-    match.bucket === "needInfo"
-  ) {
-    return treatment === "checkAtAuthority"
-      ? "יש לבדוק ברשות המוסמכת — אין זכאות אוטומטית מהפרופיל"
-      : "יש לבדוק בדיקן / ברשות המקומית — אין תנאי סף מאומת בקטלוג";
+  if (treatment === "selective" && (match.bucket === "eligible" || match.bucket === "needInfo")) {
+    return "עומד/ת בתנאי הסף — מיון תחרותי, לא זכייה אוטומטית";
   }
   switch (match.bucket) {
     case "eligible":

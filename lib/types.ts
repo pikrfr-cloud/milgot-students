@@ -124,6 +124,7 @@ export type ScholarshipScope = (typeof SCOPE_TYPES)[number];
 export const SCHOLARSHIP_TREATMENTS = [
   "standard",
   "scoreBased",
+  "selective",
   "checkAtInstitution",
   "checkAtAuthority",
 ] as const;
@@ -305,6 +306,7 @@ export type Scholarship = {
   kind?: CatalogKind;
   /**
    * `scoreBased`: never «eligible now» — award is a scored lottery/scale.
+   * `selective`: threshold may pass, but admission is competitive (interview/quota already in the record).
    * `checkAtInstitution`: skeleton dean/city-hall record; never auto-eligible.
    * `checkAtAuthority`: rehab/ministry track; never auto-eligible from a generic flag.
    */
@@ -342,7 +344,13 @@ export type RuleEval = {
   immutablePass?: boolean;
 };
 
-export type MatchBucket = "eligible" | "closedCycle" | "needInfo" | "nearMiss" | "ineligible";
+export type MatchBucket =
+  | "eligible"
+  | "closedCycle"
+  | "needInfo"
+  | "nearMiss"
+  | "checkAtInstitution"
+  | "ineligible";
 
 export type ScholarshipMatch = {
   scholarship: Scholarship;

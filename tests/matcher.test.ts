@@ -3,8 +3,9 @@ import { matchAll, matchScholarship } from "@/lib/matcher";
 import { SCHOLARSHIPS } from "@/data/scholarships";
 import { TIPS, TIP_IDS } from "@/data/tips";
 import { citiesMatch, isPeripheryCity, neighborhoodMatches } from "@/lib/cities";
-import { deadlineSortValue, deadlineStatus, isDeadlineClosed } from "@/lib/format";
+import { catalogAgeBanner, deadlineSortValue, deadlineStatus, isDeadlineClosed, matchHeadline, shouldHideIcs } from "@/lib/format";
 import { allOf, anyOf, collectInstitutionIn, deadline, not } from "@/data/scholarships/helpers";
+import { mostUrgentOpen, partialKnownAmountSum } from "@/lib/match-insights";
 import { bestSourceGrade, gradeSourceUrl, hasOfficialSource, isValidHttpUrl } from "@/lib/sources";
 import { deriveIncomeBand } from "@/lib/income";
 import { INSTITUTIONS } from "@/lib/institutions";
@@ -298,14 +299,14 @@ describe("Haredi college student", () => {
   it("is eligible for Tena and not Irtikaa; dean skeleton is check-at-institution", () => {
     expect(bucketOf(harediCollege, "tena")).toBe("eligible");
     expect(bucketOf(harediCollege, "irtikaa")).not.toBe("eligible");
-    expect(bucketOf(harediCollege, "ono-dean")).toBe("needInfo");
+    expect(bucketOf(harediCollege, "ono-dean")).toBe("checkAtInstitution");
     expect(TIPS.some((t) => t.id === "aluma-haredi-support")).toBe(true);
   });
 });
 
 describe("oleh at Hebrew University", () => {
   it("matches HIAS and HUJI aid; Student Authority is check-at-authority not a fake age cap", () => {
-    expect(bucketOf(olehStudent, "olim-student-authority")).toBe("needInfo");
+    expect(bucketOf(olehStudent, "olim-student-authority")).toBe("checkAtInstitution");
     expect(bucketOf(olehStudent, "hias-olim")).toBe("eligible");
     expect(bucketOf(olehStudent, "marom")).not.toBe("eligible");
     expect(bucketOf(olehStudent, "huji-financial-aid")).toBe("eligible");
@@ -339,24 +340,25 @@ describe("ordinary Colman BA year-2 profile near-miss cap", () => {
     const matches = matchAll(SCHOLARSHIPS, ordinaryColmanProfile);
     const near = matches.filter((m) => m.bucket === "nearMiss");
     const ids = near.map((m) => m.scholarship.id).sort();
-    expect(ids).toEqual([
-      "eilim",
-      "iron-swords-reservist",
-      "nuis-community",
-      "perach",
-      "perach-reserves",
-      "reservist-tuition-grant",
-      "sahlav",
-    ]);
+    expect(ids).toEqual(["eilim", "nuis-community", "perach", "sahlav"]);
     for (const m of near) {
       expect(m.failed.some((c) => c.field === "fieldOfStudy")).toBe(false);
       expect(m.eval.immutableFailCount).toBe(0);
     }
   });
 
+  it("sends 0 reservist days to ineligible for miluim grants (immutable), not near-miss", () => {
+    for (const id of ["iron-swords-reservist", "perach-reserves", "reservist-tuition-grant"] as const) {
+      const match = matchScholarship(byId(id), ordinaryColmanProfile);
+      expect(match.bucket, id).toBe("ineligible");
+      expect(match.eval.immutableFailCount, id).toBeGreaterThan(0);
+      expect(match.failed.some((c) => c.field === "reservistDaysLastYear"), id).toBe(true);
+    }
+  });
+
   it("does not treat colman dean skeleton or rishon city-hall as eligible now", () => {
-    expect(bucketOf(ordinaryColmanProfile, "colman-aid")).toBe("needInfo");
-    expect(bucketOf(ordinaryColmanProfile, "rishon-muni")).toBe("needInfo");
+    expect(bucketOf(ordinaryColmanProfile, "colman-aid")).toBe("checkAtInstitution");
+    expect(bucketOf(ordinaryColmanProfile, "rishon-muni")).toBe("checkAtInstitution");
   });
 
   it("sends wrong-institution and wrong-community failures to ineligible", () => {
@@ -792,5 +794,176 @@ describe("disabilityRecognizedBy discriminator", () => {
         "bituach-leumi-rehab",
       ),
     ).toBe("ineligible");
+  });
+});
+
+describe("TA-south vs Beer Sheva is ineligible", () => {
+  const asOf = new Date("2026-09-01T12:00:00+03:00");
+
+  it("does not ask for city of residence when Beer Sheva already fails cityIn", () => {
+    const match = matchScholarship(
+      byId("telaviv-south-neighborhoods"),
+      { cityOfResidence: "באר שבע" },
+      { asOf },
+    );
+    expect(match.bucket).toBe("ineligible");
+    expect(match.eval.status).toBe("fail");
+    expect(match.eval.immutableFailCount).toBeGreaterThan(0);
+    expect(match.unknown.some((c) => c.field === "cityOfResidence")).toBe(false);
+    expect(match.unknown.some((c) => c.detailHe.includes("חסר במפורט: עיר מגורים"))).toBe(false);
+    expect(match.failed.some((c) => c.field === "cityOfResidence")).toBe(true);
+  });
+});
+
+describe("allOf fail + unknown is ineligible", () => {
+  it("treats immutable fail plus an unknown sibling as ineligible, not needInfo", () => {
+    const sch = {
+      ...byId("perach"),
+      id: "synthetic-allof-fail-unknown",
+      treatment: undefined,
+      eligibility: allOf(
+        { type: "cityIn", values: ["תל אביב-יפו"] },
+        { type: "neighborhoodIn", values: ["שפירא"] },
+      ),
+    };
+    const match = matchScholarship(sch, { cityOfResidence: "באר שבע" });
+    expect(match.bucket).toBe("ineligible");
+    expect(match.eval.status).toBe("fail");
+    expect(match.eval.immutableFailCount).toBeGreaterThan(0);
+    expect(match.unknown.some((c) => c.detailHe.includes("חסר במפורט: עיר מגורים"))).toBe(false);
+  });
+});
+
+describe("Gruss window is notYetOpen on 2026-09-01", () => {
+  const asOf = new Date("2026-09-01T12:00:00+03:00");
+
+  it("sets opensAt 2026-09-15 so deadlineStatus is notYetOpen, not open", () => {
+    const gruss = byId("gruss");
+    expect(gruss.deadline.opensAt).toBe("2026-09-15");
+    expect(gruss.deadline.date).toBe("2026-12-11");
+    expect(deadlineStatus(gruss.deadline, asOf).kind).toBe("notYetOpen");
+    expect(deadlineStatus(gruss.deadline, asOf).kind).not.toBe("open");
+    expect(shouldHideIcs(gruss.deadline, asOf)).toBe(true);
+  });
+});
+
+describe("thin records go to checkAtInstitution, not blank needInfo", () => {
+  it("rebuckets beer-sheva-muni, wizo-students, and dean shells when identity passes", () => {
+    expect(
+      bucketOf(
+        { ...ordinaryColmanProfile, cityOfResidence: "באר שבע", hometown: "באר שבע" },
+        "beer-sheva-muni",
+      ),
+    ).toBe("checkAtInstitution");
+    expect(bucketOf({ ...ordinaryColmanProfile, gender: "female" }, "wizo-students")).toBe(
+      "checkAtInstitution",
+    );
+    expect(bucketOf(harediCollege, "ono-dean")).toBe("checkAtInstitution");
+    const dean = matchScholarship(byId("ono-dean"), harediCollege);
+    expect(dean.unknown.some((c) => c.field)).toBe(false);
+    expect(matchHeadline(dean)).toBe("יש לבדוק במוסד/ברשות");
+  });
+});
+
+describe("needInfo cards always name a missing field", () => {
+  it("requires a named field unless the record is score-based", () => {
+    const profiles: StudentProfile[] = [
+      ordinaryColmanProfile,
+      tauPeripheryFirstYear,
+      { institution: "tau" },
+      { cityOfResidence: "באר שבע" },
+    ];
+    for (const profile of profiles) {
+      const matches = matchAll(SCHOLARSHIPS, profile);
+      for (const m of matches.filter((x) => x.bucket === "needInfo")) {
+        if (m.scholarship.treatment === "scoreBased") {
+          expect(m.unknown.length, m.scholarship.id).toBeGreaterThan(0);
+          continue;
+        }
+        expect(
+          m.unknown.some((c) => !!c.field),
+          `${m.scholarship.id} needInfo without a field`,
+        ).toBe(true);
+      }
+    }
+  });
+});
+
+describe("mostUrgentOpen uses real published dates", () => {
+  it("picks soonest open/closingSoon among actionable buckets only", () => {
+    const asOf = new Date("2026-09-20T12:00:00+03:00");
+    const matches = matchAll(SCHOLARSHIPS, { ...ordinaryColmanProfile, willingToVolunteer: true }, { asOf });
+    const urgent = mostUrgentOpen(matches, asOf, 3);
+    expect(urgent.length).toBeLessThanOrEqual(3);
+    for (const m of urgent) {
+      expect(["eligible", "needInfo", "nearMiss", "checkAtInstitution"]).toContain(m.bucket);
+      const kind = deadlineStatus(m.scholarship.deadline, asOf).kind;
+      expect(["open", "closingSoon"]).toContain(kind);
+      expect(m.scholarship.deadline.date).toBeTruthy();
+    }
+    for (let i = 1; i < urgent.length; i++) {
+      expect(deadlineSortValue(urgent[i]!.scholarship.deadline, asOf)).toBeGreaterThanOrEqual(
+        deadlineSortValue(urgent[i - 1]!.scholarship.deadline, asOf),
+      );
+    }
+  });
+});
+
+describe("partialKnownAmountSum skips sparse catalogs", () => {
+  it("returns null when too few eligible/needInfo records have a known maxIls", () => {
+    const matches = matchAll(SCHOLARSHIPS, { institution: "colman" });
+    const numbered = matches.filter(
+      (m) =>
+        (m.bucket === "eligible" || m.bucket === "needInfo") &&
+        m.scholarship.amounts.maxIls != null &&
+        !m.scholarship.amounts.uncertain,
+    );
+    if (numbered.length < 3) {
+      expect(partialKnownAmountSum(matches)).toBeNull();
+    } else {
+      const result = partialKnownAmountSum(matches);
+      expect(result).not.toBeNull();
+      expect(result!.counted).toBe(numbered.length);
+    }
+  });
+});
+
+describe("catalog age banner", () => {
+  const asOf = new Date("2026-09-01T12:00:00+03:00");
+
+  it("is quiet when lastVerified is 2026-08 (under 60 days)", () => {
+    expect(catalogAgeBanner("2026-08", asOf)).toBeNull();
+  });
+
+  it("shows months when lastVerified is older than 60 days", () => {
+    expect(catalogAgeBanner("2026-06", asOf)).toBe("הקטלוג אומת לפני 3 חודשים");
+    expect(catalogAgeBanner("2026-01-15", asOf)).toMatch(/^הקטלוג אומת לפני \d+ חודשים$/);
+  });
+});
+
+describe("olim student authority is not a fake age-30 gate", () => {
+  it("uses checkAtAuthority and has no ageMax predicate", () => {
+    const s = byId("olim-student-authority");
+    expect(s.treatment).toBe("checkAtAuthority");
+    expect(JSON.stringify(s.eligibility)).not.toContain('"ageMax"');
+  });
+});
+
+describe("selective treatment only on records that already describe interviews", () => {
+  it("tags Rothschild ambassadors as selective; does not invent tags on Atidim/Gruss/Eilim", () => {
+    expect(byId("rothschild-ambassadors").treatment).toBe("selective");
+    expect(byId("rothschild-ambassadors").documentsHe.some((d) => d.includes("ראיון"))).toBe(true);
+    expect(byId("atidim-industry").treatment).not.toBe("selective");
+    expect(byId("gruss").treatment).not.toBe("selective");
+    expect(byId("eilim").treatment).not.toBe("selective");
+    expect(byId("heznek-academy").treatment).not.toBe("selective");
+    expect(byId("impact-fidf").treatment).not.toBe("selective");
+  });
+});
+
+describe("bidirectional excludes already claimed in card text", () => {
+  it("keeps yeud-44 and memadim excluding each other", () => {
+    expect(byId("yeud-44").excludes).toContain("mod-uniform-to-studies");
+    expect(byId("mod-uniform-to-studies").excludes).toContain("yeud-44");
   });
 });
