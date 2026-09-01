@@ -748,7 +748,7 @@ describe("catalog freshness", () => {
     expect(rec.deadline.opensAt).toBe("2026-09-02");
     expect(rec.deadline.date).toBeUndefined();
     expect(rec.deadline.uncertain).toBe(true);
-    expect(rec.deadline.textHe).not.toMatch(/17\.12/);
+    expect(rec.deadline.windowHe).toMatch(/נובמבר/);
     expect(deadlineStatus(rec.deadline, asOf).kind).toBe("notYetOpen");
   });
 });
