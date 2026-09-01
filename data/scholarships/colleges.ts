@@ -36,7 +36,7 @@ export const COLLEGES: Scholarship[] = [
     institutionIds: ["sapir"],
     eligibility: allOf(
       { type: "institutionIn", values: ["sapir"] },
-      { type: "studyLoadFull" },
+      { type: "weeklyHoursMin", value: 10 },
       { type: "incomeAtMost", value: "lower_middle" },
     ),
   }),

@@ -1,4 +1,4 @@
-import type { SourceGrade } from "./types";
+import type { SourceLevel } from "./types";
 
 /** Hosts that are news aggregators / commercial scholarship portals — not official. */
 const UNOFFICIAL_HOSTS = new Set([
@@ -69,6 +69,7 @@ const OFFICIAL_HOSTS = new Set([
 ]);
 
 const HOMEPAGE_PATHS = new Set(["", "/", "/he", "/en", "/he/", "/en/", "/home", "/home/", "/index.html"]);
+const LANG_SEGMENTS = new Set(["he", "en", "he-il", "en-us", "pages", "page", "home", "index.html"]);
 
 function hostnameOf(url: string): string | null {
   try {
@@ -115,42 +116,65 @@ function pathLooksLikeHomepage(pathname: string): boolean {
   return HOMEPAGE_PATHS.has(pathname) || HOMEPAGE_PATHS.has(p);
 }
 
-export function gradeSourceUrl(url: string): SourceGrade {
-  const host = hostnameOf(url);
-  if (!host) return "secondary";
-  const bare = bareHost(host);
-  if (UNOFFICIAL_HOSTS.has(host) || UNOFFICIAL_HOSTS.has(bare)) return "secondary";
-  if (SECONDARY_HOSTS.has(host) || SECONDARY_HOSTS.has(bare)) return "secondary";
-  if (!isOfficialSourceUrl(url)) return "secondary";
+/** Path segments that look like a real page, ignoring language/CMS prefixes. */
+export function significantPathDepth(pathname: string): number {
+  return pathname
+    .split("/")
+    .filter(Boolean)
+    .filter((seg) => !LANG_SEGMENTS.has(seg.toLowerCase())).length;
+}
+
+export function isValidHttpUrl(url: string): boolean {
   try {
-    const path = new URL(url).pathname;
-    if (pathLooksLikeHomepage(path)) return "homepage";
-    return "dedicated";
+    const u = new URL(url);
+    return u.protocol === "https:" || u.protocol === "http:";
   } catch {
-    return "secondary";
+    return false;
   }
 }
 
-const GRADE_RANK: Record<SourceGrade, number> = {
-  dedicated: 3,
-  homepage: 2,
-  secondary: 1,
+export function gradeSourceUrl(url: string): SourceLevel {
+  const host = hostnameOf(url);
+  if (!host) return "indirect";
+  const bare = bareHost(host);
+  if (UNOFFICIAL_HOSTS.has(host) || UNOFFICIAL_HOSTS.has(bare)) return "indirect";
+  if (SECONDARY_HOSTS.has(host) || SECONDARY_HOSTS.has(bare)) return "indirect";
+  if (!isOfficialSourceUrl(url)) return "indirect";
+  try {
+    const path = new URL(url).pathname;
+    if (pathLooksLikeHomepage(path) || significantPathDepth(path) <= 1) return "institution_site";
+    return "official_page";
+  } catch {
+    return "indirect";
+  }
+}
+
+const LEVEL_RANK: Record<SourceLevel, number> = {
+  official_page: 3,
+  institution_site: 2,
+  indirect: 1,
 };
 
-export function bestSourceGrade(urls: string[]): SourceGrade {
-  if (!urls.length) return "secondary";
+export function bestSourceLevel(urls: string[]): SourceLevel {
+  if (!urls.length) return "indirect";
   return urls.map(gradeSourceUrl).reduce((best, grade) =>
-    GRADE_RANK[grade] > GRADE_RANK[best] ? grade : best,
+    LEVEL_RANK[grade] > LEVEL_RANK[best] ? grade : best,
   );
 }
 
-export function sourceGradeLabelHe(grade: SourceGrade): string {
-  switch (grade) {
-    case "dedicated":
+/** @deprecated Use bestSourceLevel */
+export const bestSourceGrade = bestSourceLevel;
+
+export function sourceLevelLabelHe(level: SourceLevel): string {
+  switch (level) {
+    case "official_page":
       return "דף מלגה רשמי";
-    case "homepage":
+    case "institution_site":
       return "אתר הארגון";
     default:
       return "מקור משני";
   }
 }
+
+/** @deprecated Use sourceLevelLabelHe */
+export const sourceGradeLabelHe = sourceLevelLabelHe;

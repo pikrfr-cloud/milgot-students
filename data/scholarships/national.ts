@@ -92,7 +92,8 @@ export const NATIONAL: Scholarship[] = [
     deadline: deadline("פתיחה מתוכננת 3.9.2026, סגירה שפורסמה בחלק מהמוסדות: 17.12.2026", {
       date: "2026-12-17",
       kind: "annual_window",
-      windowHe: "ספטמבר–דצמבר",
+      opensAt: "2026-09-03",
+      windowHe: "3.9.2026–17.12.2026",
     }),
     whoItsForHe:
       "סטודנטים לקראת תואר באוניברסיטאות, מכללות אקדמיות, מכללות להוראה ומה״ט המוכרים, המוכנים לחונכות ילדים.",
@@ -371,8 +372,10 @@ export const NATIONAL: Scholarship[] = [
     sourceUrls: [
       "https://www.btl.gov.il/benefits/Vocational_Rehabilitation/Vocational_Rehabilitation_disabeld/Pages/Zacaut.aspx",
     ],
-    treatment: "checkAtAuthority",
-    eligibility: allOf({ type: "hasDisability" }),
+    eligibility: allOf(
+      { type: "hasDisability" },
+      { type: "disabilityRecognizedBy", values: ["btl"] },
+    ),
   }),
   s({
     id: "mod-disabled-veterans-education",
@@ -391,8 +394,11 @@ export const NATIONAL: Scholarship[] = [
     sourceUrls: [
       "https://www.gov.il/he/departments/units/rehabilitation_department",
     ],
-    treatment: "checkAtAuthority",
-    eligibility: allOf({ type: "hasDisability" }, { type: "serviceIn", values: ["idf"] }),
+    eligibility: allOf(
+      { type: "hasDisability" },
+      { type: "disabilityRecognizedBy", values: ["mod"] },
+      { type: "serviceIn", values: ["idf"] },
+    ),
   }),
   s({
     id: "reservist-tuition-grant",
@@ -470,6 +476,7 @@ export const NATIONAL: Scholarship[] = [
       "עד 100% משכר הלימוד האוניברסיטאי (תקרת תשפ״ו 12,017 ₪). במהלך התואר החזר שנתי עד 85% (10,214.45 ₪ בתשפ״ו); השלמה ל־100% בשנה האחרונה",
       { min: 10214, max: 12017 },
     ),
+    // TODO(human): לאמת סכומי תשפ״ז לממדים ללימודים כשיפורסמו — לא להמציא.
     cadence: "multi_year",
     deadline: deadline("הרשמה לתשפ״ו: 3.11.2025–31.10.2026 (הוארכה); העלאת מסמכים עד 31.10.2026", {
       date: "2026-10-31",
@@ -676,8 +683,10 @@ export const NATIONAL: Scholarship[] = [
     sourceUrls: [
       "https://www.btl.gov.il/benefits/Vocational_Rehabilitation/Vocational_Rehabilitation%20_Victims_of_%20Hostilities/Pages/default.aspx",
     ],
-    treatment: "checkAtAuthority",
-    eligibility: allOf({ type: "hasDisability" }),
+    eligibility: allOf(
+      { type: "hasDisability" },
+      { type: "disabilityRecognizedBy", values: ["hostilities"] },
+    ),
   }),
   s({
     id: "work-injury-studies",
@@ -696,8 +705,10 @@ export const NATIONAL: Scholarship[] = [
     sourceUrls: [
       "https://www.btl.gov.il/benefits/Vocational_Rehabilitation/Vocational_Rehabilitation_work_injury/Pages/bakasha.aspx",
     ],
-    treatment: "checkAtAuthority",
-    eligibility: allOf({ type: "hasDisability" }),
+    eligibility: allOf(
+      { type: "hasDisability" },
+      { type: "disabilityRecognizedBy", values: ["work_injury"] },
+    ),
   }),
   s({
     id: "kemach-derech-tzlacha",

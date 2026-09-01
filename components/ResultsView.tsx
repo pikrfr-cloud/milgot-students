@@ -9,8 +9,18 @@ import type { ScholarshipMatch, ScholarshipScope, StudentProfile } from "@/lib/t
 import { amountSortValue, deadlineSortValue } from "@/lib/format";
 import { CoverageNote } from "@/components/CoverageNote";
 import { EmptyBucket, ScholarshipCard } from "@/components/ScholarshipCard";
+import { useTracking } from "@/components/TrackingProvider";
+import { downloadCombinedIcs } from "@/lib/ics";
+import { HE } from "@/lib/i18n/he";
 
 type SortKey = "amount" | "deadline" | "name";
+
+function passesAmountFilter(match: ScholarshipMatch, minAmount: number): boolean {
+  if (minAmount <= 0) return true;
+  const v = amountSortValue(match.scholarship.amounts);
+  if (v == null) return true;
+  return v >= minAmount;
+}
 
 export function ResultsView() {
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -20,6 +30,8 @@ export function ResultsView() {
   const [type, setType] = useState("all");
   const [sort, setSort] = useState<SortKey>("amount");
   const [showIneligible, setShowIneligible] = useState(false);
+  const { tracking } = useTracking();
+  const asOf = useMemo(() => new Date(), []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
@@ -38,56 +50,64 @@ export function ResultsView() {
 
   const grouped = useMemo(() => {
     if (!profile) return null;
-    return groupMatches(matchAll(SCHOLARSHIPS, profile));
-  }, [profile]);
+    return groupMatches(matchAll(SCHOLARSHIPS, profile, { asOf }));
+  }, [profile, asOf]);
 
   const tipMatches = useMemo(() => {
     if (!profile) return [];
-    return matchAll(TIPS, profile).filter((m) => m.bucket === "eligible" || m.bucket === "needInfo");
-  }, [profile]);
+    return matchAll(TIPS, profile, { asOf }).filter(
+      (m) => m.bucket === "eligible" || m.bucket === "needInfo",
+    );
+  }, [profile, asOf]);
 
-  function applyFilters(list: ScholarshipMatch[]) {
-    let next = list;
-    if (query.trim()) {
-      const q = query.trim();
-      next = next.filter(
-        (m) => m.scholarship.nameHe.includes(q) || m.scholarship.funderHe.includes(q),
-      );
-    }
-    if (minAmount > 0) {
-      next = next.filter((m) => amountSortValue(m.scholarship.amounts) >= minAmount);
-    }
-    if (scope !== "all") {
-      next = next.filter((m) => m.scholarship.scope === scope);
-    }
-    if (type !== "all") {
-      next = next.filter((m) => m.scholarship.types.includes(type as never));
-    }
-    next = [...next].sort((a, b) => {
-      if (sort === "name") return a.scholarship.nameHe.localeCompare(b.scholarship.nameHe, "he");
-      if (sort === "deadline") {
-        const now = new Date();
-        return deadlineSortValue(a.scholarship.deadline, now) - deadlineSortValue(b.scholarship.deadline, now);
+  const applyFilters = useMemo(() => {
+    return (list: ScholarshipMatch[]) => {
+      let next = list;
+      if (query.trim()) {
+        const q = query.trim();
+        next = next.filter(
+          (m) => m.scholarship.nameHe.includes(q) || m.scholarship.funderHe.includes(q),
+        );
       }
-      return amountSortValue(b.scholarship.amounts) - amountSortValue(a.scholarship.amounts);
-    });
-    return next;
-  }
+      if (minAmount > 0) {
+        next = next.filter((m) => passesAmountFilter(m, minAmount));
+      }
+      if (scope !== "all") {
+        next = next.filter((m) => m.scholarship.scope === scope);
+      }
+      if (type !== "all") {
+        next = next.filter((m) => m.scholarship.types.includes(type as never));
+      }
+      next = [...next].sort((a, b) => {
+        if (sort === "name") return a.scholarship.nameHe.localeCompare(b.scholarship.nameHe, "he");
+        if (sort === "deadline") {
+          return (
+            deadlineSortValue(a.scholarship.deadline, asOf) -
+            deadlineSortValue(b.scholarship.deadline, asOf)
+          );
+        }
+        const av = amountSortValue(a.scholarship.amounts) ?? -1;
+        const bv = amountSortValue(b.scholarship.amounts) ?? -1;
+        return bv - av;
+      });
+      return next;
+    };
+  }, [query, minAmount, scope, type, sort, asOf]);
 
   if (profile === null) {
-    return <p className="px-4 py-16 text-center text-ink-soft">טוען את הפרופיל…</p>;
+    return <p className="px-4 py-16 text-center text-ink-soft">{HE.profile.loading}</p>;
   }
 
   if (profileIsEmpty(profile)) {
     return (
       <div className="mx-auto max-w-xl px-4 py-16 text-center">
-        <h1 className="font-display text-3xl text-forest-deep">אין עדיין פרופיל</h1>
-        <p className="mt-3 text-ink-soft">כדי לקבל דוח זכאות יש למלא את הפרטים פעם אחת.</p>
+        <h1 className="font-display text-3xl text-forest-deep">{HE.profile.emptyTitle}</h1>
+        <p className="mt-3 text-ink-soft">{HE.profile.emptyBody}</p>
         <Link
           href="/profile"
           className="mt-6 inline-flex rounded-full bg-forest px-6 py-3 text-white"
         >
-          למילוי הפרופיל
+          {HE.profile.fillProfile}
         </Link>
       </div>
     );
@@ -102,121 +122,165 @@ export function ResultsView() {
   const ineligible = applyFilters(grouped.ineligible);
   const filtersOn = Boolean(query.trim()) || minAmount > 0 || scope !== "all" || type !== "all";
 
+  const myListIds = new Set(Object.keys(tracking));
+  const myList = applyFilters(
+    [...grouped.eligible, ...grouped.closedCycle, ...grouped.needInfo, ...grouped.nearMiss, ...grouped.ineligible].filter(
+      (m) => myListIds.has(m.scholarship.id),
+    ),
+  );
+
+  const filterControls = (
+    <>
+      <input
+        className="min-h-11 rounded-xl border border-line px-3 py-2"
+        placeholder="חיפוש לפי שם או קרן"
+        aria-label="חיפוש מלגות לפי שם או קרן"
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          if (e.target.value.trim()) setShowIneligible(true);
+        }}
+      />
+      <select
+        className="min-h-11 rounded-xl border border-line px-3 py-2"
+        value={sort}
+        aria-label="מיון תוצאות"
+        onChange={(e) => setSort(e.target.value as SortKey)}
+      >
+        <option value="amount">מיון לפי סכום</option>
+        <option value="deadline">מיון לפי מועד</option>
+        <option value="name">מיון לפי שם</option>
+      </select>
+      <select
+        className="min-h-11 rounded-xl border border-line px-3 py-2"
+        value={scope}
+        aria-label="סינון לפי היקף"
+        onChange={(e) => setScope(e.target.value as typeof scope)}
+      >
+        <option value="all">כל ההיקפים</option>
+        <option value="national">ארצי</option>
+        <option value="institution">מוסדי</option>
+        <option value="municipal">עירוני</option>
+        <option value="regional">אזורי</option>
+      </select>
+      <select
+        className="min-h-11 rounded-xl border border-line px-3 py-2"
+        value={type}
+        aria-label="סינון לפי סוג מלגה"
+        onChange={(e) => setType(e.target.value)}
+      >
+        <option value="all">כל הסוגים</option>
+        <option value="need">סיוע כלכלי</option>
+        <option value="merit">הצטיינות</option>
+        <option value="volunteering">התנדבות</option>
+        <option value="leadership">מנהיגות</option>
+        <option value="population">אוכלוסייה ייעודית</option>
+        <option value="periphery">פריפריה</option>
+        <option value="service">שירות / מילואים</option>
+        <option value="research">מחקר</option>
+        <option value="loan">הלוואה</option>
+      </select>
+      <select
+        className="min-h-11 rounded-xl border border-line px-3 py-2"
+        value={minAmount}
+        aria-label="סינון לפי סכום מינימלי"
+        onChange={(e) => setMinAmount(Number(e.target.value))}
+      >
+        <option value={0}>כל הסכומים</option>
+        <option value={5000}>מ־5,000 ₪</option>
+        <option value={10000}>מ־10,000 ₪</option>
+        <option value={20000}>מ־20,000 ₪</option>
+      </select>
+    </>
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl text-forest-deep">דוח הזכאות</h1>
+          <h1 className="font-display text-4xl text-forest-deep">{HE.results.title}</h1>
           <p className="mt-2 text-ink-soft" aria-live="polite">
-            {eligible.length} זכאים עכשיו · {closedCycle.length} נסגר למחזור זה · {needInfo.length}{" "}
-            חסר פרט · {nearMiss.length} כמעט זכאים · {ineligible.length} לא זכאים
-            {filtersOn ? " (לפי הסינון הנוכחי)" : ""}
+            {eligible.length} {HE.buckets.eligible} · {closedCycle.length} {HE.buckets.closedCycle} ·{" "}
+            {needInfo.length} חסר פרט · {nearMiss.length} {HE.buckets.nearMiss} · {ineligible.length}{" "}
+            {HE.buckets.ineligible}
+            {filtersOn ? HE.results.afterFilter : ""}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 no-print">
           <Link href="/profile" className="inline-flex min-h-11 items-center rounded-full border border-line px-4 text-sm">
-            לערוך פרופיל
+            {HE.results.editProfile}
           </Link>
           <button
             type="button"
             onClick={() => window.print()}
             className="inline-flex min-h-11 items-center rounded-full bg-forest px-4 text-sm text-white"
           >
-            הדפסה / שמירה כ‑PDF
+            {HE.actions.print}
           </button>
         </div>
       </div>
-      <p className="mt-2 text-xs text-ink-soft no-print">
-        באייפון: שתפו → הדפסה, או בחרו «שמירה כ‑PDF» בתיבת ההדפסה.
-      </p>
-      <CoverageNote className="mt-4" />
+      <p className="mt-2 text-xs text-ink-soft no-print">{HE.results.iphonePrint}</p>
+
+      <table className="print-summary mt-6 hidden w-full text-sm print:table">
+        <caption className="mb-2 text-right font-medium">{HE.results.printSummary}</caption>
+        <thead>
+          <tr>
+            <th className="border-b p-2 text-right">קטגוריה</th>
+            <th className="border-b p-2 text-right">מספר</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[
+            [HE.buckets.eligible, eligible.length],
+            [HE.buckets.closedCycleLong, closedCycle.length],
+            [HE.buckets.needInfo, needInfo.length],
+            [HE.buckets.nearMiss, nearMiss.length],
+            [HE.buckets.ineligible, ineligible.length],
+          ].map(([label, n]) => (
+            <tr key={String(label)}>
+              <td className="border-b p-2">{label}</td>
+              <td className="border-b p-2">{n}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
 
       <nav
         aria-label="מעבר בין קטגוריות הדוח"
         className="no-print mt-6 flex flex-wrap gap-2 rounded-2xl border border-line bg-card/95 p-3 md:sticky md:top-16 md:z-30 md:backdrop-blur-sm"
       >
         <a href="#eligible" className="inline-flex min-h-11 items-center rounded-full bg-ok/10 px-3 text-sm text-ok">
-          זכאים עכשיו ({eligible.length})
+          {HE.buckets.eligible} ({eligible.length})
         </a>
         <a href="#closed-cycle" className="inline-flex min-h-11 items-center rounded-full bg-gold/20 px-3 text-sm">
-          נסגר למחזור זה ({closedCycle.length})
+          {HE.buckets.closedCycle} ({closedCycle.length})
         </a>
         <a href="#need-info" className="inline-flex min-h-11 items-center rounded-full bg-info/10 px-3 text-sm text-info">
           חסר פרט ({needInfo.length})
         </a>
         <a href="#near-miss" className="inline-flex min-h-11 items-center rounded-full bg-warn/10 px-3 text-sm text-warn">
-          כמעט זכאים ({nearMiss.length})
+          {HE.buckets.nearMiss} ({nearMiss.length})
+        </a>
+        <a href="#my-list" className="inline-flex min-h-11 items-center rounded-full bg-forest/10 px-3 text-sm">
+          {HE.buckets.myList} ({myList.length})
         </a>
         <a href="#ineligible" className="inline-flex min-h-11 items-center rounded-full bg-paper-deep px-3 text-sm">
-          לא זכאים ({ineligible.length})
+          {HE.buckets.ineligible} ({ineligible.length})
         </a>
       </nav>
 
-      <div className="no-print mt-4 grid gap-3 rounded-2xl border border-line bg-card p-4 sm:grid-cols-2 lg:grid-cols-5">
-        <input
-          className="min-h-11 rounded-xl border border-line px-3 py-2"
-          placeholder="חיפוש לפי שם או קרן"
-          aria-label="חיפוש מלגות לפי שם או קרן"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            if (e.target.value.trim()) setShowIneligible(true);
-          }}
-        />
-        <select
-          className="min-h-11 rounded-xl border border-line px-3 py-2"
-          value={sort}
-          aria-label="מיון תוצאות"
-          onChange={(e) => setSort(e.target.value as SortKey)}
-        >
-          <option value="amount">מיון לפי סכום</option>
-          <option value="deadline">מיון לפי מועד</option>
-          <option value="name">מיון לפי שם</option>
-        </select>
-        <select
-          className="min-h-11 rounded-xl border border-line px-3 py-2"
-          value={scope}
-          aria-label="סינון לפי היקף"
-          onChange={(e) => setScope(e.target.value as typeof scope)}
-        >
-          <option value="all">כל ההיקפים</option>
-          <option value="national">ארצי</option>
-          <option value="institution">מוסדי</option>
-          <option value="municipal">עירוני</option>
-          <option value="regional">אזורי</option>
-        </select>
-        <select
-          className="min-h-11 rounded-xl border border-line px-3 py-2"
-          value={type}
-          aria-label="סינון לפי סוג מלגה"
-          onChange={(e) => setType(e.target.value)}
-        >
-          <option value="all">כל הסוגים</option>
-          <option value="need">סיוע כלכלי</option>
-          <option value="merit">הצטיינות</option>
-          <option value="volunteering">התנדבות</option>
-          <option value="leadership">מנהיגות</option>
-          <option value="population">אוכלוסייה ייעודית</option>
-          <option value="periphery">פריפריה</option>
-          <option value="service">שירות / מילואים</option>
-          <option value="research">מחקר</option>
-          <option value="loan">הלוואה</option>
-        </select>
-        <select
-          className="min-h-11 rounded-xl border border-line px-3 py-2"
-          value={minAmount}
-          aria-label="סינון לפי סכום מינימלי"
-          onChange={(e) => setMinAmount(Number(e.target.value))}
-        >
-          <option value={0}>כל הסכומים</option>
-          <option value={5000}>מ־5,000 ₪</option>
-          <option value={10000}>מ־10,000 ₪</option>
-          <option value={20000}>מ־20,000 ₪</option>
-        </select>
+      <details className="no-print mt-4 rounded-2xl border border-line bg-card p-4 max-sm:block sm:hidden">
+        <summary className="min-h-11 cursor-pointer text-sm font-medium">{HE.actions.showFilters}</summary>
+        <div className="mt-3 grid gap-3">{filterControls}</div>
+      </details>
+      <div className="no-print mt-4 hidden gap-3 rounded-2xl border border-line bg-card p-4 sm:grid sm:grid-cols-2 lg:grid-cols-5">
+        {filterControls}
       </div>
 
       <section id="eligible" className="mt-10 scroll-mt-28">
-        <h2 className="font-display text-2xl">זכאים עכשיו ({eligible.length})</h2>
+        <h2 className="font-display text-2xl">
+          {HE.buckets.eligible} ({eligible.length})
+        </h2>
         <p className="mt-1 text-sm text-ink-soft">כל הכללים המובְנים מתקיימים לפי הפרופיל.</p>
         <div className="mt-4 grid gap-4">
           {eligible.length ? eligible.map((m, i) => (
@@ -226,9 +290,11 @@ export function ResultsView() {
       </section>
 
       <section id="closed-cycle" className="mt-10 scroll-mt-28">
-        <h2 className="font-display text-2xl">נסגר למחזור זה — מתאים למחזור הבא ({closedCycle.length})</h2>
+        <h2 className="font-display text-2xl">
+          {HE.buckets.closedCycleLong} ({closedCycle.length})
+        </h2>
         <p className="mt-1 text-sm text-ink-soft">
-          התנאים שבקטלוג מתקיימים, אבל המועד שפורסם כבר עבר. לא מוסתר תחת «לא זכאים».
+          התנאים שבקטלוג מתקיימים או חסר רק פרט / פער שניתן לשנות, אבל המועד שפורסם כבר עבר. לא מוסתר תחת «לא זכאים».
         </p>
         <div className="mt-4 grid gap-4">
           {closedCycle.length ? closedCycle.map((m) => (
@@ -238,7 +304,9 @@ export function ResultsView() {
       </section>
 
       <section id="need-info" className="mt-10 scroll-mt-28">
-        <h2 className="font-display text-2xl">חסר פרט לאישור ({needInfo.length})</h2>
+        <h2 className="font-display text-2xl">
+          {HE.buckets.needInfo} ({needInfo.length})
+        </h2>
         <p className="mt-1 text-sm text-ink-soft">
           אף קריטריון לא נכשל, אבל שדה שדולג נדרש. מלאו אותו בפרופיל כדי לאשר.
         </p>
@@ -248,42 +316,74 @@ export function ResultsView() {
       </section>
 
       <section id="near-miss" className="mt-10 scroll-mt-28">
-        <h2 className="font-display text-2xl">כמעט זכאים ({nearMiss.length})</h2>
+        <h2 className="font-display text-2xl">
+          {HE.buckets.nearMiss} ({nearMiss.length})
+        </h2>
         <p className="mt-1 text-sm text-ink-soft">
-          פער בקריטריונים שניתן לשנות (התנדבות, היקף לימודים, ממוצע, מכינה). כישלון בזהות
-          — מוסד, קהילה, מגדר, עיר, תחום לימוד, ימי מילואים, עולה, סוג שירות — מופיע תחת לא זכאים.
+          פער בקריטריונים שניתן לשנות (התנדבות, היקף לימודים, ממוצע, ימי מילואים). כישלון בזהות
+          — מוסד, קהילה, מגדר, עיר, תחום לימוד, שנת לימוד, מכינה, נתוני קבלה, עולה, סוג שירות — מופיע תחת לא זכאים.
         </p>
         <div className="mt-4 grid gap-4">
           {nearMiss.length ? nearMiss.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
         </div>
       </section>
 
-      <section id="ineligible" className="mt-10 scroll-mt-28">
+      <section id="my-list" className="mt-10 scroll-mt-28">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-2xl">
+            {HE.buckets.myList} ({myList.length})
+          </h2>
+          {myList.some((m) => m.scholarship.deadline.date) ? (
+            <button
+              type="button"
+              className="no-print min-h-11 rounded-full border border-line px-4 text-sm"
+              onClick={() => downloadCombinedIcs(myList.map((m) => m.scholarship))}
+            >
+              {HE.actions.exportMyListIcs}
+            </button>
+          ) : null}
+        </div>
+        <p className="mt-1 text-sm text-ink-soft">מלגות שסימנתם במעקב בכרטיס.</p>
+        <div className="mt-4 grid gap-4">
+          {myList.length ? myList.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
+        </div>
+      </section>
+
+      <section id="ineligible" className="mt-10 scroll-mt-28 print-ineligible">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-2xl">לא זכאים ({ineligible.length})</h2>
+          <h2 className="font-display text-2xl">
+            {HE.buckets.ineligible} ({ineligible.length})
+          </h2>
           <button
             type="button"
             className="no-print text-sm underline underline-offset-4"
             onClick={() => setShowIneligible((v) => !v)}
           >
-            {showIneligible ? "הסתר" : "הצג את כל מה שנבדק"}
+            {showIneligible ? HE.actions.hide : HE.actions.showIneligible}
           </button>
         </div>
         <p className="mt-1 text-sm text-ink-soft">
-          מוסתר כברירת מחדל. השלמות הדוח: אפשר לוודא שכל הקטלוג נשקל.
+          מוסתר כברירת מחדל במסך. בהדפסה מופיע בשורה אחת לכל מלגה.
         </p>
         {showIneligible ? (
-          <div className="mt-4 grid gap-4">
+          <div className="mt-4 grid gap-4 no-print">
             {ineligible.length ? ineligible.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
           </div>
         ) : (
           <p className="mt-3 text-sm text-ink-soft no-print">לחצו «הצג» כדי לחפש גם כאן.</p>
         )}
+        <div className="mt-4 hidden print:grid gap-1">
+          {ineligible.map((m) => (
+            <ScholarshipCard key={m.scholarship.id} match={m} compact />
+          ))}
+        </div>
       </section>
 
       {tipMatches.length > 0 ? (
         <section id="tips" className="mt-10 scroll-mt-28">
-          <h2 className="font-display text-2xl">טיפים והפניות ({tipMatches.length})</h2>
+          <h2 className="font-display text-2xl">
+            {HE.buckets.tips} ({tipMatches.length})
+          </h2>
           <p className="mt-1 text-sm text-ink-soft">
             אלה אינן מלגות בקטלוג — הפניות לדיקן, לזכויות או למעטפת. לא נספרות כמלגות.
           </p>
@@ -294,6 +394,8 @@ export function ResultsView() {
           </div>
         </section>
       ) : null}
+
+      <CoverageNote className="mt-12" />
     </div>
   );
 }

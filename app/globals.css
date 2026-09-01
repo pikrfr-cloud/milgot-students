@@ -91,6 +91,11 @@ textarea:focus-visible {
   top: 1rem;
 }
 
+.ltr-isolate {
+  unicode-bidi: isolate;
+  direction: ltr;
+}
+
 .pattern-band {
   background-color: var(--forest-deep);
   background-image:
@@ -115,11 +120,21 @@ textarea:focus-visible {
   .print-break {
     break-inside: avoid;
   }
-  /* Open every <details> so criteria and documents print. */
   details {
     display: block !important;
   }
   details > *:not(summary) {
     display: block !important;
+  }
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  .print-summary {
+    display: table !important;
+  }
+  .ltr-isolate {
+    unicode-bidi: isolate;
+    direction: ltr;
   }
 }

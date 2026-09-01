@@ -13,7 +13,7 @@ import {
   SECTORS,
   SERVICE_TYPES,
 } from "@/lib/types";
-import { INSTITUTIONS_FOR_SELECT } from "@/lib/institutions";
+import { INSTITUTION_GROUPS } from "@/lib/institutions";
 import {
   CITY_SUGGESTIONS,
   JERUSALEM_NEIGHBORHOOD_SUGGESTIONS,
@@ -29,11 +29,17 @@ import {
   parseImportedProfile,
   saveProfile,
 } from "@/lib/profile-storage";
-import { FIELD_STEP, HIGH_IMPACT_FIELDS, WIZARD_FIELDS, fieldDomId } from "@/lib/profile-fields";
+import { FIELD_STEP, WIZARD_FIELDS, fieldDomId } from "@/lib/profile-fields";
 import { HOUSEHOLD_INCOME_HINT_HE, deriveIncomeBand } from "@/lib/income";
 import { CityPicker } from "@/components/CityPicker";
 import { Field } from "@/components/Field";
 import { HeWithEn } from "@/components/HeWithEn";
+import { TriStateSelect } from "@/components/TriStateSelect";
+import { DeleteMyDataButton } from "@/components/DeleteMyDataButton";
+import { HE } from "@/lib/i18n/he";
+import { matchAll } from "@/lib/matcher";
+import { SCHOLARSHIPS } from "@/data/scholarships";
+import { DISABILITY_AUTHORITIES } from "@/lib/types";
 
 const DEMO_PERIPHERY_TAU: StudentProfile = {
   institution: "tau",
@@ -167,7 +173,7 @@ export function ProfileWizard() {
   }, [focus, ready, router]);
 
   const selectedInstitution = useMemo(
-    () => INSTITUTIONS_FOR_SELECT.find((i) => i.id === profile.institution),
+    () => INSTITUTION_GROUPS.flatMap((g) => g.items).find((i) => i.id === profile.institution),
     [profile.institution],
   );
 
@@ -184,6 +190,27 @@ export function ProfileWizard() {
       : [];
   const derivedIncome = deriveIncomeBand(profile.householdSize, profile.householdIncomeBand);
   const hints = validationHints(profile);
+  const topUnblock = useMemo(() => {
+    if (step !== 5) return [];
+    const matches = matchAll(SCHOLARSHIPS, profile);
+    const counts = new Map<ProfileField, number>();
+    for (const m of matches) {
+      if (m.bucket !== "needInfo") continue;
+      const seen = new Set<ProfileField>();
+      for (const c of m.unknown) {
+        if (!c.field || seen.has(c.field)) continue;
+        seen.add(c.field);
+        counts.set(c.field, (counts.get(c.field) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+  }, [profile, step]);
+
+  const filledFields = WIZARD_FIELDS.filter((f) => {
+    const v = profile[f];
+    return !(v === null || v === undefined || (Array.isArray(v) && v.length === 0));
+  });
+  const skippedFields = WIZARD_FIELDS.filter((f) => !filledFields.includes(f));
 
   function patch(partial: StudentProfile) {
     setProfile((p) => ({ ...p, ...partial }));
@@ -191,7 +218,12 @@ export function ProfileWizard() {
 
   function goTo(nextStep: number) {
     setStep(nextStep);
-    window.requestAnimationFrame(() => headingRef.current?.focus());
+    const reduce =
+      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.requestAnimationFrame(() => {
+      headingRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      headingRef.current?.focus();
+    });
   }
 
   function next() {
@@ -220,6 +252,15 @@ export function ProfileWizard() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
+      {!ready ? (
+        <div aria-busy="true" aria-live="polite" className="space-y-4">
+          <div className="h-4 w-32 animate-pulse rounded bg-paper-deep" />
+          <div className="h-10 w-48 animate-pulse rounded bg-paper-deep" />
+          <div className="h-64 animate-pulse rounded-3xl border border-line bg-card" />
+          <p className="text-center text-sm text-ink-soft">{HE.profile.loading}</p>
+        </div>
+      ) : (
+        <>
       <p className="text-sm text-ink-soft">
         שלב {step + 1} מתוך {STEPS.length}
       </p>
@@ -277,10 +318,14 @@ export function ProfileWizard() {
                 onChange={(e) => patch({ institution: e.target.value || null })}
               >
                 <option value="">בחירה / דילוג</option>
-                {INSTITUTIONS_FOR_SELECT.map((i) => (
-                  <option key={i.id} value={i.id}>
-                    {i.nameHe}
-                  </option>
+                {INSTITUTION_GROUPS.map((g) => (
+                  <optgroup key={g.labelHe} label={g.labelHe}>
+                    {g.items.map((i) => (
+                      <option key={i.id} value={i.id}>
+                        {i.nameHe}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </Field>
@@ -400,7 +445,7 @@ export function ProfileWizard() {
                 placeholder="אופציונלי"
               />
             </Field>
-            <Field field="studyLoad" label="היקף לימודים" hint="מלגות רבות דורשות כ־60% משרה או 12 שעות שבועיות.">
+            <Field field="studyLoad" label="היקף לימודים" hint="מלגות רבות דורשות כ־60% משרה או 12 שעות שבועיות. אפשר גם למלא נק״ז למטה.">
               <select
                 className={inputClass}
                 value={profile.studyLoad ?? ""}
@@ -413,31 +458,36 @@ export function ProfileWizard() {
                 <option value="partial">היקף חלקי</option>
               </select>
             </Field>
+            <Field
+              field="weeklyHours"
+              label="שעות שבועיות / נק״ז (אם ידוע)"
+              hint="מלגת שכונות דרום בת״א ומלגת דיקן ספיר דורשות 10 שעות. היקף מלא נגזר מ־12 ומעלה."
+            >
+              <input
+                className={inputClass}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={40}
+                value={profile.weeklyHours ?? ""}
+                onChange={(e) =>
+                  patch({ weeklyHours: e.target.value === "" ? null : Number(e.target.value) })
+                }
+                placeholder="אופציונלי"
+              />
+              <SkipButton onClick={() => patch({ weeklyHours: null })} />
+            </Field>
             {showMechina ? (
               <Field
                 field="completedMechina"
                 label="האם סיימתם מכינה קדם-אקדמית?"
                 hint="נדרש למלגות ייעודיות כמו ייעוד 46. אם תדלגו — המלגה תופיע תחת «חסר פרט»."
               >
-                <select
+                <TriStateSelect
                   className={inputClass}
-                  value={
-                    profile.completedMechina === true
-                      ? "yes"
-                      : profile.completedMechina === false
-                        ? "no"
-                        : ""
-                  }
-                  onChange={(e) =>
-                    patch({
-                      completedMechina: e.target.value === "" ? null : e.target.value === "yes",
-                    })
-                  }
-                >
-                  <option value="">לא יודע/ת</option>
-                  <option value="yes">כן</option>
-                  <option value="no">לא</option>
-                </select>
+                  value={profile.completedMechina}
+                  onChange={(v) => patch({ completedMechina: v })}
+                />
               </Field>
             ) : null}
           </>
@@ -494,60 +544,30 @@ export function ProfileWizard() {
               label="האם אתם גרים בפריפריה חברתית או גיאוגרפית?"
               hint="למלגות קרנות פרטיות (אייסף, גרוס ועוד). אם לא בטוחים — דלגו. הדגל המפורש גובר על העיר. זו אינה קביעה משפטית של אזור עדיפות לאומית."
             >
-              <select
+              <TriStateSelect
                 className={inputClass}
-                value={profile.peripheryResidence === true ? "yes" : profile.peripheryResidence === false ? "no" : ""}
-                onChange={(e) =>
-                  patch({
-                    peripheryResidence: e.target.value === "" ? null : e.target.value === "yes",
-                  })
-                }
-              >
-                <option value="">לא יודע/ת</option>
-                <option value="yes">כן</option>
-                <option value="no">לא</option>
-              </select>
+                value={profile.peripheryResidence}
+                onChange={(v) => patch({ peripheryResidence: v })}
+              />
             </Field>
             <Field field="peripheryHometown" label="האם המוצא הוא מפריפריה?">
-              <select
+              <TriStateSelect
                 className={inputClass}
-                value={profile.peripheryHometown === true ? "yes" : profile.peripheryHometown === false ? "no" : ""}
-                onChange={(e) =>
-                  patch({
-                    peripheryHometown: e.target.value === "" ? null : e.target.value === "yes",
-                  })
-                }
-              >
-                <option value="">לא יודע/ת</option>
-                <option value="yes">כן</option>
-                <option value="no">לא</option>
-              </select>
+                value={profile.peripheryHometown}
+                onChange={(v) => patch({ peripheryHometown: v })}
+              />
             </Field>
             <Field
               field="nationalPriorityResidence"
               label="כתובת רשומה באזור עדיפות לאומית — 5 מתוך 6 שנים?"
               hint="נדרש לייעוד 45/46 של משרד הביטחון. לא מספיק לגור היום בעיר מסוימת, ולא לפי רשימת ערים בקטלוג. אם תדלגו — המלגות יופיעו תחת «חסר פרט» ולא כזכאות."
             >
-              <select
+              <TriStateSelect
                 className={inputClass}
-                value={
-                  profile.nationalPriorityResidence === true
-                    ? "yes"
-                    : profile.nationalPriorityResidence === false
-                      ? "no"
-                      : ""
-                }
-                onChange={(e) =>
-                  patch({
-                    nationalPriorityResidence:
-                      e.target.value === "" ? null : e.target.value === "yes",
-                  })
-                }
-              >
-                <option value="">לא יודע/ת</option>
-                <option value="yes">כן, 5 מתוך 6 השנים שקדמו ללימודים</option>
-                <option value="no">לא</option>
-              </select>
+                value={profile.nationalPriorityResidence}
+                onChange={(v) => patch({ nationalPriorityResidence: v })}
+                yesLabel="כן, 5 מתוך 6 השנים שקדמו ללימודים"
+              />
             </Field>
           </>
         )}
@@ -605,25 +625,13 @@ export function ProfileWizard() {
               label="האם אתם פתוחים להתנדבות כחלק ממלגה?"
               hint="מלגות כמו פר״ח דורשות חונכות. אם תדלגו — המלגות האלה יופיעו תחת «חסר פרט»."
             >
-              <select
+              <TriStateSelect
                 className={inputClass}
-                value={
-                  profile.willingToVolunteer === true
-                    ? "yes"
-                    : profile.willingToVolunteer === false
-                      ? "no"
-                      : ""
-                }
-                onChange={(e) =>
-                  patch({
-                    willingToVolunteer: e.target.value === "" ? null : e.target.value === "yes",
-                  })
-                }
-              >
-                <option value="">לא יודע/ת</option>
-                <option value="yes">כן, פתוח/ה להתנדבות</option>
-                <option value="no">לא מעוניין/ת במלגות התנדבות</option>
-              </select>
+                value={profile.willingToVolunteer}
+                onChange={(v) => patch({ willingToVolunteer: v })}
+                yesLabel="כן, פתוח/ה להתנדבות"
+                noLabel="לא מעוניין/ת במלגות התנדבות"
+              />
             </Field>
             <fieldset id={fieldDomId("outstanding")}>
               <legend className="text-sm font-medium">פעילות בולטת</legend>
@@ -669,17 +677,12 @@ export function ProfileWizard() {
             {showServiceDetails ? (
               <>
                 <Field field="combatRole" label="שירות במערך לוחם או תומך לחימה?">
-                  <select
+                  <TriStateSelect
                     className={inputClass}
-                    value={profile.combatRole === true ? "yes" : profile.combatRole === false ? "no" : ""}
-                    onChange={(e) =>
-                      patch({ combatRole: e.target.value === "" ? null : e.target.value === "yes" })
-                    }
-                  >
-                    <option value="">לא יודע/ת / לא רלוונטי</option>
-                    <option value="yes">כן</option>
-                    <option value="no">לא</option>
-                  </select>
+                    value={profile.combatRole}
+                    onChange={(v) => patch({ combatRole: v })}
+                    unknownLabel="לא יודע/ת / לא רלוונטי"
+                  />
                 </Field>
                 <Field field="yearsSinceDischarge" label="כמה שנים עברו מאז השחרור?">
                   <input
@@ -697,17 +700,11 @@ export function ProfileWizard() {
                   />
                 </Field>
                 <Field field="loneSoldier" label="האם שירתתם כחייל/ת בודד/ה?">
-                  <select
+                  <TriStateSelect
                     className={inputClass}
-                    value={profile.loneSoldier === true ? "yes" : profile.loneSoldier === false ? "no" : ""}
-                    onChange={(e) =>
-                      patch({ loneSoldier: e.target.value === "" ? null : e.target.value === "yes" })
-                    }
-                  >
-                    <option value="">לא יודע/ת</option>
-                    <option value="yes">כן</option>
-                    <option value="no">לא</option>
-                  </select>
+                    value={profile.loneSoldier}
+                    onChange={(v) => patch({ loneSoldier: v })}
+                  />
                 </Field>
               </>
             ) : (
@@ -762,17 +759,11 @@ export function ProfileWizard() {
               <SkipButton onClick={() => patch({ sectors: null })} />
             </fieldset>
             <Field field="isOleh" label="עולה חדש/ה או בעל/ת סטטוס עולה?">
-              <select
+              <TriStateSelect
                 className={inputClass}
-                value={profile.isOleh === true ? "yes" : profile.isOleh === false ? "no" : ""}
-                onChange={(e) =>
-                  onOlehChange(e.target.value === "" ? null : e.target.value === "yes")
-                }
-              >
-                <option value="">לא יודע/ת</option>
-                <option value="yes">כן</option>
-                <option value="no">לא</option>
-              </select>
+                value={profile.isOleh}
+                onChange={(v) => onOlehChange(v)}
+              />
             </Field>
             {showYearsInIsrael ? (
               <Field field="yearsInIsrael" label="שנים בארץ">
@@ -790,45 +781,54 @@ export function ProfileWizard() {
               </Field>
             ) : null}
             <Field field="firstGeneration" label="דור ראשון להשכלה גבוהה?">
-              <select
+              <TriStateSelect
                 className={inputClass}
-                value={
-                  profile.firstGeneration === true
-                    ? "yes"
-                    : profile.firstGeneration === false
-                      ? "no"
-                      : ""
-                }
-                onChange={(e) =>
-                  patch({
-                    firstGeneration: e.target.value === "" ? null : e.target.value === "yes",
-                  })
-                }
-              >
-                <option value="">לא יודע/ת</option>
-                <option value="yes">כן</option>
-                <option value="no">לא</option>
-              </select>
+                value={profile.firstGeneration}
+                onChange={(v) => patch({ firstGeneration: v })}
+              />
             </Field>
             <Field
               field="hasDisability"
               label="מוגבלות מוכרת?"
               hint="למשל נכות רפואית לצורך שיקום מקצועי. השדה רגיש ואופציונלי."
             >
-              <select
+              <TriStateSelect
                 className={inputClass}
-                value={
-                  profile.hasDisability === true ? "yes" : profile.hasDisability === false ? "no" : ""
+                value={profile.hasDisability}
+                onChange={(v) =>
+                  patch({
+                    hasDisability: v,
+                    disabilityRecognizedBy: v === true ? profile.disabilityRecognizedBy : null,
+                  })
                 }
-                onChange={(e) =>
-                  patch({ hasDisability: e.target.value === "" ? null : e.target.value === "yes" })
-                }
-              >
-                <option value="">מעדיף/ה לא לציין</option>
-                <option value="yes">כן</option>
-                <option value="no">לא</option>
-              </select>
+                unknownLabel="מעדיף/ה לא לציין"
+              />
             </Field>
+            {profile.hasDisability === true ? (
+              <Field
+                field="disabilityRecognizedBy"
+                label="מי מכיר במוגבלות / במסלול השיקום?"
+                hint="נדרש להבחין בין שיקום ביטוח לאומי, נכי צה״ל, נפגעי איבה ונפגעי עבודה. בלי הבחנה — המלגות יופיעו תחת «חסר פרט»."
+              >
+                <select
+                  className={inputClass}
+                  value={profile.disabilityRecognizedBy ?? ""}
+                  onChange={(e) =>
+                    patch({
+                      disabilityRecognizedBy: (e.target.value ||
+                        null) as StudentProfile["disabilityRecognizedBy"],
+                    })
+                  }
+                >
+                  <option value="">לא יודע/ת</option>
+                  {DISABILITY_AUTHORITIES.map((a) => (
+                    <option key={a} value={a}>
+                      {fieldLabelHe(a)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            ) : null}
             <Field
               field="householdSize"
               label="כמה נפשות במשק הבית?"
@@ -877,14 +877,37 @@ export function ProfileWizard() {
 
         {step === 5 && (
           <div className="space-y-4">
+            <p className="text-sm text-ink-soft">{HE.review.ctaHint}</p>
+            <button
+              type="button"
+              className="w-full min-h-11 rounded-full bg-clay py-3 text-white font-medium hover:bg-clay-deep"
+              onClick={() => router.push("/results")}
+            >
+              {HE.actions.produceReport}
+            </button>
             <p className="leading-relaxed text-ink">
               הפרופיל נשמר במכשיר זה בלבד. אפשר לחזור ולתקן בכל שלב. שדות שדולגו לא יפסלו מלגות —
               הן יופיעו תחת «חסר פרט לאישור».
             </p>
-            <p className="rounded-2xl bg-paper-deep p-4 text-sm leading-relaxed">
-              השדות שמשפיעים הכי הרבה על הדוח:{" "}
-              {HIGH_IMPACT_FIELDS.map((f) => fieldLabelHe(f)).join(" · ")}.
-            </p>
+            {topUnblock.length > 0 ? (
+              <div className="rounded-2xl bg-info/5 p-4 text-sm">
+                <p className="font-medium">{HE.review.topUnblock}</p>
+                <ul className="mt-2 space-y-1">
+                  {topUnblock.map(([field, n]) => (
+                    <li key={field}>
+                      <button
+                        type="button"
+                        className="underline underline-offset-4 text-forest"
+                        onClick={() => goTo(FIELD_STEP[field] ?? 0)}
+                      >
+                        {fieldLabelHe(field)}
+                      </button>
+                      {` — ${n} מלגות`}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {hints.length > 0 ? (
               <ul className="rounded-2xl border border-warn/30 bg-warn/5 p-4 text-sm space-y-1">
                 {hints.map((h) => (
@@ -892,8 +915,9 @@ export function ProfileWizard() {
                 ))}
               </ul>
             ) : null}
+            <h2 className="font-medium">{HE.review.filled}</h2>
             <dl className="grid gap-3 text-sm">
-              {WIZARD_FIELDS.map((field) => (
+              {filledFields.map((field) => (
                 <div
                   key={field}
                   className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line/60 pb-2"
@@ -907,11 +931,33 @@ export function ProfileWizard() {
                     className="min-h-11 text-sm text-forest underline underline-offset-4"
                     onClick={() => goTo(FIELD_STEP[field] ?? 0)}
                   >
-                    עריכה
+                    {HE.actions.edit}
                   </button>
                 </div>
               ))}
             </dl>
+            <details className="rounded-2xl border border-line p-4">
+              <summary className="min-h-11 cursor-pointer text-sm font-medium">
+                {HE.review.skipped} ({skippedFields.length})
+              </summary>
+              <dl className="mt-3 grid gap-3 text-sm">
+                {skippedFields.map((field) => (
+                  <div
+                    key={field}
+                    className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line/60 pb-2"
+                  >
+                    <dt className="text-ink-soft">{fieldLabelHe(field)}</dt>
+                    <button
+                      type="button"
+                      className="min-h-11 text-sm text-forest underline underline-offset-4"
+                      onClick={() => goTo(FIELD_STEP[field] ?? 0)}
+                    >
+                      {HE.actions.edit}
+                    </button>
+                  </div>
+                ))}
+              </dl>
+            </details>
             {selectedInstitution ? (
               <p className="text-sm text-ink-soft">
                 מוסד שנבחר: <HeWithEn text={selectedInstitution.nameHe} />
@@ -921,16 +967,19 @@ export function ProfileWizard() {
               <button
                 type="button"
                 className={`${tapBtn} border border-line text-sm`}
-                onClick={() => downloadProfileJson(profile)}
+                onClick={() => {
+                  if (!window.confirm(HE.profile.exportWarn)) return;
+                  downloadProfileJson(profile);
+                }}
               >
-                ייצוא פרופיל (JSON)
+                {HE.actions.exportJson}
               </button>
               <button
                 type="button"
                 className={`${tapBtn} border border-line text-sm`}
                 onClick={() => fileRef.current?.click()}
               >
-                ייבוא פרופיל
+                {HE.actions.importJson}
               </button>
               <input
                 ref={fileRef}
@@ -946,7 +995,7 @@ export function ProfileWizard() {
                   reader.onload = () => {
                     const parsed = parseImportedProfile(String(reader.result ?? ""));
                     if (!parsed) {
-                      setImportError("לא הצלחנו לקרוא את הקובץ. ודאו שזה ייצוא JSON מהאתר.");
+                      setImportError(HE.profile.importFail);
                       return;
                     }
                     setImportError(null);
@@ -957,13 +1006,7 @@ export function ProfileWizard() {
               />
             </div>
             {importError ? <p className="text-sm text-danger">{importError}</p> : null}
-            <button
-              type="button"
-              className="w-full min-h-11 rounded-full bg-clay py-3 text-white font-medium hover:bg-clay-deep"
-              onClick={() => router.push("/results")}
-            >
-              להפקת דוח הזכאות
-            </button>
+            <DeleteMyDataButton />
           </div>
         )}
       </div>
@@ -975,14 +1018,16 @@ export function ProfileWizard() {
           disabled={step === 0}
           className={`${tapBtn} text-ink-soft disabled:opacity-40`}
         >
-          הקודם
+          {HE.actions.back}
         </button>
         {step < STEPS.length - 1 ? (
           <button type="button" onClick={next} className={`${tapBtn} bg-forest text-white hover:bg-forest-deep`}>
-            המשך
+            {HE.actions.continue}
           </button>
         ) : null}
       </div>
+        </>
+      )}
     </div>
   );
 }

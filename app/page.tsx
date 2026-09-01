@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { CATALOG_STATS } from "@/data/scholarships";
 import { CoverageNote } from "@/components/CoverageNote";
+import { HE } from "@/lib/i18n/he";
+
+export const metadata: Metadata = {
+  title: `${HE.siteName} — ${HE.tagline}`,
+  description:
+    "ממלאים פרופיל פעם אחת ומקבלים דוח מפורט: כל המלגות שעומדים בתנאיהן, מה חסר לאישור, ומה כמעט מתאים.",
+  alternates: { canonical: "/" },
+};
 
 export default function HomePage() {
   return (

@@ -1,10 +1,8 @@
-import type { ScholarshipTracking, TrackingStatus } from "./types";
+import { TRACKING_STATUSES, type ScholarshipTracking, type TrackingStatus } from "./types";
 
 export const TRACKING_STORAGE_KEY = "milgot-tracking-v1";
 
 export type { TrackingStatus };
-
-const STATUSES: TrackingStatus[] = ["in_progress", "submitted", "accepted"];
 
 export function loadTracking(): ScholarshipTracking {
   if (typeof window === "undefined") return {};
@@ -19,7 +17,20 @@ export function loadTracking(): ScholarshipTracking {
 
 export function saveTracking(map: ScholarshipTracking): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(TRACKING_STORAGE_KEY, JSON.stringify(map));
+  try {
+    window.localStorage.setItem(TRACKING_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    // quota / private mode — ignore
+  }
+}
+
+export function clearTracking(): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(TRACKING_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
 }
 
 export function setTrackingStatus(
@@ -48,4 +59,4 @@ export function trackingLabelHe(status: TrackingStatus): string {
   }
 }
 
-export { STATUSES as TRACKING_STATUSES };
+export { TRACKING_STATUSES };
