@@ -73,70 +73,68 @@ export function MyListView() {
               </p>
             ) : null}
           </div>
-          <div className="mt-6 overflow-x-auto rounded-2xl border border-line bg-card">
-            <table className="w-full min-w-[40rem] text-sm">
-              <thead>
-                <tr className="border-b border-line bg-paper-deep text-right">
-                  <th className="p-3 font-medium">מלגה</th>
-                  <th className="p-3 font-medium">מועד סגירה</th>
-                  <th className="p-3 font-medium">סטטוס</th>
-                  <th className="p-3 font-medium">מסמכים</th>
-                  <th className="p-3 font-medium">סכום שהתקבל</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map(({ scholarship, entry }) => {
-                  const due = deadlineStatus(scholarship.deadline, asOf);
-                  const checked = new Set(entry.documentsChecked ?? []);
-                  return (
-                    <tr key={scholarship.id} className="border-b border-line/70 align-top">
-                      <td className="p-3">
-                        <Link
-                          href={scholarshipPagePath(scholarship.id)}
-                          className="font-medium text-forest underline underline-offset-4"
-                        >
-                          {scholarship.nameHe}
-                        </Link>
-                        <p className="mt-1 text-xs text-ink-soft">{scholarship.funderHe}</p>
-                      </td>
-                      <td className="p-3 whitespace-nowrap">
-                        <div>{due.labelHe}</div>
-                        <div className="text-ink-soft">{formatDeadline(scholarship.deadline)}</div>
-                        {!shouldHideIcs(scholarship.deadline, asOf) ? (
-                          <button
-                            type="button"
-                            className="mt-1 text-xs underline underline-offset-4"
-                            onClick={() => downloadIcs(scholarship)}
-                          >
-                            {HE.actions.addToCalendar}
-                          </button>
-                        ) : null}
-                      </td>
-                      <td className="p-3">
-                        <select
-                          className="min-h-11 rounded-xl border border-line px-2"
-                          aria-label={`סטטוס עבור ${scholarship.nameHe}`}
-                          value={entry.status}
-                          onChange={(e) =>
-                            setStatus(scholarship.id, e.target.value as TrackingStatus)
-                          }
-                        >
-                          {TRACKING_STATUSES.map((st) => (
-                            <option key={st} value={st}>
-                              {trackingLabelHe(st)}
-                            </option>
-                          ))}
-                        </select>
+          <ul className="mt-6 space-y-4">
+            {rows.map(({ scholarship, entry }) => {
+              const due = deadlineStatus(scholarship.deadline, asOf);
+              const checked = new Set(entry.documentsChecked ?? []);
+              return (
+                <li
+                  key={scholarship.id}
+                  className="rounded-2xl border border-line bg-card p-4 sm:p-5"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <Link
+                        href={scholarshipPagePath(scholarship.id)}
+                        className="font-medium text-forest underline underline-offset-4"
+                      >
+                        {scholarship.nameHe}
+                      </Link>
+                      <p className="mt-1 text-xs text-ink-soft">{scholarship.funderHe}</p>
+                    </div>
+                    <div className="text-sm">
+                      <p>{due.labelHe}</p>
+                      <p className="text-ink-soft">{formatDeadline(scholarship.deadline)}</p>
+                      {!shouldHideIcs(scholarship.deadline, asOf) ? (
                         <button
                           type="button"
-                          className="mt-1 block text-xs text-ink-soft underline underline-offset-4"
-                          onClick={() => setStatus(scholarship.id, null)}
+                          className="mt-1 min-h-11 text-xs underline underline-offset-4"
+                          onClick={() => downloadIcs(scholarship)}
                         >
-                          הסרה מהרשימה
+                          {HE.actions.addToCalendar}
                         </button>
-                      </td>
-                      <td className="p-3">
-                        <ul className="space-y-1">
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-ink-soft">סטטוס</p>
+                      <select
+                        className="min-h-11 w-full rounded-xl border border-line px-2"
+                        aria-label={`סטטוס עבור ${scholarship.nameHe}`}
+                        value={entry.status}
+                        onChange={(e) =>
+                          setStatus(scholarship.id, e.target.value as TrackingStatus)
+                        }
+                      >
+                        {TRACKING_STATUSES.map((st) => (
+                          <option key={st} value={st}>
+                            {trackingLabelHe(st)}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        className="mt-1 min-h-11 text-xs text-ink-soft underline underline-offset-4"
+                        onClick={() => setStatus(scholarship.id, null)}
+                      >
+                        הסרה מהרשימה
+                      </button>
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-ink-soft">מסמכים בקטלוג</p>
+                      {scholarship.documentsHe.length ? (
+                        <ul className="space-y-1 text-sm">
                           {scholarship.documentsHe.map((doc) => (
                             <li key={doc}>
                               <label className="flex min-h-11 items-start gap-2">
@@ -156,35 +154,38 @@ export function MyListView() {
                             </li>
                           ))}
                         </ul>
-                      </td>
-                      <td className="p-3">
-                        {entry.status === "accepted" ? (
-                          <label className="block text-xs text-ink-soft">
-                            סכום ₪ (במכשיר זה)
-                            <input
-                              type="number"
-                              inputMode="numeric"
-                              min={0}
-                              className="mt-1 min-h-11 w-full rounded-xl border border-line px-2"
-                              value={entry.acceptedAmountIls ?? ""}
-                              onChange={(e) =>
-                                setAcceptedAmount(
-                                  scholarship.id,
-                                  e.target.value === "" ? null : Number(e.target.value),
-                                )
-                              }
-                            />
-                          </label>
-                        ) : (
-                          <span className="text-ink-soft">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      ) : (
+                        <p className="text-sm text-ink-soft">אין מסמכים רשומים בקטלוג.</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="mb-1 text-xs font-medium text-ink-soft">סכום שהתקבל</p>
+                      {entry.status === "accepted" ? (
+                        <label className="block text-xs text-ink-soft">
+                          סכום ₪ (במכשיר זה בלבד)
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            min={0}
+                            className="mt-1 min-h-11 w-full rounded-xl border border-line px-2"
+                            value={entry.acceptedAmountIls ?? ""}
+                            onChange={(e) =>
+                              setAcceptedAmount(
+                                scholarship.id,
+                                e.target.value === "" ? null : Number(e.target.value),
+                              )
+                            }
+                          />
+                        </label>
+                      ) : (
+                        <p className="text-sm text-ink-soft">בחרו «התקבל» כדי לרשום סכום מקומי.</p>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         </>
       )}
     </div>
