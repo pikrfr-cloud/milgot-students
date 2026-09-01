@@ -21,6 +21,42 @@ export const PREFERRED_EMPLOYMENT: FieldGroup[] = [
 ];
 
 export const VERIFIED = "2026-08";
+/** Fetch date for the תשפ״ז flagship pass (official pages, 2026-09-01). */
+export const VERIFIED_TODAY = "2026-09-01";
+/** Required card copy when last year's ILS figure is kept because תשפ״ז was not published. */
+export const TASHPAV_UNPUBLISHED_HE = "סכום תשפ״ו; טרם פורסם לתשפ״ז";
+
+/**
+ * National competitive programs verified from official pages in the תשפ״ז pass.
+ * Dean/muni shells are not in this list.
+ */
+export const FLAGSHIP_IDS = [
+  "schulich-leaders",
+  "technion-schulich-entrepreneurship",
+  "isef",
+  "mod-uniform-to-studies",
+  "yeud-44",
+  "yeud-45",
+  "yeud-46",
+  "iron-swords-reservist",
+  "perach",
+  "perach-reserves",
+  "mil-go",
+  "mil-go-loan",
+  "gruss",
+  "rothschild-ambassadors",
+  "atidim-industry",
+  "heznek-academy",
+  "eilim",
+  "impact-fidf",
+  "irtikaa",
+  "tena",
+  "marom",
+  "moshal",
+  "kemach-derech-tzlacha",
+  "reservist-tuition-grant",
+  "mechina-worthy-of-aid",
+] as const;
 
 export function allOf(...rules: Rule[]): Rule {
   return { op: "allOf", rules };

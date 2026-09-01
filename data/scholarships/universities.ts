@@ -5,6 +5,7 @@ import {
   DOCS_INCOME,
   STEM,
   VERIFIED,
+  VERIFIED_TODAY,
   admissionExcellence,
   allOf,
   amount,
@@ -66,26 +67,36 @@ export const UNIVERSITIES: Scholarship[] = [
     funderHe: "קרן שוליך, בשיתוף אוניברסיטאות שותפות",
     types: ["merit", "leadership"],
     scope: "national",
-    amounts: amount("40,000 ₪ לשנה; עד 160,000 ₪ להנדסה (4 שנים) או 120,000 ₪ לתואר תלת־שנתי", {
-      min: 40000,
-      max: 160000,
-    }),
+    amounts: amount(
+      "מחזור אוק׳ 2026 (תשפ״ז) נסגר. סכום שפורסם באתר שוליך למחזור אוק׳ 2027 / תשפ״ח: 50,000 ₪ לשנה; 200,000 ₪ להנדסה (4 שנים) או 150,000 ₪ לתואר תלת־שנתי. 65 מלגות בשנה.",
+      { min: 50000, max: 200000 },
+    ),
     cadence: "multi_year",
-    deadline: deadline("הגשה דרך אתרי האוניברסיטאות למתחילים באוקטובר 2026; בחלק מהמוסדות נסגר ב־10.5.2026", {
-      date: "2026-05-10",
-      kind: "annual_window",
-      uncertain: true,
-    }),
+    deadline: deadline(
+      "מחזור מתחילים אוקטובר 2026 נסגר (בחלק מהמוסדות 10.5.2026). מחזור אוק׳ 2027: פתיחה 1.3.2027, סגירה 30.6.2027, תשובות 15.8.2027 — לפי דף הבית. הרשמה באתרי האוניברסיטאות בלבד.",
+      {
+        date: "2026-05-10",
+        kind: "annual_window",
+      },
+    ),
     archivedReasonHe:
-      "מחזור אוקטובר 2026 נסגר במוסדות שפורסמו (10.5.2026). הרשומה נשארת להתאמה למחזור הבא — לא זכאות עכשיו.",
-    // TODO(human): לאמת סכומי תשפ״ז למנהיגי שוליך כשיפורסמו — לא להמציא.
+      "מחזור אוקטובר 2026 (תשפ״ז) נסגר. הרשומה נשארת להתאמה למחזור אוקטובר 2027 — לא זכאות עכשיו.",
     whoItsForHe:
-      "מתחילים שנה א׳ בתואר ראשון ב־STEM באוניברסיטה העברית, תל אביב, בן־גוריון, בר־אילן ותל־חי. דורשת מצוינות, פוטנציאל מנהיגות, ולעיתים צורך כלכלי. בטכניון המסלול שונה (יזמות אחרי שנה א׳).",
-    documentsHe: [...DOCS_BASIC, "נתוני בגרות ופסיכומטרי", "מסמכי הכנסה אם נדרש"],
+      "מתחילים שנה א׳ בתואר ראשון ב־STEM באוניברסיטה העברית, תל אביב, בן־גוריון, בר־אילן ותל־חי. דורשת מצוינות, פוטנציאל מנהיגות, ולעיתים צורך כלכלי. בטכניון המסלול שונה (יזמות אחרי שנה א׳). למחזור 2027: רק מתחילים שנה א׳ באוקטובר 2027.",
+    documentsHe: [
+      ...DOCS_BASIC,
+      "נתוני בגרות ופסיכומטרי",
+      "מכתבי המלצה (שניים לפחות)",
+      "מכתב קבלה למוסד",
+      "מסמכי הכנסה אם נדרש",
+      "חיבור מועמדות",
+    ],
     howToApplyHe: "הרשמה באתר המוסד בלבד, לא באתר שוליך.",
     applyUrl: "https://schulichleaders.co.il/application/",
-    notesHe: "65 מלגות בשנה ב־6 מוסדות. בטכניון: פטור משכ״ל + 25,000 ₪ שנתי במסלול יזמות נפרד.",
-    lastVerified: VERIFIED,
+    notesHe:
+      "65 מלגות בשנה ב־6 מוסדות — מיון תחרותי. בבר־אילן פורסם סף פסיכומטרי מעל 740 ובגרות 110; בעברית פסיכומטרי כמותי 700 או בגרות משוקלל 11. הספים המדויקים לפי מוסד.",
+    lastVerified: VERIFIED_TODAY,
+    treatment: "selective",
     sourceUrls: ["https://schulichleaders.co.il/", "https://deanstudents.tau.ac.il/financial-aid/schulichleaders"],
     institutionIds: ["tau", "huji", "bgu", "biu", "telhai"],
     eligibility: allOf(
@@ -102,14 +113,19 @@ export const UNIVERSITIES: Scholarship[] = [
     funderHe: "קרן שוליך / הטכניון",
     types: ["merit", "leadership"],
     scope: "institution",
-    amounts: amount("פטור משכר לימוד + מענק שנתי 25,000 ₪ למשך 2–3 שנים", { min: 25000, uncertain: true }),
+    amounts: amount(
+      "פטור משכר לימוד + מענק שנתי: בדף ההגשה למסיימי שנה א׳ באוקטובר 2026 צוין 25,000 ₪; בדף הבית (מחזור 2027) צוין 35,000 ₪. לא אוחד מספר יחיד.",
+      { min: 25000, max: 35000, uncertain: true },
+    ),
     cadence: "multi_year",
     deadline: CHECK_ANNUALLY,
-    whoItsForHe: "מסיימי שנה א׳ בטכניון המעוניינים בתוכנית יזמות. אורך 2–3 שנים לפי התואר.",
-    documentsHe: [...DOCS_BASIC, "גיליון ציונים שנה א׳"],
-    howToApplyHe: "דרך הטכניון / אתר שוליך למסלול הטכניון.",
-    applyUrl: "https://schulichleaders.co.il/",
-    lastVerified: VERIFIED,
+    whoItsForHe:
+      "מסיימי שנה א׳ בטכניון המעוניינים בתוכנית יזמות. אורך 2–3 שנים לפי התואר. בדף ההגשה: מתחילים שנה ב׳ באוקטובר 2026; לאחר הסגירה — סדנת מיון של יומיים למספר מצומצם.",
+    documentsHe: [...DOCS_BASIC, "גיליון ציונים שנה א׳", "טופס מועמדות באתר התכנית"],
+    howToApplyHe: "דרך הטכניון / דף ההגשה של שוליך למסלול הטכניון.",
+    applyUrl: "https://schulichleaders.co.il/application/",
+    lastVerified: VERIFIED_TODAY,
+    treatment: "selective",
     sourceUrls: ["https://schulichleaders.co.il/"],
     institutionIds: ["technion"],
     eligibility: allOf(
