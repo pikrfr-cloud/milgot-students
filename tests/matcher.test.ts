@@ -4,7 +4,7 @@ import { SCHOLARSHIPS } from "@/data/scholarships";
 import { TIPS, TIP_IDS } from "@/data/tips";
 import { citiesMatch, isPeripheryCity, neighborhoodMatches } from "@/lib/cities";
 import { catalogAgeBanner, deadlineSortValue, deadlineStatus, isDeadlineClosed, matchHeadline, shouldHideIcs } from "@/lib/format";
-import { allOf, anyOf, collectInstitutionIn, deadline, not } from "@/data/scholarships/helpers";
+import { allOf, anyOf, collectInstitutionIn, deadline, FLAGSHIP_IDS, not } from "@/data/scholarships/helpers";
 import { mostUrgentOpen, partialKnownAmountSum } from "@/lib/match-insights";
 import { bestSourceGrade, gradeSourceUrl, hasOfficialSource, isValidHttpUrl } from "@/lib/sources";
 import { deriveIncomeBand } from "@/lib/income";
@@ -537,7 +537,7 @@ describe("closed-cycle matching students see Schulich and ISEF", () => {
     expect(match.bucket).not.toBe("eligible");
   });
 
-  it("puts a matching first-generation periphery student in closedCycle for ISEF", () => {
+  it("keeps a matching first-generation periphery student eligible for ISEF (institution-gated, not closed-cycle)", () => {
     const profile: StudentProfile = {
       degreeLevel: "ba",
       firstGeneration: true,
@@ -546,9 +546,13 @@ describe("closed-cycle matching students see Schulich and ISEF", () => {
       willingToVolunteer: true,
     };
     const match = matchScholarship(byId("isef"), profile, { asOf });
-    expect(isDeadlineClosed(byId("isef").deadline, asOf)).toBe(true);
-    expect(match.bucket).toBe("closedCycle");
-    expect(match.bucket).not.toBe("ineligible");
+    expect(isDeadlineClosed(byId("isef").deadline, asOf)).toBe(false);
+    expect(byId("isef").deadline.kind).toBe("annual_window");
+    expect(byId("isef").treatment).toBe("selective");
+    expect(byId("isef").notesHe).toMatch(/מוסדות.*עדיין פתוחה|חלק עדיין פתוחה/);
+    expect(match.bucket).toBe("eligible");
+    expect(match.bucket).not.toBe("closedCycle");
+    expect(matchHeadline(match)).toMatch(/מיון תחרותי/);
   });
 });
 
@@ -643,9 +647,12 @@ describe("source grades and catalog URLs", () => {
     expect(urls).not.toContain("Perypheria45");
   });
 
-  it("does not cite gruss.org.il/blank as the official source", () => {
-    expect(byId("gruss").sourceUrls.some((u) => u.includes("gruss.org.il/blank"))).toBe(false);
-    expect(byId("gruss").sourceUrls.some((u) => u.includes("Gruss.aspx"))).toBe(true);
+  it("cites the official Gruss מלגות page (gruss.org.il/blank) with a תשפ״ו amount tag", () => {
+    const rec = byId("gruss");
+    expect(rec.sourceUrls.some((u) => u.includes("gruss.org.il/blank"))).toBe(true);
+    expect(rec.applyUrl).toMatch(/gruss\.org\.il\/blank/);
+    expect(rec.amounts.textHe).toMatch(/תשפ״ו/);
+    expect(rec.treatment).toBe("selective");
   });
 
   it("keeps schulich-leaders institutionIds in sync with eligibility", () => {
@@ -684,9 +691,10 @@ describe("source grades and catalog URLs", () => {
 describe("closed deadline wins over needInfo", () => {
   const asOf = new Date("2026-09-01T12:00:00Z");
 
-  it("puts a partial ISEF profile in closedCycle, not needInfo asking for more fields", () => {
-    const match = matchScholarship(byId("isef"), { degreeLevel: "ba" }, { asOf });
-    expect(isDeadlineClosed(byId("isef").deadline, asOf)).toBe(true);
+  it("puts a partial Kemach תשפ״ו profile in closedCycle, not needInfo asking for more fields", () => {
+    const match = matchScholarship(byId("kemach-derech-tzlacha"), { degreeLevel: "ba" }, { asOf });
+    expect(isDeadlineClosed(byId("kemach-derech-tzlacha").deadline, asOf)).toBe(true);
+    expect(byId("kemach-derech-tzlacha").archivedReasonHe).toMatch(/נסגר|אינה פעילה/);
     expect(match.bucket).toBe("closedCycle");
     expect(match.bucket).not.toBe("needInfo");
   });
@@ -734,9 +742,14 @@ describe("catalog freshness", () => {
     }
   });
 
-  it("treats perach as notYetOpen before 2026-09-03", () => {
-    expect(byId("perach").deadline.opensAt).toBe("2026-09-03");
-    expect(deadlineStatus(byId("perach").deadline, asOf).kind).toBe("notYetOpen");
+  it("treats Perach as notYetOpen on 2026-09-01 with an unconfirmed November close", () => {
+    const rec = byId("perach");
+    expect(rec.deadline.kind).toBe("annual_window");
+    expect(rec.deadline.opensAt).toBe("2026-09-02");
+    expect(rec.deadline.date).toBeUndefined();
+    expect(rec.deadline.uncertain).toBe(true);
+    expect(rec.deadline.windowHe).toMatch(/נובמבר/);
+    expect(deadlineStatus(rec.deadline, asOf).kind).toBe("notYetOpen");
   });
 });
 
@@ -840,7 +853,7 @@ describe("Gruss window is notYetOpen on 2026-09-01", () => {
   it("sets opensAt 2026-09-15 so deadlineStatus is notYetOpen, not open", () => {
     const gruss = byId("gruss");
     expect(gruss.deadline.opensAt).toBe("2026-09-15");
-    expect(gruss.deadline.date).toBe("2026-12-11");
+    expect(gruss.deadline.date).toBe("2026-12-15");
     expect(deadlineStatus(gruss.deadline, asOf).kind).toBe("notYetOpen");
     expect(deadlineStatus(gruss.deadline, asOf).kind).not.toBe("open");
     expect(shouldHideIcs(gruss.deadline, asOf)).toBe(true);
@@ -949,15 +962,45 @@ describe("olim student authority is not a fake age-30 gate", () => {
   });
 });
 
-describe("selective treatment only on records that already describe interviews", () => {
-  it("tags Rothschild ambassadors as selective; does not invent tags on Atidim/Gruss/Eilim", () => {
-    expect(byId("rothschild-ambassadors").treatment).toBe("selective");
+describe("selective treatment on competitive flagships", () => {
+  it("marks interview/quota programs as selective (UI chip «מיון תחרותי»)", () => {
+    const selectiveIds = [
+      "rothschild-ambassadors",
+      "atidim-industry",
+      "heznek-academy",
+      "eilim",
+      "impact-fidf",
+      "gruss",
+      "schulich-leaders",
+      "technion-schulich-entrepreneurship",
+      "isef",
+      "kemach-derech-tzlacha",
+    ];
+    for (const id of selectiveIds) {
+      expect(byId(id).treatment, id).toBe("selective");
+    }
     expect(byId("rothschild-ambassadors").documentsHe.some((d) => d.includes("ראיון"))).toBe(true);
-    expect(byId("atidim-industry").treatment).not.toBe("selective");
-    expect(byId("gruss").treatment).not.toBe("selective");
-    expect(byId("eilim").treatment).not.toBe("selective");
-    expect(byId("heznek-academy").treatment).not.toBe("selective");
-    expect(byId("impact-fidf").treatment).not.toBe("selective");
+  });
+});
+
+describe("flagship תשפ״ז catalog honesty", () => {
+  it("keeps all 111 catalog ids, including every flagship", () => {
+    const ids = SCHOLARSHIPS.map((s) => s.id);
+    expect(ids.length).toBe(111);
+    expect(new Set(ids).size).toBe(111);
+    for (const id of FLAGSHIP_IDS) {
+      expect(ids, id).toContain(id);
+    }
+  });
+
+  it("gives each flagship a numeric amount or an explicit unpublished/תשפ״ז tag, verified 2026-09-01", () => {
+    const tag = /תשפ״ז|טרם פורסם|לא פורסם/;
+    for (const id of FLAGSHIP_IDS) {
+      const rec = byId(id);
+      expect(rec.lastVerified, id).toBe("2026-09-01");
+      const hasNumber = rec.amounts.minIls != null || rec.amounts.maxIls != null;
+      expect(hasNumber || tag.test(rec.amounts.textHe), `${id} amount: ${rec.amounts.textHe}`).toBe(true);
+    }
   });
 });
 
