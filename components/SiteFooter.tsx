@@ -11,6 +11,7 @@ export function SiteFooter() {
           <p className="mt-2 text-white/75 leading-relaxed">
             {HE.legal.notOfficial}
           </p>
+          <p className="mt-2 text-white/75 leading-relaxed">{HE.legal.identityUnpublished}</p>
         </div>
         <div>
           <p className="font-medium">פרטיות</p>

@@ -113,8 +113,10 @@ function cityMatches(
   }
   if (match(res) || match(home)) return "pass";
   if (isUnknown(res) && isUnknown(home)) return "unknown";
-  if (isUnknown(res) || isUnknown(home)) return "unknown";
-  return "fail";
+  // Known mismatch on the filled city is a fail. Do not report a filled
+  // cityOfResidence as «חסר במפורט» just because hometown is still blank.
+  if (!isUnknown(res) && !match(res)) return "fail";
+  return "unknown";
 }
 
 function peripheryMatches(
@@ -568,6 +570,8 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
   const children = rule.rules.map((r) => evalRule(r, profile));
   const anyFail = children.some((c) => c.status === "fail");
   const anyUnknown = children.some((c) => c.status === "unknown");
+  // Fail wins over unknown: allOf(immutable fail, missing field) is ineligible,
+  // not «חסר פרט» on the unknown sibling.
   const status: EvalStatus = anyFail ? "fail" : anyUnknown ? "unknown" : "pass";
   const failCount = children.reduce((sum, c) => sum + c.failCount, 0);
   const immutableFailCount = children.reduce((sum, c) => sum + c.immutableFailCount, 0);
@@ -654,27 +658,29 @@ function applyPostEval(
     };
   }
 
-  if (
-    bucket === "eligible" &&
-    (scholarship.treatment === "checkAtInstitution" || scholarship.treatment === "checkAtAuthority")
-  ) {
-    const atAuthority = scholarship.treatment === "checkAtAuthority";
-    extra.push({
-      id: nextId("check"),
-      labelHe: atAuthority ? "בדיקה ברשות המוסמכת" : "בדיקה במוסד / ברשות",
-      status: "unknown",
-      detailHe: atAuthority
-        ? "רשומה זו מציינת מסלול שיקום או מימון ברשות (ביטוח לאומי / משרד), בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «זכאים עכשיו»."
-        : "רשומה זו מציינת שקיים מסלול דיקן או עירייה, בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «זכאים עכשיו».",
-    });
-    return {
-      bucket: "needInfo",
-      evaluation: {
-        ...evaluation,
+  if (scholarship.treatment === "checkAtInstitution" || scholarship.treatment === "checkAtAuthority") {
+    const missingNamedField = evaluation.criteria.some(
+      (c) => c.status === "unknown" && !!c.field && !c.group,
+    );
+    if (bucket === "eligible" || (bucket === "needInfo" && !missingNamedField)) {
+      const atAuthority = scholarship.treatment === "checkAtAuthority";
+      extra.push({
+        id: nextId("check"),
+        labelHe: atAuthority ? "בדיקה ברשות המוסמכת" : "בדיקה במוסד / ברשות",
         status: "unknown",
-        criteria: [...evaluation.criteria, ...extra],
-      },
-    };
+        detailHe: atAuthority
+          ? "רשומה זו מציינת מסלול שיקום או מימון ברשות (ביטוח לאומי / משרד), בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «זכאים עכשיו»."
+          : "רשומה זו מציינת שקיים מסלול דיקן או עירייה, בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «זכאים עכשיו».",
+      });
+      return {
+        bucket: "checkAtInstitution",
+        evaluation: {
+          ...evaluation,
+          status: "unknown",
+          criteria: [...evaluation.criteria, ...extra],
+        },
+      };
+    }
   }
 
   return { bucket, evaluation };
@@ -735,6 +741,7 @@ export function groupMatches(matches: ScholarshipMatch[]) {
     closedCycle: matches.filter((m) => m.bucket === "closedCycle"),
     needInfo: matches.filter((m) => m.bucket === "needInfo"),
     nearMiss: matches.filter((m) => m.bucket === "nearMiss"),
+    checkAtInstitution: matches.filter((m) => m.bucket === "checkAtInstitution"),
     ineligible: matches.filter((m) => m.bucket === "ineligible"),
   };
 }

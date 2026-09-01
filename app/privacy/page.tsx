@@ -26,7 +26,7 @@ export default function PrivacyPage() {
         <DeleteMyDataButton />
       </div>
       <h2 className="mt-8 font-display text-2xl">יצירת קשר</h2>
-      <p className="mt-3 text-sm text-ink-soft">{HE.legal.todoBusiness}</p>
+      <p className="mt-3">{HE.legal.identityUnpublished}</p>
       <p className="mt-6">
         <Link href="/terms" className="underline underline-offset-4">
           תנאי שימוש

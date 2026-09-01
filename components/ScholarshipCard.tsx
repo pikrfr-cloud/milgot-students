@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ScholarshipMatch, SourceLevel, TrackingStatus } from "@/lib/types";
-import { deadlineStatus, formatAmount, formatDeadline, matchHeadline, scopeLabelHe } from "@/lib/format";
+import { deadlineStatus, formatAmount, formatDeadline, matchHeadline, scopeLabelHe, shouldHideIcs } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { INSTITUTIONS } from "@/lib/institutions";
 import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
@@ -21,6 +21,7 @@ const bucketStyle: Record<string, string> = {
   closedCycle: "border-gold/40 bg-gold/10",
   needInfo: "border-info/30 bg-info/5",
   nearMiss: "border-warn/30 bg-warn/5",
+  checkAtInstitution: "border-line bg-paper-deep/50",
   ineligible: "border-line bg-card",
 };
 
@@ -53,7 +54,8 @@ export function ScholarshipCard({
     ...new Map(match.unknown.filter((c) => c.field).map((c) => [c.field, c])).values(),
   ];
   const due = deadlineStatus(s.deadline);
-  const hideIcs = due.kind === "closed" || !s.deadline.date;
+  const hideIcs = shouldHideIcs(s.deadline);
+  const unknownNotes = match.unknown.filter((c) => !c.field && !c.group);
 
   if (compact && match.bucket === "ineligible") {
     return (
@@ -145,11 +147,13 @@ export function ScholarshipCard({
               </ul>
             </section>
           )}
-          {match.unknown.length > 0 && (
+          {match.unknown.filter((c) => c.field).length > 0 && (
             <section>
               <h4 className="font-medium text-info">חסר לאישור</h4>
               <ul className="mt-1 list-disc pr-5 space-y-1">
-                {match.unknown.map((c) => (
+                {match.unknown
+                  .filter((c) => c.field)
+                  .map((c) => (
                   <li key={c.id}>
                     <span className="font-medium">{c.labelHe}.</span> {c.detailHe}{" "}
                     {c.field ? (
@@ -157,6 +161,20 @@ export function ScholarshipCard({
                         לעריכת השדה
                       </Link>
                     ) : null}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {unknownNotes.length > 0 && (
+            <section>
+              <h4 className="font-medium text-ink-soft">
+                {match.bucket === "checkAtInstitution" ? HE.buckets.checkAtInstitutionLong : "לתשומת לב"}
+              </h4>
+              <ul className="mt-1 list-disc pr-5 space-y-1">
+                {unknownNotes.map((c) => (
+                  <li key={c.id}>
+                    <span className="font-medium">{c.labelHe}.</span> {c.detailHe}
                   </li>
                 ))}
               </ul>
@@ -218,7 +236,10 @@ export function ScholarshipCard({
   );
 
   return (
-    <article className={`print-break rounded-2xl border p-5 ${bucketStyle[match.bucket]}`}>
+    <article
+      id={s.id}
+      className={`print-break scroll-mt-28 rounded-2xl border p-5 ${bucketStyle[match.bucket] ?? bucketStyle.ineligible}`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="font-display text-xl text-forest-deep">
@@ -233,6 +254,11 @@ export function ScholarshipCard({
       <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
         {match.bucket === "closedCycle" ? (
           <span className="rounded-full bg-gold/20 px-2 py-0.5 text-ink">{HE.buckets.closedCycleLong}</span>
+        ) : null}
+        {match.bucket === "checkAtInstitution" ? (
+          <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">
+            {HE.buckets.checkAtInstitutionLong}
+          </span>
         ) : null}
         <span className={`rounded-full px-2 py-0.5 ${level === "official_page" ? levelStyle.official_page : level === "institution_site" ? levelStyle.institution_site : levelStyle.indirect}`}>
           {sourceLevelLabelHe(level)}

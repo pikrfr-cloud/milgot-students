@@ -342,7 +342,13 @@ export type RuleEval = {
   immutablePass?: boolean;
 };
 
-export type MatchBucket = "eligible" | "closedCycle" | "needInfo" | "nearMiss" | "ineligible";
+export type MatchBucket =
+  | "eligible"
+  | "closedCycle"
+  | "needInfo"
+  | "nearMiss"
+  | "checkAtInstitution"
+  | "ineligible";
 
 export type ScholarshipMatch = {
   scholarship: Scholarship;
