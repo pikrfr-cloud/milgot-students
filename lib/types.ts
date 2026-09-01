@@ -121,8 +121,17 @@ export const SCOPE_TYPES = ["national", "institution", "municipal", "regional"] 
 export type ScholarshipScope = (typeof SCOPE_TYPES)[number];
 
 /** How the matcher should present a record even when predicates pass. */
-export const SCHOLARSHIP_TREATMENTS = ["standard", "scoreBased", "checkAtInstitution"] as const;
+export const SCHOLARSHIP_TREATMENTS = [
+  "standard",
+  "scoreBased",
+  "checkAtInstitution",
+  "checkAtAuthority",
+] as const;
 export type ScholarshipTreatment = (typeof SCHOLARSHIP_TREATMENTS)[number];
+
+/** Best official-source URL quality for this record. Green UI tag only for `dedicated`. */
+export const SOURCE_GRADES = ["dedicated", "homepage", "secondary"] as const;
+export type SourceGrade = (typeof SOURCE_GRADES)[number];
 
 export const CATALOG_KINDS = ["scholarship", "tip"] as const;
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
@@ -281,8 +290,16 @@ export type Scholarship = {
   /**
    * `scoreBased`: never «eligible now» — award is a scored lottery/scale.
    * `checkAtInstitution`: skeleton dean/city-hall record; never auto-eligible.
+   * `checkAtAuthority`: rehab/ministry track; never auto-eligible from a generic flag.
    */
   treatment?: ScholarshipTreatment;
+  /**
+   * Scholarship ids that cannot be taken together with this one in the same cycle.
+   * Shown as «בחרו אחת מ‑…» when several in the set would otherwise be eligible.
+   */
+  excludes?: string[];
+  /** Best source URL grade; computed at catalog load. */
+  sourceGrade?: SourceGrade;
 };
 
 export type EvalStatus = "pass" | "fail" | "unknown";
@@ -305,9 +322,11 @@ export type RuleEval = {
   /** Failures the student could still change (volunteer, load, average, mechina, …). */
   mutableFailCount: number;
   criteria: CriterionResult[];
+  /** True when a passing outcome is based on identity facts the student cannot change. */
+  immutablePass?: boolean;
 };
 
-export type MatchBucket = "eligible" | "needInfo" | "nearMiss" | "ineligible";
+export type MatchBucket = "eligible" | "closedCycle" | "needInfo" | "nearMiss" | "ineligible";
 
 export type ScholarshipMatch = {
   scholarship: Scholarship;
@@ -316,6 +335,8 @@ export type ScholarshipMatch = {
   passed: CriterionResult[];
   failed: CriterionResult[];
   unknown: CriterionResult[];
+  /** Set when another scholarship in `excludes` is also otherwise eligible. */
+  mutexNoteHe?: string;
 };
 
 export const TRACKING_STATUSES = ["in_progress", "submitted", "accepted"] as const;

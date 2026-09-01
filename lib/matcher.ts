@@ -24,6 +24,20 @@ function isUnknown(value: unknown): boolean {
   return value === null || value === undefined;
 }
 
+/**
+ * Native-born students (isOleh === false) do not see years-in-Israel in the wizard.
+ * Treat them as having lived in Israel their whole life so Marom-style mins are not stuck
+ * on a hidden field. Oleh with a skipped count stays unknown.
+ */
+function effectiveYearsInIsrael(profile: StudentProfile): number | null {
+  if (!isUnknown(profile.yearsInIsrael)) return profile.yearsInIsrael as number;
+  if (profile.isOleh === false) {
+    if (!isUnknown(profile.age)) return profile.age as number;
+    return 80;
+  }
+  return null;
+}
+
 function includesAny<T>(have: T[] | null | undefined, needed: T[]): boolean {
   if (!have) return false;
   return needed.some((n) => have.includes(n));
@@ -45,6 +59,7 @@ const IMMUTABLE_TYPES = new Set<Predicate["type"]>([
   "yearsInIsraelMin",
   "serviceIn",
   "degreeLevelIn",
+  "fieldOfStudyIn",
   "hasDisability",
   "familyFlagIn",
   "combatRole",
@@ -54,6 +69,7 @@ const IMMUTABLE_TYPES = new Set<Predicate["type"]>([
   "ageMin",
   "ageMax",
   "yearsSinceDischargeMax",
+  "reservistDaysMin",
   "periphery",
   "nationalPriority",
   "neighborhoodIn",
@@ -321,9 +337,9 @@ function evalPredicate(pred: Predicate, profile: StudentProfile): EvalStatus {
     case "isOleh":
       return boolPred(profile.isOleh, pred.value ?? true);
     case "yearsInIsraelMax":
-      return numPred(profile.yearsInIsrael, (n) => n <= pred.value);
+      return numPred(effectiveYearsInIsrael(profile), (n) => n <= pred.value);
     case "yearsInIsraelMin":
-      return numPred(profile.yearsInIsrael, (n) => n >= pred.value);
+      return numPred(effectiveYearsInIsrael(profile), (n) => n >= pred.value);
     case "hasDisability":
       return boolPred(profile.hasDisability, pred.value ?? true);
     case "familyFlagIn":
@@ -391,6 +407,7 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
     return {
       status,
       ...failSplit(status, isImmutablePredicate(rule)),
+      immutablePass: status === "pass" && isImmutablePredicate(rule),
       criteria: [criterion],
     };
   }
@@ -399,7 +416,31 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
     const inner = evalRule(rule.rule, profile);
     const status: EvalStatus =
       inner.status === "pass" ? "fail" : inner.status === "fail" ? "pass" : "unknown";
-    const innerImmutable = isPredicate(rule.rule) && isImmutablePredicate(rule.rule);
+    const failImmutable = status === "fail" && !!inner.immutablePass;
+    const passImmutable =
+      status === "pass" && inner.immutableFailCount > 0 && inner.mutableFailCount === 0;
+    const innerIsCompound = !isPredicate(rule.rule);
+
+    if (innerIsCompound) {
+      const criterion: CriterionResult = {
+        id: nextId("not"),
+        labelHe: rule.labelHe ?? "תנאי שלילה",
+        status,
+        detailHe:
+          status === "pass"
+            ? "התנאי השלילי מתקיים כמכלול (לא כל התנאים הפנימיים מתקיימים)."
+            : status === "unknown"
+              ? "חסר פרט כדי לאשר את התנאי השלילי."
+              : "התנאי השלילי אינו מתקיים — התנאים הפנימיים מתקיימים.",
+      };
+      return {
+        status,
+        ...failSplit(status, failImmutable),
+        immutablePass: passImmutable,
+        criteria: [criterion],
+      };
+    }
+
     const criteria = inner.criteria.map((c) => ({
       ...c,
       id: nextId("n"),
@@ -415,7 +456,8 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
     }));
     return {
       status,
-      ...failSplit(status, innerImmutable),
+      ...failSplit(status, failImmutable),
+      immutablePass: passImmutable,
       criteria,
     };
   }
@@ -425,6 +467,7 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
     const anyPass = children.some((c) => c.status === "pass");
     const anyUnknown = children.some((c) => c.status === "unknown");
     const status: EvalStatus = anyPass ? "pass" : anyUnknown ? "unknown" : "fail";
+    const immutablePass = children.some((c) => c.status === "pass" && c.immutablePass);
 
     const summary: CriterionResult = {
       id: nextId("any"),
@@ -446,6 +489,7 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
         failCount: 0,
         immutableFailCount: 0,
         mutableFailCount: 0,
+        immutablePass,
         criteria: [summary, ...passing.flatMap((c) => c.criteria)],
       };
     }
@@ -456,6 +500,7 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
         failCount: 0,
         immutableFailCount: 0,
         mutableFailCount: 0,
+        immutablePass: false,
         criteria: [summary, ...relevant.flatMap((c) => c.criteria)],
       };
     }
@@ -470,6 +515,7 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
     return {
       status,
       ...failSplit("fail", blockedImmutably),
+      immutablePass: false,
       criteria: [leaf],
     };
   }
@@ -481,6 +527,7 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
   const failCount = children.reduce((sum, c) => sum + c.failCount, 0);
   const immutableFailCount = children.reduce((sum, c) => sum + c.immutableFailCount, 0);
   const mutableFailCount = children.reduce((sum, c) => sum + c.mutableFailCount, 0);
+  const immutablePass = status === "pass" && children.every((c) => c.immutablePass);
   const criteria = children.flatMap((c) => c.criteria);
   if (rule.labelHe) {
     criteria.unshift({
@@ -496,7 +543,7 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
             : "לא כל התנאים בקבוצה מתקיימים.",
     });
   }
-  return { status, failCount, immutableFailCount, mutableFailCount, criteria };
+  return { status, failCount, immutableFailCount, mutableFailCount, immutablePass, criteria };
 }
 
 const NEAR_MISS_MAX = 2;
@@ -529,16 +576,13 @@ function applyPostEval(
     extra.push({
       id: nextId("deadline"),
       labelHe: "מועד ההגשה",
-      status: "fail",
-      detailHe: "המועד שפורסם כבר עבר. בדקו אם ייפתח מחזור חדש באתר הרשמי.",
+      status: "unknown",
+      detailHe: "המועד שפורסם למחזור זה כבר עבר. המלגה נשארת רלוונטית למחזור הבא — לא «לא זכאים».",
     });
     return {
-      bucket: "ineligible",
+      bucket: "closedCycle",
       evaluation: {
         ...evaluation,
-        status: "fail",
-        failCount: evaluation.failCount + 1,
-        immutableFailCount: evaluation.immutableFailCount + 1,
         criteria: [...evaluation.criteria, ...extra],
       },
     };
@@ -562,13 +606,18 @@ function applyPostEval(
     };
   }
 
-  if (bucket === "eligible" && scholarship.treatment === "checkAtInstitution") {
+  if (
+    bucket === "eligible" &&
+    (scholarship.treatment === "checkAtInstitution" || scholarship.treatment === "checkAtAuthority")
+  ) {
+    const atAuthority = scholarship.treatment === "checkAtAuthority";
     extra.push({
       id: nextId("check"),
-      labelHe: "בדיקה במוסד / ברשות",
+      labelHe: atAuthority ? "בדיקה ברשות המוסמכת" : "בדיקה במוסד / ברשות",
       status: "unknown",
-      detailHe:
-        "רשומה זו מציינת שקיים מסלול דיקן או עירייה, בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «זכאים עכשיו».",
+      detailHe: atAuthority
+        ? "רשומה זו מציינת מסלול שיקום או מימון ברשות (ביטוח לאומי / משרד), בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «זכאים עכשיו»."
+        : "רשומה זו מציינת שקיים מסלול דיקן או עירייה, בלי תנאי סף מאומתים בקטלוג. יש לבדוק במקור — לא «זכאים עכשיו».",
     });
     return {
       bucket: "needInfo",
@@ -613,12 +662,29 @@ export function matchAll(
   profile: StudentProfile,
   options: MatchOptions = {},
 ): ScholarshipMatch[] {
-  return scholarships.map((s) => matchScholarship(s, profile, options));
+  return applyMutexNotes(scholarships.map((s) => matchScholarship(s, profile, options)));
+}
+
+const TAKING_BUCKETS = new Set<MatchBucket>(["eligible", "closedCycle"]);
+
+function applyMutexNotes(matches: ScholarshipMatch[]): ScholarshipMatch[] {
+  const byId = new Map(matches.map((m) => [m.scholarship.id, m]));
+  return matches.map((m) => {
+    const excludes = m.scholarship.excludes;
+    if (!excludes?.length || !TAKING_BUCKETS.has(m.bucket)) return m;
+    const rivals = excludes
+      .map((id) => byId.get(id))
+      .filter((o): o is ScholarshipMatch => !!o && TAKING_BUCKETS.has(o.bucket));
+    if (!rivals.length) return m;
+    const names = [m.scholarship.nameHe, ...rivals.map((r) => r.scholarship.nameHe)];
+    return { ...m, mutexNoteHe: `בחרו אחת מ‑${names.join(" / ")}` };
+  });
 }
 
 export function groupMatches(matches: ScholarshipMatch[]) {
   return {
     eligible: matches.filter((m) => m.bucket === "eligible"),
+    closedCycle: matches.filter((m) => m.bucket === "closedCycle"),
     needInfo: matches.filter((m) => m.bucket === "needInfo"),
     nearMiss: matches.filter((m) => m.bucket === "nearMiss"),
     ineligible: matches.filter((m) => m.bucket === "ineligible"),

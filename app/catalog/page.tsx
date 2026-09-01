@@ -3,8 +3,11 @@
 import { useMemo, useState } from "react";
 import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
 import { CoverageNote } from "@/components/CoverageNote";
-import { formatAmount, formatDeadline, scopeLabelHe } from "@/lib/format";
+import { ExternalLink } from "@/components/ExternalLink";
+import { HeWithEn } from "@/components/HeWithEn";
+import { deadlineStatus, formatAmount, formatDeadline, scopeLabelHe } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
+import { bestSourceGrade, sourceGradeLabelHe } from "@/lib/sources";
 
 export default function CatalogPage() {
   const [q, setQ] = useState("");
@@ -39,45 +42,59 @@ export default function CatalogPage() {
         onChange={(e) => setQ(e.target.value)}
       />
       <ul className="mt-8 grid gap-4">
-        {list.map((s) => (
-          <li key={s.id} className="rounded-2xl border border-line bg-card p-5">
-            <div className="flex flex-wrap justify-between gap-2">
-              <h2 className="font-display text-xl text-forest-deep">{s.nameHe}</h2>
-              <span className="text-sm">{formatAmount(s.amounts)}</span>
-            </div>
-            <p className="mt-1 text-sm text-ink-soft">{s.funderHe}</p>
-            <p className="mt-2 text-sm">{s.whoItsForHe}</p>
-            <p className="mt-2 text-sm text-ink-soft">
-              {formatDeadline(s.deadline)} · {s.types.map(scholarshipTypeLabel).join(", ")} ·{" "}
-              {scopeLabelHe(s.scope)}
-            </p>
-            <p className="mt-2 text-xs">
-              {s.officialSource ? (
-                <span className="rounded-full bg-ok/10 px-2 py-0.5 text-ok">מקור רשמי</span>
-              ) : (
-                <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">אין מקור רשמי מאומת</span>
-              )}
-            </p>
-            {s.sourceUrls.length > 0 ? (
-              <p className="mt-2 text-xs text-ink-soft">
-                מקורות:{" "}
-                {s.sourceUrls.map((url, i) => (
-                  <span key={url}>
-                    {i > 0 ? " · " : null}
-                    <a className="underline" href={url} target="_blank" rel="noreferrer">
-                      {url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}
-                    </a>
-                  </span>
-                ))}
+        {list.map((s) => {
+          const grade = s.sourceGrade ?? bestSourceGrade(s.sourceUrls);
+          const due = deadlineStatus(s.deadline);
+          return (
+            <li key={s.id} className="rounded-2xl border border-line bg-card p-5">
+              <div className="flex flex-wrap justify-between gap-2">
+                <h2 className="font-display text-xl text-forest-deep">
+                  <HeWithEn text={s.nameHe} />
+                </h2>
+                <span className="text-sm">{formatAmount(s.amounts)}</span>
+              </div>
+              <p className="mt-1 text-sm text-ink-soft">
+                <HeWithEn text={s.funderHe} />
               </p>
-            ) : null}
-            {s.applyUrl ? (
-              <a className="mt-2 inline-block text-sm underline" href={s.applyUrl} target="_blank" rel="noreferrer">
-                הגשה / מידע
-              </a>
-            ) : null}
-          </li>
-        ))}
+              <p className="mt-2 text-sm">{s.whoItsForHe}</p>
+              <p className="mt-2 text-sm text-ink-soft">
+                {due.labelHe} · {formatDeadline(s.deadline)} · {s.types.map(scholarshipTypeLabel).join(", ")} ·{" "}
+                {scopeLabelHe(s.scope)}
+              </p>
+              <p className="mt-2 text-xs">
+                <span
+                  className={`rounded-full px-2 py-0.5 ${
+                    grade === "dedicated"
+                      ? "bg-ok/10 text-ok"
+                      : grade === "homepage"
+                        ? "bg-info/10 text-info"
+                        : "bg-warn/10 text-warn"
+                  }`}
+                >
+                  {sourceGradeLabelHe(grade)}
+                </span>
+              </p>
+              {s.sourceUrls.length > 0 ? (
+                <p className="mt-2 text-xs text-ink-soft">
+                  מקורות:{" "}
+                  {s.sourceUrls.map((url, i) => (
+                    <span key={url}>
+                      {i > 0 ? " · " : null}
+                      <ExternalLink className="underline" href={url}>
+                        {url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}
+                      </ExternalLink>
+                    </span>
+                  ))}
+                </p>
+              ) : null}
+              {s.applyUrl ? (
+                <ExternalLink className="mt-2 inline-block text-sm underline" href={s.applyUrl}>
+                  הגשה / מידע
+                </ExternalLink>
+              ) : null}
+            </li>
+          );
+        })}
       </ul>
 
       <h2 className="mt-14 font-display text-3xl text-forest-deep">טיפים והפניות (לא מלגות)</h2>
@@ -87,13 +104,17 @@ export default function CatalogPage() {
       <ul className="mt-6 grid gap-4">
         {tips.map((s) => (
           <li key={s.id} className="rounded-2xl border border-dashed border-line bg-card p-5">
-            <h3 className="font-display text-lg text-forest-deep">{s.nameHe}</h3>
-            <p className="mt-1 text-sm text-ink-soft">{s.funderHe}</p>
+            <h3 className="font-display text-lg text-forest-deep">
+              <HeWithEn text={s.nameHe} />
+            </h3>
+            <p className="mt-1 text-sm text-ink-soft">
+              <HeWithEn text={s.funderHe} />
+            </p>
             <p className="mt-2 text-sm">{s.whoItsForHe}</p>
             {s.sourceUrls[0] ? (
-              <a className="mt-2 inline-block text-sm underline" href={s.sourceUrls[0]} target="_blank" rel="noreferrer">
+              <ExternalLink className="mt-2 inline-block text-sm underline" href={s.sourceUrls[0]}>
                 מקור
-              </a>
+              </ExternalLink>
             ) : null}
           </li>
         ))}

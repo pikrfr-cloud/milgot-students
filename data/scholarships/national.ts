@@ -41,7 +41,7 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "הגשה מקוונת באתר מיל־GO (cua.org.il) כשההרשמה נפתחת.",
     applyUrl: "https://www.cua.org.il/",
     notesHe:
-      "מחליפה את קרן הסיוע של משרד החינוך. אין כפל מלא עם מלגות ממשלתיות מסוימות. מדרגות הסכום פורסמו באתר המל״ג ובאתר מיל־GO; גובה המענק האישי תלוי בניקוד.",
+      "מחליפה את קרן הסיוע של משרד החינוך. כפל עם מלגת ממדים ללימודים לא אומת בדף מיל־GO הרשמי — יש לבדוק בשני המקורות לפני הגשה. מדרגות הסכום פורסמו באתר המל״ג ובאתר מיל־GO; גובה המענק האישי תלוי בניקוד.",
     lastVerified: VERIFIED,
     sourceUrls: [
       "https://www.cua.org.il/",
@@ -150,11 +150,15 @@ export const NATIONAL: Scholarship[] = [
       "חיילים משוחררים ומסיימי שירות לאומי/אזרחי הלומדים שנה א׳ לתואר ראשון במוסד באזור עדיפות לאומית או בירושלים, עד חמש שנים מסיום השירות.",
     documentsHe: [...DOCS_SERVICE, "רישום לשנה א׳ במוסד זכאי"],
     howToApplyHe: "במקרים רבים המוסד מעביר את רשימת הזכאים למשרד הביטחון. יש לוודא מול מדור שכר לימוד.",
-    applyUrl: "https://www.hachvana.mod.gov.il/",
-    notesHe: "אין כפל עם ייעוד 45/46 ועם חלק ממענקי המילואים. הסכום צמוד לשכ״ל האוניברסיטאי.",
+    applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria44.aspx",
+    notesHe: "אין כפל עם ייעוד 45/46. עם ממדים ללימודים: מימוש ייעוד 44 בשנה א׳ וממדים משנה ב׳. הסכום צמוד לשכ״ל האוניברסיטאי.",
     lastVerified: VERIFIED,
-    sourceUrls: ["https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria45.aspx"],
+    sourceUrls: [
+      "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria44.aspx",
+      "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/List-of-Educational-Institutions-for-Periphery-44.aspx",
+    ],
     institutionIds: PERIPHERY_STUDY_INSTITUTIONS,
+    excludes: ["yeud-45", "yeud-46"],
     eligibility: allOf(
       { type: "institutionIn", values: PERIPHERY_STUDY_INSTITUTIONS },
       { type: "degreeLevelIn", values: ["ba"] },
@@ -182,9 +186,10 @@ export const NATIONAL: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, ...DOCS_SERVICE, "הוכחת מגורים באזור עדיפות לאומית"],
     howToApplyHe: "הגשה באזור האישי באתר האגף לחיילים משוחררים.",
     applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria45.aspx",
-    notesHe: "המלגה מועברת לפיקדון האישי. אין כפל עם ייעוד 44/46. כתובת רשומה 5 מתוך 6 שנים נבדקת באגף — לא לפי עיר מגורים נוכחית.",
+    notesHe: "המלגה מועברת לפיקדון האישי. אין כפל עם ייעוד 44/46. כתובת רשומה 5 מתוך 6 שנים נבדקת באגף — לא לפי עיר מגורים נוכחית. עם ממדים ללימודים ניתן לשלב (85% לחשבון, 15% לפיקדון).",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria45.aspx"],
+    excludes: ["yeud-44", "yeud-46"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "yearOfStudyIn", values: [1] },
@@ -212,9 +217,10 @@ export const NATIONAL: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, ...DOCS_SERVICE, "אישור סיום מכינה קדם־אקדמית", "הוכחת מגורים"],
     howToApplyHe: "הגשה באזור האישי באתר האגף לחיילים משוחררים.",
     applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria46.aspx",
-    notesHe: "מיועדת למי שלמד במכינה. מועברת לפיקדון כסכום חד־פעמי לכל שנה שאושרה.",
+    notesHe: "מיועדת למי שלמד במכינה. מועברת לפיקדון כסכום חד־פעמי לכל שנה שאושרה. בדף האגף: אין כפל עם ייעוד 44/45 או ממדים ללימודים.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria46.aspx"],
+    excludes: ["yeud-44", "yeud-45", "mod-uniform-to-studies"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "serviceIn", values: ["idf", "national", "civil"] },
@@ -327,22 +333,21 @@ export const NATIONAL: Scholarship[] = [
       windowHe: "לפי סמסטר",
     }),
     whoItsForHe:
-      "עולים הלומדים בישראל במוסד המוכר על ידי המינהל, לתואר ראשון/שני ומסלולים נוספים. מותנה בשירות חברתי־קהילתי (שח״ק). מגבלות גיל חלות בתחילת הלימודים.",
+      "עולים הלומדים בישראל במוסד המוכר על ידי המינהל, לתואר ראשון/שני ומסלולים נוספים. מותנה בשירות חברתי־קהילתי (שח״ק). מגבלות גיל ושנים בארץ חלות בתחילת הלימודים לפי מסלול — לא אומתו כאן כסף אחיד לכל התארים.",
     documentsHe: [...DOCS_BASIC, "תעודת עולה / סטטוס עולה", "מסמכים לפי הנחיות המינהל"],
     howToApplyHe: "בקשה מקוונת באתר משרד העלייה והקליטה בכל שנת לימודים.",
     applyUrl: "https://www.gov.il/he/service/apply-online-for-a-scholarship-from-the-student-authority",
     notesHe:
-      "יש מגבלות גיל (למשל עד 27 לתואר ראשון במסלולים מסוימים) ותקופת זכאות מיום העלייה. מלגות קיום ניתנות רק לאוכלוסיות מיוחדות.",
+      "בדפי המינהל פורסמו מגבלות גיל לפי מסלול (למשל תואר ראשון מול שני) ותקופת זכאות מיום העלייה. לא מקודד כאן גיל אחיד לכל התארים — יש לאמת בדף הרשמי. מלגות קיום ניתנות רק לאוכלוסיות מיוחדות.",
     lastVerified: VERIFIED,
     sourceUrls: [
       "https://www.gov.il/he/service/apply-online-for-a-scholarship-from-the-student-authority",
-      "https://www.kolzchut.org.il/he/%D7%9E%D7%99%D7%9E%D7%95%D7%9F_%D7%A9%D7%9B%D7%A8_%D7%9C%D7%99%D7%9E%D7%95%D7%93_%D7%9C%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A2%D7%95%D7%9C%D7%99%D7%9D",
     ],
+    treatment: "checkAtAuthority",
     eligibility: allOf(
       { type: "isOleh" },
       { type: "degreeLevelIn", values: ["ba", "ma", "practical_engineer", "teaching_certificate"] },
       { type: "willingToVolunteer" },
-      { type: "ageMax", value: 30 },
     ),
   }),
   s({
@@ -360,12 +365,13 @@ export const NATIONAL: Scholarship[] = [
       "מי שהוכרה לו נכות רפואית בשיעור 20% לפחות (ובתנאים נוספים של השיקום המקצועי), לצורך רכישת מקצוע.",
     documentsHe: ["אישור נכות / החלטת ועדה רפואית", "תוכנית לימודים", "מסמכים לפי פקיד השיקום"],
     howToApplyHe: "פנייה למחלקת השיקום בסניף ביטוח לאומי. לא דרך אתר מלגות כללי.",
-    applyUrl: "https://www.btl.gov.il/",
-    notesHe: "זו זכות שיקום, לא מלגת סטודנטים רגילה. התנאים אישיים.",
+    applyUrl: "https://www.btl.gov.il/benefits/Vocational_Rehabilitation/Vocational_Rehabilitation_disabeld/Pages/Zacaut.aspx",
+    notesHe: "זו זכות שיקום, לא מלגת סטודנטים רגילה. התנאים אישיים ונבדקים מול פקיד השיקום.",
     lastVerified: VERIFIED,
     sourceUrls: [
-      "https://www.kolzchut.org.il/he/%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A2%D7%9D_%D7%9E%D7%95%D7%92%D7%91%D7%9C%D7%95%D7%99%D7%95%D7%AA_%D7%95%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A0%D7%9B%D7%99%D7%9D",
+      "https://www.btl.gov.il/benefits/Vocational_Rehabilitation/Vocational_Rehabilitation_disabeld/Pages/Zacaut.aspx",
     ],
+    treatment: "checkAtAuthority",
     eligibility: allOf({ type: "hasDisability" }),
   }),
   s({
@@ -383,8 +389,9 @@ export const NATIONAL: Scholarship[] = [
     applyUrl: "https://www.gov.il/he/departments/units/rehabilitation_department",
     lastVerified: VERIFIED,
     sourceUrls: [
-      "https://www.kolzchut.org.il/he/%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A2%D7%9D_%D7%9E%D7%95%D7%92%D7%91%D7%9C%D7%95%D7%99%D7%95%D7%AA_%D7%95%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A0%D7%9B%D7%99%D7%9D",
+      "https://www.gov.il/he/departments/units/rehabilitation_department",
     ],
+    treatment: "checkAtAuthority",
     eligibility: allOf({ type: "hasDisability" }, { type: "serviceIn", values: ["idf"] }),
   }),
   s({
@@ -447,6 +454,7 @@ export const NATIONAL: Scholarship[] = [
       "https://mushlam-frontend.wiz.digital.idf.il/m/v2fnx2a8lp",
       "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/UniformToStudies.aspx",
     ],
+    excludes: ["mod-uniform-to-studies"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma", "phd", "practical_engineer", "teaching_certificate"] },
       { type: "reservistDaysMin", value: 50 },
@@ -479,11 +487,12 @@ export const NATIONAL: Scholarship[] = [
       "האזור האישי באתר האגף לחיילים משוחררים: הטבות ומלגות ← מלגות ← ממדים ללימודים. חתימה דיגיטלית על כתב התחייבות.",
     applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/UniformToStudies.aspx",
     notesHe:
-      "ללא חובת התנדבות. אין כפל עם מלגת חרבות ברזל באותה שנת לימודים. עם ייעוד 44 — מימוש ממדים משנה ב׳ בלבד. עם ייעוד 45 ניתן לשלב (85% לחשבון, 15% לפיקדון).",
+      "ללא חובת התנדבות. אין כפל עם מלגת חרבות ברזל באותה שנת לימודים. עם ייעוד 44 — מימוש ממדים משנה ב׳ בלבד. עם ייעוד 45 ניתן לשלב (85% לחשבון, 15% לפיקדון). עם ייעוד 46 — אין כפל לפי דף האגף.",
     lastVerified: VERIFIED,
     sourceUrls: [
       "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/UniformToStudies.aspx",
     ],
+    excludes: ["iron-swords-reservist", "yeud-46"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma"] },
       { type: "serviceIn", values: ["idf"] },
@@ -577,6 +586,7 @@ export const NATIONAL: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.biu.ac.il/"],
     institutionIds: ["biu", "technion", "bgu"],
+    treatment: "checkAtInstitution",
     eligibility: allOf(
       { type: "institutionIn", values: ["biu", "technion", "bgu"] },
       { type: "fieldOfStudyIn", values: STEM },
@@ -605,6 +615,7 @@ export const NATIONAL: Scholarship[] = [
     sourceUrls: [
       "https://www.gov.il/he/departments/ministry_for_the_development_of_the_periphery_the_negev_and_the_galilee",
     ],
+    treatment: "checkAtInstitution",
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma"] },
       { type: "yearOfStudyMin", value: 3 },
@@ -660,11 +671,12 @@ export const NATIONAL: Scholarship[] = [
     whoItsForHe: "נפגעי פעולות איבה המוכרים בביטוח לאומי, לפי תוכנית שיקום.",
     documentsHe: ["הכרה כנפגע איבה", "תוכנית לימודים"],
     howToApplyHe: "מחלקת השיקום לנפגעי איבה בביטוח לאומי.",
-    applyUrl: "https://www.btl.gov.il/",
+    applyUrl: "https://www.btl.gov.il/benefits/Vocational_Rehabilitation/Vocational_Rehabilitation%20_Victims_of_%20Hostilities/Pages/default.aspx",
     lastVerified: VERIFIED,
     sourceUrls: [
-      "https://www.kolzchut.org.il/he/%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A2%D7%9D_%D7%9E%D7%95%D7%92%D7%91%D7%9C%D7%95%D7%99%D7%95%D7%AA_%D7%95%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A0%D7%9B%D7%99%D7%9D",
+      "https://www.btl.gov.il/benefits/Vocational_Rehabilitation/Vocational_Rehabilitation%20_Victims_of_%20Hostilities/Pages/default.aspx",
     ],
+    treatment: "checkAtAuthority",
     eligibility: allOf({ type: "hasDisability" }),
   }),
   s({
@@ -679,11 +691,12 @@ export const NATIONAL: Scholarship[] = [
     whoItsForHe: "נפגעי עבודה הזכאים לשיקום מקצועי.",
     documentsHe: ["הכרה כנפגע עבודה", "תוכנית שיקום"],
     howToApplyHe: "ביטוח לאומי, שיקום נפגעי עבודה.",
-    applyUrl: "https://www.btl.gov.il/",
+    applyUrl: "https://www.btl.gov.il/benefits/Vocational_Rehabilitation/Vocational_Rehabilitation_work_injury/Pages/bakasha.aspx",
     lastVerified: VERIFIED,
     sourceUrls: [
-      "https://www.kolzchut.org.il/he/%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A2%D7%9D_%D7%9E%D7%95%D7%92%D7%91%D7%9C%D7%95%D7%99%D7%95%D7%AA_%D7%95%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D_%D7%A0%D7%9B%D7%99%D7%9D",
+      "https://www.btl.gov.il/benefits/Vocational_Rehabilitation/Vocational_Rehabilitation_work_injury/Pages/bakasha.aspx",
     ],
+    treatment: "checkAtAuthority",
     eligibility: allOf({ type: "hasDisability" }),
   }),
   s({

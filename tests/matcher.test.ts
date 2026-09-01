@@ -4,8 +4,8 @@ import { SCHOLARSHIPS } from "@/data/scholarships";
 import { TIPS, TIP_IDS } from "@/data/tips";
 import { citiesMatch, isPeripheryCity, neighborhoodMatches } from "@/lib/cities";
 import { deadlineSortValue, deadlineStatus, isDeadlineClosed } from "@/lib/format";
-import { allOf, deadline, not } from "@/data/scholarships/helpers";
-import { hasOfficialSource } from "@/lib/sources";
+import { allOf, anyOf, deadline, not } from "@/data/scholarships/helpers";
+import { bestSourceGrade, gradeSourceUrl, hasOfficialSource } from "@/lib/sources";
 import { deriveIncomeBand } from "@/lib/income";
 import { INSTITUTIONS } from "@/lib/institutions";
 import type { StudentProfile } from "@/lib/types";
@@ -252,10 +252,11 @@ describe("first-year BA at TAU from the periphery", () => {
     expect(bucketOf(tauPeripheryFirstYear, "yeud-46")).toBe("nearMiss");
   });
 
-  it("is a near-miss for Schulich (STEM required)", () => {
-    expect(bucketOf(tauPeripheryFirstYear, "schulich-leaders")).toBe("nearMiss");
+  it("is not eligible for Schulich (STEM field is identity, not a near-miss)", () => {
+    expect(bucketOf(tauPeripheryFirstYear, "schulich-leaders")).toBe("ineligible");
     const match = matchScholarship(byId("schulich-leaders"), tauPeripheryFirstYear);
     expect(match.failed.some((c) => c.labelHe.includes("תחום"))).toBe(true);
+    expect(match.eval.immutableFailCount).toBeGreaterThan(0);
   });
 });
 
@@ -303,8 +304,8 @@ describe("Haredi college student", () => {
 });
 
 describe("oleh at Hebrew University", () => {
-  it("matches Student Authority tuition aid and HIAS, not Marom", () => {
-    expect(bucketOf(olehStudent, "olim-student-authority")).toBe("eligible");
+  it("matches HIAS and HUJI aid; Student Authority is check-at-authority not a fake age cap", () => {
+    expect(bucketOf(olehStudent, "olim-student-authority")).toBe("needInfo");
     expect(bucketOf(olehStudent, "hias-olim")).toBe("eligible");
     expect(bucketOf(olehStudent, "marom")).not.toBe("eligible");
     expect(bucketOf(olehStudent, "huji-financial-aid")).toBe("eligible");
@@ -335,10 +336,15 @@ describe("near-miss counting", () => {
 });
 
 describe("ordinary Colman BA year-2 profile near-miss cap", () => {
-  it("has at most 15 near-misses", () => {
+  it("has a tight volunteering-related near-miss list after field/reservist immutability", () => {
     const matches = matchAll(SCHOLARSHIPS, ordinaryColmanProfile);
     const near = matches.filter((m) => m.bucket === "nearMiss");
-    expect(near.length).toBeLessThanOrEqual(15);
+    const ids = near.map((m) => m.scholarship.id).sort();
+    expect(ids).toEqual(["eilim", "negev-galil-students-future", "nuis-community", "perach", "sahlav"]);
+    for (const m of near) {
+      expect(m.failed.some((c) => c.field === "fieldOfStudy")).toBe(false);
+      expect(m.failed.some((c) => c.field === "reservistDaysLastYear")).toBe(false);
+    }
   });
 
   it("does not treat colman dean skeleton or rishon city-hall as eligible now", () => {
@@ -358,7 +364,10 @@ describe("city aliases", () => {
     expect(citiesMatch("תל אביב", "תל אביב-יפו")).toBe(true);
     expect(citiesMatch("קרית גת", "קריית גת")).toBe(true);
     expect(citiesMatch("קרית שמונה", "קריית שמונה")).toBe(true);
-    expect(citiesMatch("קריית גת", "קריית שמונה")).toBe(false);
+    expect(citiesMatch("באר-שבע", "באר שבע")).toBe(true);
+    expect(citiesMatch("ב\"ש", "באר שבע")).toBe(true);
+    expect(citiesMatch("ראשל\"צ", "ראשון לציון")).toBe(true);
+    expect(citiesMatch("פ\"ת", "פתח תקווה")).toBe(true);
   });
 
   it("matches Tel Aviv municipal aid city alias but requires a south-neighborhood", () => {
@@ -389,8 +398,8 @@ describe("city aliases", () => {
   });
 });
 
-describe("past deadlines are not eligible now", () => {
-  it("does not bucket a closed-deadline match as eligible", () => {
+describe("past deadlines stay visible as closed-cycle", () => {
+  it("does not bucket a closed-deadline match as eligible or hidden ineligible", () => {
     const closed = {
       ...byId("perach"),
       deadline: deadline("נסגר", { date: "2020-01-01", kind: "fixed" as const }),
@@ -400,7 +409,7 @@ describe("past deadlines are not eligible now", () => {
       willingToVolunteer: true,
     });
     expect(match.bucket).not.toBe("eligible");
-    expect(match.bucket).toBe("ineligible");
+    expect(match.bucket).toBe("closedCycle");
     expect(isDeadlineClosed(closed.deadline, new Date("2026-08-31"))).toBe(true);
   });
 
@@ -434,7 +443,7 @@ describe("national-priority vs social periphery", () => {
 });
 
 describe("nested not / allOf", () => {
-  it("inverts an allOf of identity predicates", () => {
+  it("inverts an allOf of identity predicates as a unit (no inverted הפער on eligible)", () => {
     const sch = {
       ...byId("perach"),
       id: "synthetic-not-allof",
@@ -443,8 +452,25 @@ describe("nested not / allOf", () => {
         allOf({ type: "sectorIn", values: ["haredi"] as const }, { type: "genderIn", values: ["male"] as const }),
       ),
     };
-    expect(matchScholarship(sch, ordinaryColmanProfile).bucket).toBe("eligible");
+    const eligible = matchScholarship(sch, ordinaryColmanProfile);
+    expect(eligible.bucket).toBe("eligible");
+    expect(eligible.failed.length).toBe(0);
+    expect(eligible.eval.failCount).toBe(0);
     expect(matchScholarship(sch, harediCollege).bucket).not.toBe("eligible");
+  });
+
+  it("treats a failed not(anyOf) of identity predicates as immutable, not always mutable", () => {
+    const sch = {
+      ...byId("perach"),
+      id: "synthetic-not-anyof",
+      treatment: undefined,
+      eligibility: not(
+        anyOf({ type: "sectorIn", values: ["haredi"] as const }, { type: "genderIn", values: ["male"] as const }),
+      ),
+    };
+    const match = matchScholarship(sch, ordinaryColmanProfile);
+    expect(match.bucket).toBe("ineligible");
+    expect(match.eval.immutableFailCount).toBeGreaterThan(0);
   });
 });
 
@@ -479,5 +505,154 @@ describe("empty institutions have check-at-institution records", () => {
       expect(records.some((s) => s.treatment === "checkAtInstitution"), inst).toBe(true);
     }
     expect(INSTITUTIONS.some((i) => i.id === "kibbutzim")).toBe(true);
+  });
+});
+
+describe("closed-cycle matching students see Schulich and ISEF", () => {
+  const asOf = new Date("2026-09-01T12:00:00Z");
+
+  it("puts a matching STEM first-year in closedCycle for Schulich, not hidden ineligible", () => {
+    const profile: StudentProfile = {
+      institution: "tau",
+      degreeLevel: "ba",
+      yearOfStudy: 1,
+      fieldOfStudy: "engineering",
+      bagrutAverage: 95,
+      psychometric: 720,
+      studyLoad: "full",
+    };
+    const match = matchScholarship(byId("schulich-leaders"), profile, { asOf });
+    expect(isDeadlineClosed(byId("schulich-leaders").deadline, asOf)).toBe(true);
+    expect(match.bucket).toBe("closedCycle");
+    expect(match.bucket).not.toBe("ineligible");
+    expect(match.bucket).not.toBe("eligible");
+  });
+
+  it("puts a matching first-generation periphery student in closedCycle for ISEF", () => {
+    const profile: StudentProfile = {
+      degreeLevel: "ba",
+      firstGeneration: true,
+      studyLoad: "full",
+      peripheryResidence: true,
+      willingToVolunteer: true,
+    };
+    const match = matchScholarship(byId("isef"), profile, { asOf });
+    expect(isDeadlineClosed(byId("isef").deadline, asOf)).toBe(true);
+    expect(match.bucket).toBe("closedCycle");
+    expect(match.bucket).not.toBe("ineligible");
+  });
+});
+
+describe("disability-only profile does not auto-qualify rehab trio", () => {
+  const disabilityOnly: StudentProfile = { hasDisability: true };
+
+  it("sends the rehab trio to needInfo / check-at-authority, not eligible now", () => {
+    for (const id of ["bituach-leumi-rehab", "hostilities-victims-studies", "work-injury-studies"]) {
+      const match = matchScholarship(byId(id), disabilityOnly);
+      expect(match.bucket, id).not.toBe("eligible");
+      expect(match.bucket, id).toBe("needInfo");
+      expect(byId(id).treatment).toBe("checkAtAuthority");
+    }
+  });
+});
+
+describe("empty checkbox groups vs skip", () => {
+  it("treats sectors [] as known-none (fail) and null as unknown", () => {
+    const empty = matchScholarship(byId("irtikaa"), {
+      degreeLevel: "ba",
+      yearOfStudy: 1,
+      fieldOfStudy: "computer_science",
+      studyLoad: "full",
+      willingToVolunteer: true,
+      sectors: [],
+    });
+    const skipped = matchScholarship(byId("irtikaa"), {
+      degreeLevel: "ba",
+      yearOfStudy: 1,
+      fieldOfStudy: "computer_science",
+      studyLoad: "full",
+      willingToVolunteer: true,
+      sectors: null,
+    });
+    expect(empty.bucket).toBe("ineligible");
+    expect(skipped.bucket).toBe("needInfo");
+  });
+});
+
+describe("marom years-in-Israel inference for native-born", () => {
+  it("does not stick native-born Ethiopian students on a hidden years field", () => {
+    const native: StudentProfile = {
+      degreeLevel: "ba",
+      sectors: ["ethiopian"],
+      isOleh: false,
+      studyLoad: "full",
+    };
+    expect(bucketOf(native, "marom")).toBe("eligible");
+  });
+});
+
+describe("yeud mutex", () => {
+  it("shows choose-one when yeud 44/45/46 are otherwise eligible together", () => {
+    const profile: StudentProfile = {
+      institution: "bgu",
+      degreeLevel: "ba",
+      yearOfStudy: 1,
+      service: "idf",
+      yearsSinceDischarge: 2,
+      nationalPriorityResidence: true,
+      completedMechina: true,
+    };
+    const matches = matchAll(
+      [byId("yeud-44"), byId("yeud-45"), byId("yeud-46")],
+      profile,
+      { asOf: new Date("2026-09-01T12:00:00Z") },
+    );
+    const taking = matches.filter((m) => m.bucket === "eligible" || m.bucket === "closedCycle");
+    expect(taking.length).toBeGreaterThanOrEqual(2);
+    expect(taking.every((m) => m.mutexNoteHe && m.mutexNoteHe.includes("בחרו אחת"))).toBe(true);
+  });
+});
+
+describe("source grades and catalog URLs", () => {
+  it("does not treat kolzchut as an official dedicated source", () => {
+    expect(
+      gradeSourceUrl(
+        "https://www.kolzchut.org.il/he/%D7%9E%D7%99%D7%9E%D7%95%D7%9F_%D7%A9%D7%9B%D7%A8_%D7%9C%D7%99%D7%9E%D7%95%D7%93",
+      ),
+    ).toBe("secondary");
+    expect(hasOfficialSource(["https://www.kolzchut.org.il/he/x"])).toBe(false);
+  });
+
+  it("gives a dedicated tag only to scholarship pages, not every .ac.il homepage", () => {
+    const grades = SCHOLARSHIPS.map((s) => s.sourceGrade ?? bestSourceGrade(s.sourceUrls));
+    expect(grades.some((g) => g === "dedicated")).toBe(true);
+    expect(grades.some((g) => g !== "dedicated")).toBe(true);
+    expect(grades.filter((g) => g === "dedicated").length).toBeLessThan(SCHOLARSHIPS.length);
+  });
+
+  it("points yeud-44 at the yeud-44 page, not yeud-45", () => {
+    const urls = byId("yeud-44").sourceUrls.join(" ");
+    expect(urls).toContain("Perypheria44");
+    expect(urls).not.toContain("Perypheria45");
+  });
+
+  it("does not cite gruss.org.il/blank as the official source", () => {
+    expect(byId("gruss").sourceUrls.some((u) => u.includes("gruss.org.il/blank"))).toBe(false);
+    expect(byId("gruss").sourceUrls.some((u) => u.includes("Gruss.aspx"))).toBe(true);
+  });
+
+  it("keeps schulich-leaders institutionIds in sync with eligibility", () => {
+    const s = byId("schulich-leaders");
+    expect(s.institutionIds).toEqual(["tau", "huji", "bgu", "biu", "telhai"]);
+    expect(s.institutionIds).not.toContain("technion");
+  });
+
+  it("validates excludes[] ids exist", () => {
+    const ids = new Set(SCHOLARSHIPS.map((s) => s.id));
+    for (const s of SCHOLARSHIPS) {
+      for (const ex of s.excludes ?? []) {
+        expect(ids.has(ex), `${s.id} excludes missing ${ex}`).toBe(true);
+      }
+    }
   });
 });

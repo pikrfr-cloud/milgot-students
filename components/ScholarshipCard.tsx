@@ -2,21 +2,30 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import type { ScholarshipMatch, TrackingStatus } from "@/lib/types";
+import type { ScholarshipMatch, SourceGrade, TrackingStatus } from "@/lib/types";
 import { deadlineStatus, formatAmount, formatDeadline, matchHeadline, scopeLabelHe } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { INSTITUTIONS } from "@/lib/institutions";
-import { hasOfficialSource } from "@/lib/sources";
+import { bestSourceGrade, sourceGradeLabelHe } from "@/lib/sources";
 import { profileFocusHref } from "@/lib/profile-fields";
 import { downloadIcs } from "@/lib/ics";
 import { loadTracking, setTrackingStatus, trackingLabelHe } from "@/lib/tracking";
 import { TRACKING_STATUSES } from "@/lib/types";
+import { ExternalLink } from "@/components/ExternalLink";
+import { HeWithEn } from "@/components/HeWithEn";
 
 const bucketStyle: Record<string, string> = {
   eligible: "border-ok/30 bg-ok/5",
+  closedCycle: "border-gold/40 bg-gold/10",
   needInfo: "border-info/30 bg-info/5",
   nearMiss: "border-warn/30 bg-warn/5",
   ineligible: "border-line bg-card",
+};
+
+const gradeStyle: Record<SourceGrade, string> = {
+  dedicated: "bg-ok/10 text-ok",
+  homepage: "bg-info/10 text-info",
+  secondary: "bg-warn/10 text-warn",
 };
 
 export function ScholarshipCard({
@@ -31,8 +40,9 @@ export function ScholarshipCard({
     ?.map((id) => INSTITUTIONS.find((i) => i.id === id)?.nameHe)
     .filter(Boolean)
     .join(", ");
-  const official = s.officialSource ?? hasOfficialSource(s.sourceUrls);
+  const grade = s.sourceGrade ?? bestSourceGrade(s.sourceUrls);
   const [tracking, setTracking] = useState<TrackingStatus | null>(null);
+  const [expanded, setExpanded] = useState(defaultOpen);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
@@ -40,51 +50,12 @@ export function ScholarshipCard({
   }, [s.id]);
 
   const unknownFields = [
-    ...new Map(
-      match.unknown.filter((c) => c.field).map((c) => [c.field, c]),
-    ).values(),
+    ...new Map(match.unknown.filter((c) => c.field).map((c) => [c.field, c])).values(),
   ];
+  const due = deadlineStatus(s.deadline);
 
-  return (
-    <article className={`print-break rounded-2xl border p-5 ${bucketStyle[match.bucket]}`}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="font-display text-xl text-forest-deep">{s.nameHe}</h3>
-          <p className="mt-1 text-sm text-ink-soft">{s.funderHe}</p>
-        </div>
-        <p className="text-sm font-medium text-ink">{formatAmount(s.amounts)}</p>
-      </div>
-      <p className="mt-3 text-sm">{matchHeadline(match)}</p>
-      <p className="mt-2 text-xs">
-        {official ? (
-          <span className="rounded-full bg-ok/10 px-2 py-0.5 text-ok">מקור רשמי</span>
-        ) : (
-          <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">אין מקור רשמי מאומת</span>
-        )}
-      </p>
-      <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-ink-soft">מועד</dt>
-          <dd>
-            {deadlineStatus(s.deadline).labelHe}
-            {" · "}
-            {formatDeadline(s.deadline)}
-            {s.deadline.uncertain ? " · לא ודאי" : ""}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-ink-soft">סוג</dt>
-          <dd>
-            {s.types.map(scholarshipTypeLabel).join(", ")} · {scopeLabelHe(s.scope)}
-          </dd>
-        </div>
-        {inst ? (
-          <div className="sm:col-span-2">
-            <dt className="text-ink-soft">מוסדות</dt>
-            <dd>{inst}</dd>
-          </div>
-        ) : null}
-      </dl>
+  const details = (
+    <>
       <p className="mt-3 text-sm leading-relaxed">{s.whoItsForHe}</p>
       {s.sourceUrls.length > 0 ? (
         <p className="mt-2 text-xs text-ink-soft">
@@ -92,9 +63,9 @@ export function ScholarshipCard({
           {s.sourceUrls.map((url, i) => (
             <span key={url}>
               {i > 0 ? " · " : null}
-              <a className="underline underline-offset-2 break-all" href={url} target="_blank" rel="noreferrer">
+              <ExternalLink className="underline underline-offset-2 break-all" href={url}>
                 {new URL(url).hostname.replace(/^www\./, "")}
-              </a>
+              </ExternalLink>
             </span>
           ))}
         </p>
@@ -208,20 +179,20 @@ export function ScholarshipCard({
           </p>
           {s.applyUrl ? (
             <p>
-              <a className="underline underline-offset-4" href={s.applyUrl} target="_blank" rel="noreferrer">
+              <ExternalLink className="underline underline-offset-4" href={s.applyUrl}>
                 קישור להגשה / מידע
-              </a>
+              </ExternalLink>
             </p>
           ) : null}
           {s.sourceUrls.length > 0 ? (
             <section>
-              <h4 className="font-medium">מקורות רשמיים</h4>
+              <h4 className="font-medium">מקורות</h4>
               <ul className="mt-1 list-disc pr-5 break-all">
                 {s.sourceUrls.map((url) => (
                   <li key={url}>
-                    <a className="underline underline-offset-4" href={url} target="_blank" rel="noreferrer">
+                    <ExternalLink className="underline underline-offset-4" href={url}>
                       {url}
-                    </a>
+                    </ExternalLink>
                   </li>
                 ))}
               </ul>
@@ -234,6 +205,73 @@ export function ScholarshipCard({
           <p className="text-xs text-ink-soft">אומת לאחרונה: {s.lastVerified}</p>
         </div>
       </details>
+    </>
+  );
+
+  return (
+    <article className={`print-break rounded-2xl border p-5 ${bucketStyle[match.bucket]}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="font-display text-xl text-forest-deep">
+            <HeWithEn text={s.nameHe} />
+          </h3>
+          <p className="mt-1 text-sm text-ink-soft">
+            <HeWithEn text={s.funderHe} />
+          </p>
+        </div>
+        <p className="text-sm font-medium text-ink">{formatAmount(s.amounts)}</p>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
+        {match.bucket === "closedCycle" ? (
+          <span className="rounded-full bg-gold/20 px-2 py-0.5 text-ink">נסגר למחזור זה — מתאים למחזור הבא</span>
+        ) : null}
+        <span className={`rounded-full px-2 py-0.5 ${gradeStyle[grade]}`}>{sourceGradeLabelHe(grade)}</span>
+        <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">{due.labelHe}</span>
+        <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft sm:hidden">
+          {s.types.map(scholarshipTypeLabel).join(" · ")}
+        </span>
+      </div>
+      <p className="mt-3 text-sm">{matchHeadline(match)}</p>
+      {match.mutexNoteHe ? (
+        <p className="mt-2 rounded-xl border border-warn/30 bg-warn/10 px-3 py-2 text-sm text-ink">
+          {match.mutexNoteHe}
+        </p>
+      ) : null}
+      <dl className="mt-4 hidden gap-2 text-sm sm:grid sm:grid-cols-2">
+        <div>
+          <dt className="text-ink-soft">מועד</dt>
+          <dd>
+            {due.labelHe}
+            {" · "}
+            {formatDeadline(s.deadline)}
+            {s.deadline.uncertain ? " · לא ודאי" : ""}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-ink-soft">סוג</dt>
+          <dd>
+            {s.types.map(scholarshipTypeLabel).join(", ")} · {scopeLabelHe(s.scope)}
+          </dd>
+        </div>
+        {inst ? (
+          <div className="sm:col-span-2">
+            <dt className="text-ink-soft">מוסדות</dt>
+            <dd>
+              <HeWithEn text={inst} />
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+
+      <button
+        type="button"
+        className="no-print mt-3 min-h-11 text-sm font-medium text-forest underline underline-offset-4 sm:hidden"
+        aria-expanded={expanded}
+        onClick={() => setExpanded((v) => !v)}
+      >
+        {expanded ? "הסתר פרטים" : "הצג פרטים"}
+      </button>
+      <div className={expanded ? "block" : "hidden sm:block print:block"}>{details}</div>
     </article>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ProfileField, StudentProfile } from "@/lib/types";
 import {
   DEGREE_LEVELS,
@@ -32,6 +32,8 @@ import {
 import { FIELD_STEP, HIGH_IMPACT_FIELDS, WIZARD_FIELDS, fieldDomId } from "@/lib/profile-fields";
 import { HOUSEHOLD_INCOME_HINT_HE, deriveIncomeBand } from "@/lib/income";
 import { CityPicker } from "@/components/CityPicker";
+import { Field } from "@/components/Field";
+import { HeWithEn } from "@/components/HeWithEn";
 
 const DEMO_PERIPHERY_TAU: StudentProfile = {
   institution: "tau",
@@ -84,27 +86,10 @@ function SkipButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function Field({
-  field,
-  label,
-  hint,
-  children,
-}: {
-  field?: ProfileField;
-  label: string;
-  hint?: string;
-  children: ReactNode;
-}) {
-  const labelId = field ? `${fieldDomId(field)}-label` : undefined;
-  return (
-    <div className="block" id={field ? fieldDomId(field) : undefined}>
-      <span id={labelId} className="block text-sm font-medium text-ink">
-        {label}
-      </span>
-      {hint ? <span className="mt-1 block text-sm text-ink-soft leading-relaxed">{hint}</span> : null}
-      <div className="mt-2">{children}</div>
-    </div>
-  );
+function toggleFlag<T>(current: T[] | null | undefined, value: T, checked: boolean): T[] | null {
+  const list = current ?? [];
+  const next = checked ? [...list, value] : list.filter((x) => x !== value);
+  return next.length ? next : null;
 }
 
 function servedMilitary(service: StudentProfile["service"]): boolean {
@@ -149,6 +134,7 @@ export function ProfileWizard() {
   const [ready, setReady] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const appliedFocus = useRef(false);
   const focus = searchParams.get("focus") as ProfileField | null;
 
@@ -187,7 +173,7 @@ export function ProfileWizard() {
 
   const showServiceDetails = servedMilitary(profile.service);
   const showReservist = profile.service === "idf";
-  const showYearsInIsrael = profile.isOleh === true;
+  const showYearsInIsrael = profile.isOleh === true || profile.sectors?.includes("ethiopian");
   const showMechina = profile.degreeLevel !== "phd";
   const showDegreeAverage = Number(profile.yearOfStudy) !== 1 && profile.degreeLevel !== "prep";
   const needNeighborhood = cityNeedsNeighborhood(profile.cityOfResidence);
@@ -203,11 +189,16 @@ export function ProfileWizard() {
     setProfile((p) => ({ ...p, ...partial }));
   }
 
+  function goTo(nextStep: number) {
+    setStep(nextStep);
+    window.requestAnimationFrame(() => headingRef.current?.focus());
+  }
+
   function next() {
-    setStep((s) => Math.min(STEPS.length - 1, s + 1));
+    goTo(Math.min(STEPS.length - 1, step + 1));
   }
   function back() {
-    setStep((s) => Math.max(0, s - 1));
+    goTo(Math.max(0, step - 1));
   }
 
   function onServiceChange(value: StudentProfile["service"]) {
@@ -232,7 +223,11 @@ export function ProfileWizard() {
       <p className="text-sm text-ink-soft">
         שלב {step + 1} מתוך {STEPS.length}
       </p>
-      <h1 className="mt-1 font-display text-3xl text-forest-deep" aria-live="polite">
+      <h1
+        ref={headingRef}
+        tabIndex={-1}
+        className="mt-1 font-display text-3xl text-forest-deep outline-none"
+      >
         {STEPS[step].title}
       </h1>
       {process.env.NODE_ENV === "development" ? (
@@ -252,7 +247,7 @@ export function ProfileWizard() {
           <li key={s.id}>
             <button
               type="button"
-              onClick={() => setStep(i)}
+              onClick={() => goTo(i)}
               className={`${tapBtn} text-sm ${
                 i === step ? "bg-forest text-white" : i < step ? "bg-paper-deep text-ink" : "text-ink-soft"
               }`}
@@ -594,11 +589,8 @@ export function ProfileWizard() {
                       className="h-5 w-5"
                       checked={profile.familyFlags?.includes(f) ?? false}
                       onChange={(e) => {
-                        const current = profile.familyFlags ?? [];
                         patch({
-                          familyFlags: e.target.checked
-                            ? [...current, f]
-                            : current.filter((x) => x !== f),
+                          familyFlags: toggleFlag(profile.familyFlags, f, e.target.checked),
                         });
                       }}
                     />
@@ -643,11 +635,8 @@ export function ProfileWizard() {
                       className="h-5 w-5"
                       checked={profile.outstanding?.includes(o) ?? false}
                       onChange={(e) => {
-                        const current = profile.outstanding ?? [];
                         patch({
-                          outstanding: e.target.checked
-                            ? [...current, o]
-                            : current.filter((x) => x !== o),
+                          outstanding: toggleFlag(profile.outstanding, o, e.target.checked),
                         });
                       }}
                     />
@@ -761,9 +750,8 @@ export function ProfileWizard() {
                       className="h-5 w-5"
                       checked={profile.sectors?.includes(s) ?? false}
                       onChange={(e) => {
-                        const current = profile.sectors ?? [];
                         patch({
-                          sectors: e.target.checked ? [...current, s] : current.filter((x) => x !== s),
+                          sectors: toggleFlag(profile.sectors, s, e.target.checked),
                         });
                       }}
                     />
@@ -917,7 +905,7 @@ export function ProfileWizard() {
                   <button
                     type="button"
                     className="min-h-11 text-sm text-forest underline underline-offset-4"
-                    onClick={() => setStep(FIELD_STEP[field] ?? 0)}
+                    onClick={() => goTo(FIELD_STEP[field] ?? 0)}
                   >
                     עריכה
                   </button>
@@ -925,7 +913,9 @@ export function ProfileWizard() {
               ))}
             </dl>
             {selectedInstitution ? (
-              <p className="text-sm text-ink-soft">מוסד שנבחר: {selectedInstitution.nameHe}</p>
+              <p className="text-sm text-ink-soft">
+                מוסד שנבחר: <HeWithEn text={selectedInstitution.nameHe} />
+              </p>
             ) : null}
             <div className="flex flex-wrap gap-2">
               <button

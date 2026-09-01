@@ -84,7 +84,7 @@ export const UNIVERSITIES: Scholarship[] = [
     notesHe: "65 מלגות בשנה ב־6 מוסדות. בטכניון: פטור משכ״ל + 25,000 ₪ שנתי במסלול יזמות נפרד.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://schulichleaders.co.il/", "https://deanstudents.tau.ac.il/financial-aid/schulichleaders"],
-    institutionIds: ["tau", "huji", "bgu", "biu", "telhai", "technion"],
+    institutionIds: ["tau", "huji", "bgu", "biu", "telhai"],
     eligibility: allOf(
       { type: "institutionIn", values: ["tau", "huji", "bgu", "biu", "telhai"] },
       { type: "degreeLevelIn", values: ["ba"] },
@@ -112,7 +112,7 @@ export const UNIVERSITIES: Scholarship[] = [
     eligibility: allOf(
       { type: "institutionIn", values: ["technion"] },
       { type: "degreeLevelIn", values: ["ba"] },
-      { type: "yearOfStudyMin", value: 1 },
+      { type: "yearOfStudyMin", value: 2 },
       { type: "fieldOfStudyIn", values: STEM },
       { type: "minAverage", value: 80 },
     ),
