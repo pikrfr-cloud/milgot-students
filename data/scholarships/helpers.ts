@@ -1,5 +1,5 @@
 import type { Amount, Deadline, FieldGroup, Rule, Scholarship } from "@/lib/types";
-import { hasOfficialSource } from "@/lib/sources";
+import { bestSourceGrade, hasOfficialSource } from "@/lib/sources";
 
 export const STEM: FieldGroup[] = [
   "stem",
@@ -86,7 +86,12 @@ export const DOCS_BANK = ["אישור בעלות על חשבון בנק"];
 export const DOCS_SERVICE = ["תעודת שחרור / אישור שירות לאומי או אזרחי"];
 
 export function s(entry: Scholarship): Scholarship {
-  return { ...entry, officialSource: hasOfficialSource(entry.sourceUrls) };
+  const sourceGrade = entry.sourceGrade ?? bestSourceGrade(entry.sourceUrls);
+  return {
+    ...entry,
+    officialSource: entry.officialSource ?? hasOfficialSource(entry.sourceUrls),
+    sourceGrade,
+  };
 }
 
 /** Dean / external-link skeleton: never auto-eligible. */

@@ -149,29 +149,57 @@ export const CITY_SUGGESTIONS = [
   "קריית מוצקין",
 ];
 
+/** Compact key: strip hyphens, spaces, and gershayim so באר-שבע = באר שבע = ב"ש. */
+export function compactCityKey(city: string): string {
+  return city
+    .trim()
+    .replace(/[־–—]/g, "-")
+    .replace(/קרית/g, "קריית")
+    .replace(/[\"״׳'`]/g, "")
+    .replace(/[-\s]/g, "");
+}
+
+const CITY_COMPACT_ALIASES: Record<string, string> = {
+  תלאביב: "תל אביב-יפו",
+  תלאביביפו: "תל אביב-יפו",
+  מעלותתרשיחא: "מעלות-תרשיחא",
+  נצרתעילית: "נוף הגליל",
+  בארשבע: "באר שבע",
+  בש: "באר שבע",
+  ראשוןלציון: "ראשון לציון",
+  ראשלצ: "ראשון לציון",
+  פתחתקווה: "פתח תקווה",
+  פתחתקוה: "פתח תקווה",
+  פת: "פתח תקווה",
+};
+
 /** Canonical city name for matching (aliases + spelling variants). */
 export function normalizeCityName(city: string): string {
   let s = city.trim().replace(/[־–—]/g, "-").replace(/\s+/g, " ");
   s = s.replace(/קרית/g, "קריית");
   s = s.replace(/\s*-\s*/g, "-");
-  const compact = s.replace(/[-\s]/g, "");
-  if (compact === "תלאביב" || compact === "תלאביביפו") return "תל אביב-יפו";
-  if (compact === "מעלותתרשיחא") return "מעלות-תרשיחא";
-  if (compact === "נצרתעילית") return "נוף הגליל";
+  s = s.replace(/[\"״׳'`]/g, "");
+  const compact = compactCityKey(s);
+  if (CITY_COMPACT_ALIASES[compact]) return CITY_COMPACT_ALIASES[compact];
   return s;
 }
 
 export function citiesMatch(a: string, b: string): boolean {
-  return normalizeCityName(a) === normalizeCityName(b);
+  return compactCityKey(normalizeCityName(a)) === compactCityKey(normalizeCityName(b));
 }
 
 export function cityInList(city: string, values: string[]): boolean {
-  const needle = normalizeCityName(city);
-  return values.some((v) => normalizeCityName(v) === needle);
+  return values.some((v) => citiesMatch(city, v));
 }
 
 export function isPeripheryCity(city: string): boolean {
-  return SOCIAL_PERIPHERY_CITIES.has(normalizeCityName(city.trim()));
+  const canonical = normalizeCityName(city.trim());
+  if (SOCIAL_PERIPHERY_CITIES.has(canonical)) return true;
+  const needle = compactCityKey(canonical);
+  for (const listed of SOCIAL_PERIPHERY_CITIES) {
+    if (compactCityKey(listed) === needle) return true;
+  }
+  return false;
 }
 
 export function isTelAvivCity(city: string | null | undefined): boolean {

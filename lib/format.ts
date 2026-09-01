@@ -95,12 +95,20 @@ export function scopeLabelHe(scope: ScholarshipScope): string {
 }
 
 export function matchHeadline(match: ScholarshipMatch): string {
+  if (match.bucket === "closedCycle") {
+    return "נסגר למחזור זה — מתאים למחזור הבא";
+  }
   const treatment = match.scholarship.treatment;
   if (treatment === "scoreBased" && (match.bucket === "needInfo" || match.bucket === "eligible")) {
     return "סיכוי לפי ניקוד — לא זכאות אוטומטית";
   }
-  if (treatment === "checkAtInstitution" && match.bucket === "needInfo") {
-    return "יש לבדוק בדיקן / ברשות המקומית — אין תנאי סף מאומת בקטלוג";
+  if (
+    (treatment === "checkAtInstitution" || treatment === "checkAtAuthority") &&
+    match.bucket === "needInfo"
+  ) {
+    return treatment === "checkAtAuthority"
+      ? "יש לבדוק ברשות המוסמכת — אין זכאות אוטומטית מהפרופיל"
+      : "יש לבדוק בדיקן / ברשות המקומית — אין תנאי סף מאומת בקטלוג";
   }
   switch (match.bucket) {
     case "eligible":

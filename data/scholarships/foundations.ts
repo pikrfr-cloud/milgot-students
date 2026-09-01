@@ -69,8 +69,8 @@ export const FOUNDATIONS: Scholarship[] = [
     notesHe: "שעות התנדבות משתנות לפי מסלול (פורסם כ־65 בחלק מהמסלולים).",
     lastVerified: VERIFIED,
     sourceUrls: [
-      "https://www.gruss.org.il/blank",
       "https://www.hachvana.mod.gov.il/MainEducation/Scholarship/Pages/Gruss.aspx",
+      "https://www.gruss.org.il/",
     ],
     eligibility: allOf(
       { type: "serviceIn", values: ["idf", "national", "civil"] },
@@ -183,6 +183,7 @@ export const FOUNDATIONS: Scholarship[] = [
     applyUrl: "https://www.moshalprogram.org/",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.moshalprogram.org/"],
+    treatment: "scoreBased",
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
       { type: "fieldOfStudyIn", values: STEM_PLUS_MED },
@@ -297,6 +298,7 @@ export const FOUNDATIONS: Scholarship[] = [
     coverageNoteHe: "אין מלגה אחידה קבועה; רק כשיש קול קורא פתוח.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.kkl.org.il/"],
+    treatment: "checkAtInstitution",
     eligibility: allOf({
       type: "fieldOfStudyIn",
       values: ["life_sciences", "exact_sciences", "social_sciences", "stem"],

@@ -96,18 +96,21 @@ export function ResultsView() {
   if (!grouped) return null;
 
   const eligible = applyFilters(grouped.eligible);
+  const closedCycle = applyFilters(grouped.closedCycle);
   const needInfo = applyFilters(grouped.needInfo);
   const nearMiss = applyFilters(grouped.nearMiss);
   const ineligible = applyFilters(grouped.ineligible);
+  const filtersOn = Boolean(query.trim()) || minAmount > 0 || scope !== "all" || type !== "all";
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-4xl text-forest-deep">דוח הזכאות</h1>
-          <p className="mt-2 text-ink-soft">
-            {grouped.eligible.length} זכאים עכשיו · {grouped.needInfo.length} חסר פרט ·{" "}
-            {grouped.nearMiss.length} כמעט זכאים · {grouped.ineligible.length} לא זכאים
+          <p className="mt-2 text-ink-soft" aria-live="polite">
+            {eligible.length} זכאים עכשיו · {closedCycle.length} נסגר למחזור זה · {needInfo.length}{" "}
+            חסר פרט · {nearMiss.length} כמעט זכאים · {ineligible.length} לא זכאים
+            {filtersOn ? " (לפי הסינון הנוכחי)" : ""}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 no-print">
@@ -119,10 +122,13 @@ export function ResultsView() {
             onClick={() => window.print()}
             className="inline-flex min-h-11 items-center rounded-full bg-forest px-4 text-sm text-white"
           >
-            שמור PDF
+            הדפסה / שמירה כ‑PDF
           </button>
         </div>
       </div>
+      <p className="mt-2 text-xs text-ink-soft no-print">
+        באייפון: שתפו → הדפסה, או בחרו «שמירה כ‑PDF» בתיבת ההדפסה.
+      </p>
       <CoverageNote className="mt-4" />
 
       <nav
@@ -131,6 +137,9 @@ export function ResultsView() {
       >
         <a href="#eligible" className="inline-flex min-h-11 items-center rounded-full bg-ok/10 px-3 text-sm text-ok">
           זכאים עכשיו ({eligible.length})
+        </a>
+        <a href="#closed-cycle" className="inline-flex min-h-11 items-center rounded-full bg-gold/20 px-3 text-sm">
+          נסגר למחזור זה ({closedCycle.length})
         </a>
         <a href="#need-info" className="inline-flex min-h-11 items-center rounded-full bg-info/10 px-3 text-sm text-info">
           חסר פרט ({needInfo.length})
@@ -186,9 +195,12 @@ export function ResultsView() {
           <option value="need">סיוע כלכלי</option>
           <option value="merit">הצטיינות</option>
           <option value="volunteering">התנדבות</option>
+          <option value="leadership">מנהיגות</option>
           <option value="population">אוכלוסייה ייעודית</option>
           <option value="periphery">פריפריה</option>
           <option value="service">שירות / מילואים</option>
+          <option value="research">מחקר</option>
+          <option value="loan">הלוואה</option>
         </select>
         <select
           className="min-h-11 rounded-xl border border-line px-3 py-2"
@@ -213,6 +225,18 @@ export function ResultsView() {
         </div>
       </section>
 
+      <section id="closed-cycle" className="mt-10 scroll-mt-28">
+        <h2 className="font-display text-2xl">נסגר למחזור זה — מתאים למחזור הבא ({closedCycle.length})</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          התנאים שבקטלוג מתקיימים, אבל המועד שפורסם כבר עבר. לא מוסתר תחת «לא זכאים».
+        </p>
+        <div className="mt-4 grid gap-4">
+          {closedCycle.length ? closedCycle.map((m) => (
+            <ScholarshipCard key={m.scholarship.id} match={m} />
+          )) : <EmptyBucket />}
+        </div>
+      </section>
+
       <section id="need-info" className="mt-10 scroll-mt-28">
         <h2 className="font-display text-2xl">חסר פרט לאישור ({needInfo.length})</h2>
         <p className="mt-1 text-sm text-ink-soft">
@@ -226,8 +250,8 @@ export function ResultsView() {
       <section id="near-miss" className="mt-10 scroll-mt-28">
         <h2 className="font-display text-2xl">כמעט זכאים ({nearMiss.length})</h2>
         <p className="mt-1 text-sm text-ink-soft">
-          פער בקריטריונים שניתן לשנות (התנדבות, היקף לימודים, ממוצע, מילואים, מכינה). כישלון בזהות
-          — מוסד, קהילה, מגדר, עיר, עולה, סוג שירות — מופיע תחת לא זכאים.
+          פער בקריטריונים שניתן לשנות (התנדבות, היקף לימודים, ממוצע, מכינה). כישלון בזהות
+          — מוסד, קהילה, מגדר, עיר, תחום לימוד, ימי מילואים, עולה, סוג שירות — מופיע תחת לא זכאים.
         </p>
         <div className="mt-4 grid gap-4">
           {nearMiss.length ? nearMiss.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
