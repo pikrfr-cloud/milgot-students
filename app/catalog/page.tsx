@@ -57,9 +57,14 @@ export default function CatalogPage() {
                 <HeWithEn text={s.funderHe} />
               </p>
               <p className="mt-2 text-sm">{s.whoItsForHe}</p>
-              <p className="mt-2 text-sm text-ink-soft">
-                {due.labelHe} · {formatDeadline(s.deadline)} · {s.types.map(scholarshipTypeLabel).join(", ")} ·{" "}
-                {scopeLabelHe(s.scope)}
+              <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
+                {due.kind === "closed" ? (
+                  <span className="rounded-full bg-gold/20 px-2 py-0.5 text-ink">נסגר למחזור זה</span>
+                ) : null}
+                <span>
+                  {due.labelHe} · {formatDeadline(s.deadline)} · {s.types.map(scholarshipTypeLabel).join(", ")} ·{" "}
+                  {scopeLabelHe(s.scope)}
+                </span>
               </p>
               <p className="mt-2 text-xs">
                 <span
