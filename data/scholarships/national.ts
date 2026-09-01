@@ -5,9 +5,11 @@ import {
   DOCS_BASIC,
   DOCS_INCOME,
   DOCS_SERVICE,
+  FETCHED_FLAGSHIP,
   PERIPHERY_STUDY_INSTITUTIONS,
   PREFERRED_EMPLOYMENT,
   STEM,
+  TASHPAZ_UNPUBLISHED,
   VERIFIED,
   allOf,
   anyOf,
@@ -26,11 +28,11 @@ export const NATIONAL: Scholarship[] = [
     scope: "national",
     treatment: "scoreBased",
     amounts: amount(
-      "תואר ראשון/מכינה: 5,000 / 7,500 / 10,000 / 12,480 ₪ לפי ניקוד. הנדסאי/טכנאי (מה״ט): 3,000 / 4,500 / 6,000 / 8,600 ₪",
+      `תואר ראשון/מכינה: 5,000 / 7,500 / 10,000 / 12,480 ₪ לפי ניקוד. הנדסאי/טכנאי (מה״ט): 3,000 / 4,500 / 6,000 / 8,600 ₪ (${TASHPAZ_UNPUBLISHED}; דף המל״ג milgo חסום למשיכה אוטומטית)`,
       { min: 3000, max: 12480 },
     ),
     cadence: "annual",
-    deadline: deadline("הרשמה לתשפ״ז טרם פורסמה באתר מיל־GO ובאתר המל״ג; לתשפ״ו ההרשמה נסגרה.", {
+    deadline: deadline("הרשמה לתשפ״ז טרם פורסמה באתר מיל־GO (cua.org.il הוא אפליקציה בלי טקסט סטטי); דף המל״ג milgo הוחזר 403.", {
       kind: "varies",
       windowHe: "מתפרסם מדי שנה באתר cua.org.il",
       uncertain: true,
@@ -41,8 +43,8 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "הגשה מקוונת באתר מיל־GO (cua.org.il) כשההרשמה נפתחת.",
     applyUrl: "https://www.cua.org.il/",
     notesHe:
-      "מחליפה את קרן הסיוע של משרד החינוך. כפל עם מלגת ממדים ללימודים לא אומת בדף מיל־GO הרשמי — יש לבדוק בשני המקורות לפני הגשה. מדרגות הסכום פורסמו באתר המל״ג ובאתר מיל־GO; גובה המענק האישי תלוי בניקוד.",
-    lastVerified: VERIFIED,
+      "מחליפה את קרן הסיוע של משרד החינוך. כפל עם מלגת ממדים ללימודים לא אומת בדף מיל־GO הרשמי — יש לבדוק בשני המקורות לפני הגשה. מדרגות הסכום הן אלו שפורסמו במחזור הקודם; גובה המענק האישי תלוי בניקוד.",
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: [
       "https://www.cua.org.il/",
       "https://www.cua.org.il/about",
@@ -59,7 +61,7 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "מל״ג / ות״ת",
     types: ["loan", "need"],
     scope: "national",
-    amounts: amount("הלוואה בסדר גודל של כ־7,000 ₪ לפי אמות המידה של הקרן", {
+    amounts: amount(`הלוואה בסדר גודל של כ־7,000 ₪ לפי אמות המידה של הקרן (${TASHPAZ_UNPUBLISHED})`, {
       min: 7000,
       max: 7000,
       uncertain: true,
@@ -70,8 +72,8 @@ export const NATIONAL: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, ...DOCS_INCOME],
     howToApplyHe: "בדרך כלל באותה מערכת כמו מיל־GO (cua.org.il), כשההרשמה נפתחת.",
     applyUrl: "https://www.cua.org.il/",
-    notesHe: "סכום ההלוואה ההיסטורי שפורסם הוא כ־7,000 ₪; יש לאמת בעת ההגשה. לא זכאות אוטומטית.",
-    lastVerified: VERIFIED,
+    notesHe: `סכום ההלוואה שפורסם בעבר הוא כ־7,000 ₪ (${TASHPAZ_UNPUBLISHED}). לא זכאות אוטומטית.`,
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: ["https://www.cua.org.il/", "https://che.org.il/scholarships/milgo/"],
     treatment: "scoreBased",
     eligibility: allOf(
@@ -84,25 +86,32 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "פר״ח / מכון דוידסון, בתמיכת ות״ת ומשרדי ממשלה",
     types: ["volunteering"],
     scope: "national",
-    amounts: amount("כ־7,000 ₪; בחלק מהישובים עד כ־10,000 ₪ בשיתוף מפעל הפיס", {
+    amounts: amount("7,000 ₪ ל־100 שעות חונכות; בפרויקטים מסוימים 10,000 ₪ (פורסם באתר פר״ח לקראת תשפ״ז)", {
       min: 7000,
       max: 10000,
     }),
     cadence: "annual",
-    deadline: deadline("פתיחה מתוכננת 3.9.2026, סגירה שפורסמה בחלק מהמוסדות: 17.12.2026", {
-      date: "2026-12-17",
-      kind: "annual_window",
-      opensAt: "2026-09-03",
-      windowHe: "3.9.2026–17.12.2026",
-    }),
+    deadline: deadline(
+      "פתיחה רשמית: 2.9.2026 לצפון (מחדרה צפונה) ו־3.9.2026 לשאר הארץ. סגירה צפויה בנובמבר לפי שאלות נפוצות באתר — אין תאריך יום מדויק.",
+      {
+        kind: "annual_window",
+        opensAt: "2026-09-02",
+        windowHe: "2.9.2026 (צפון) / 3.9.2026 (שאר הארץ) עד נובמבר",
+        uncertain: true,
+      },
+    ),
     whoItsForHe:
       "סטודנטים לקראת תואר באוניברסיטאות, מכללות אקדמיות, מכללות להוראה ומה״ט המוכרים, המוכנים לחונכות ילדים.",
     documentsHe: [...DOCS_BASIC, ...DOCS_BANK],
     howToApplyHe: "הרשמה באתר פר״ח. השיבוץ נעשה דרך מינהלות אזוריות.",
     applyUrl: "https://www.perach.org.il/",
-    notesHe: "החונכות כ־100 שעות + הדרכה (סך כ־114 שעות). מלגות מוגדלות קיימות בישובים מסוימים.",
-    lastVerified: VERIFIED,
-    sourceUrls: ["https://www.perach.org.il/%D7%A2%D7%9C-%D7%94%D7%9E%D7%9C%D7%92%D7%94", "https://scholarships.ono.ac.il/perach/"],
+    notesHe:
+      "החונכות 100 שעות. מלגות מוגדלות לפי ישוב/פרויקט. השיבוץ והראיון מתחילים מה־14.9.2026 לפי שאלות נפוצות באתר. תאריך הסגירה 17.12 שפורסם בחלק מהמוסדות לא אומת באתר פר״ח — הוסר.",
+    lastVerified: FETCHED_FLAGSHIP,
+    sourceUrls: [
+      "https://www.perach.org.il/%D7%A2%D7%9C-%D7%94%D7%9E%D7%9C%D7%92%D7%94",
+      "https://www.perach.org.il/%D7%94%D7%A8%D7%A9%D7%9E%D7%94-%D7%A9%D7%90%D7%9C%D7%95%D7%AA-%D7%A0%D7%A4%D7%95%D7%A6%D7%95%D7%AA",
+    ],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma", "phd", "teaching_certificate", "practical_engineer"] },
       { type: "willingToVolunteer" },
@@ -114,18 +123,19 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "פר״ח — פרויקט חונכות",
     types: ["volunteering", "service"],
     scope: "national",
-    amounts: amount("כ־2,600 ₪ תוספת למלגת פר״ח", { min: 2600, max: 2600 }),
+    amounts: amount("2,600 ₪ תוספת למלגת פר״ח (פורסם באתר פר״ח, «על המלגה»)", { min: 2600, max: 2600 }),
     cadence: "annual",
     deadline: deadline("בהתאם ללוח הזמנים של פר״ח ולאחר עמידה בחובות החונכות", {
       kind: "annual_window",
+      opensAt: "2026-09-02",
       uncertain: true,
     }),
     whoItsForHe: "חונכי פר״ח ששירתו במילואים בהיקף שנקבע (בעבר: לפחות כ־10 ימים בשנה הקודמת).",
     documentsHe: ["אישור מילואים", "השתתפות פעילה בפר״ח"],
     howToApplyHe: "דרך פר״ח, למי שכבר משובץ כחונך ועמד בתנאי המילואים.",
     applyUrl: "https://www.perach.org.il/",
-    notesHe: "התוספת מותנית בסיום חובות פר״ח. סף ימי המילואים עלול להתעדכן.",
-    lastVerified: VERIFIED,
+    notesHe: "התוספת מותנית בסיום חובות פר״ח. סף ימי המילואים עלול להתעדכן — לא פורסם סף תשפ״ז נפרד בדף «על המלגה».",
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: ["https://www.perach.org.il/%D7%A2%D7%9C-%D7%94%D7%9E%D7%9C%D7%92%D7%94"],
     eligibility: allOf(
       { type: "willingToVolunteer" },
@@ -138,12 +148,12 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "האגף והקרן לחיילים משוחררים, משרד הביטחון",
     types: ["periphery", "service"],
     scope: "national",
-    amounts: amount("עד 50% משכר הלימוד האוניברסיטאי (מל״ג) לשנה א׳", {
-      max: 6009,
-      uncertain: true,
-    }),
+    amounts: amount(
+      `עד 50% משכר הלימוד האוניברסיטאי לשנה א׳ (מסיימי שירות לאומי של 12 חודשים); מימון מלא לקבוצות שפורסמו בדף (לוחמים/בודדים וכו׳). ${TASHPAZ_UNPUBLISHED} — הדף לא מפרסם תקרה מספרית אחידה.`,
+      { uncertain: true },
+    ),
     cadence: "one_time",
-    deadline: deadline("לרוב מועברת דרך המוסד; אין תמיד צורך בהרשמה עצמאית. יש לאמת מול המוסד.", {
+    deadline: deadline("חורף תשפ״ו (סמסטר א׳) נסגר. אין צורך בהרשמה עצמאית — המוסד מעביר שמות. מועד תשפ״ז נפרד לא פורסם.", {
       kind: "varies",
       uncertain: true,
     }),
@@ -152,8 +162,9 @@ export const NATIONAL: Scholarship[] = [
     documentsHe: [...DOCS_SERVICE, "רישום לשנה א׳ במוסד זכאי"],
     howToApplyHe: "במקרים רבים המוסד מעביר את רשימת הזכאים למשרד הביטחון. יש לוודא מול מדור שכר לימוד.",
     applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria44.aspx",
-    notesHe: "אין כפל עם ייעוד 45/46. עם ממדים ללימודים: מימוש ייעוד 44 בשנה א׳ וממדים משנה ב׳. הסכום צמוד לשכ״ל האוניברסיטאי.",
-    lastVerified: VERIFIED,
+    notesHe:
+      "אין כפל עם ייעוד 45/46. עם ממדים ללימודים: מימוש ייעוד 44 בשנה א׳ וממדים משנה ב׳. התשלום לפיקדון עד 31.12.2026 לפי הדף. הסכום צמוד לשכ״ל האוניברסיטאי — בלי תקרה מספרית בדף ייעוד 44.",
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: [
       "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria44.aspx",
       "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/List-of-Educational-Institutions-for-Periphery-44.aspx",
@@ -174,13 +185,15 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "האגף והקרן לחיילים משוחררים, משרד הביטחון",
     types: ["periphery", "service"],
     scope: "national",
-    amounts: amount("עד 100% משכר הלימוד האוניברסיטאי לשנה א׳, ולא יותר מ־12,017 ₪ (תשפ״ו)", {
+    amounts: amount(`עד 100% משכר הלימוד האוניברסיטאי לשנה א׳, ולא יותר מ־12,017 ₪ (${TASHPAZ_UNPUBLISHED})`, {
       max: 12017,
     }),
     cadence: "one_time",
-    deadline: deadline("הרשמה 3.8.2026–31.10.2026 באזור האישי של האגף", {
+    deadline: deadline("הרשמה 3.8.2026–31.10.2026 באזור האישי של האגף (פורסם בדף ייעוד 45)", {
       date: "2026-10-31",
+      opensAt: "2026-08-03",
       kind: "fixed",
+      windowHe: "3.8.2026–31.10.2026",
     }),
     whoItsForHe:
       "חיילים משוחררים ומסיימי שירות לאומי־אזרחי שכתובתם הרשומה בחמש מתוך שש השנים שקדמו לתחילת הלימודים היא באזור עדיפות לאומית כהגדרתו בחוק, המתחילים שנה א׳ לתואר ראשון במוסד מוכר. לא נקבעת זכאות לפי רשימת ערים בקטלוג.",
@@ -188,7 +201,7 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "הגשה באזור האישי באתר האגף לחיילים משוחררים.",
     applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria45.aspx",
     notesHe: "המלגה מועברת לפיקדון האישי. אין כפל עם ייעוד 44/46. כתובת רשומה 5 מתוך 6 שנים נבדקת באגף — לא לפי עיר מגורים נוכחית. עם ממדים ללימודים ניתן לשלב (85% לחשבון, 15% לפיקדון).",
-    lastVerified: VERIFIED,
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: ["https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria45.aspx"],
     excludes: ["yeud-44", "yeud-46"],
     eligibility: allOf(
@@ -205,13 +218,15 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "האגף והקרן לחיילים משוחררים, משרד הביטחון",
     types: ["periphery", "service"],
     scope: "national",
-    amounts: amount("עד 50% משכ״ל אוניברסיטאי לשנה, עד 6,008.5 ₪ (תשפ״ו), ל־3 שנים", {
+    amounts: amount(`עד 50% משכ״ל אוניברסיטאי לשנה, עד 6,008.5 ₪ (${TASHPAZ_UNPUBLISHED}), ל־3 שנים`, {
       max: 6009,
     }),
     cadence: "multi_year",
-    deadline: deadline("הרשמה 3.8.2026–31.10.2026; יש להגיש בכל שנה מחדש", {
+    deadline: deadline("הרשמה 3.8.2026–31.10.2026; יש להגיש בכל שנה מחדש (פורסם בדף ייעוד 46)", {
       date: "2026-10-31",
+      opensAt: "2026-08-03",
       kind: "fixed",
+      windowHe: "3.8.2026–31.10.2026",
     }),
     whoItsForHe:
       "בוגרי מכינה קדם־אקדמית במימון הקרן שכתובתם הרשומה בחמש מתוך שש השנים שקדמו ללימודים היא באזור עדיפות לאומית, הלומדים לתואר ראשון במוסד מוכר. לא נקבעת זכאות לפי רשימת ערים בקטלוג.",
@@ -219,7 +234,7 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "הגשה באזור האישי באתר האגף לחיילים משוחררים.",
     applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria46.aspx",
     notesHe: "מיועדת למי שלמד במכינה. מועברת לפיקדון כסכום חד־פעמי לכל שנה שאושרה. בדף האגף: אין כפל עם ייעוד 44/45 או ממדים ללימודים.",
-    lastVerified: VERIFIED,
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: ["https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/Perypheria46.aspx"],
     excludes: ["yeud-44", "yeud-45", "mod-uniform-to-studies"],
     eligibility: allOf(
@@ -235,14 +250,18 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "מל״ג / ות״ת, מופעלת על ידי פר״ח, בשיתוף המשרד לשוויון חברתי",
     types: ["population", "need"],
     scope: "national",
-    amounts: amount("10,000 ₪ לכל אחת משתי השנים הראשונות; 8,000 ₪ לכל אחת מהשנים הבאות", {
-      min: 8000,
-      max: 10000,
-    }),
+    amounts: amount(
+      `10,000 ₪ לכל אחת משתי השנים הראשונות; 8,000 ₪ לכל אחת מהשנים הבאות (${TASHPAZ_UNPUBLISHED}; דף המל״ג הוחזר 403 למשיכה אוטומטית)`,
+      {
+        min: 8000,
+        max: 10000,
+      },
+    ),
     cadence: "multi_year",
-    deadline: deadline("הרשמה נפתחת באוקטובר ונסגרת בתחילת נובמבר מדי שנה", {
+    deadline: deadline("לפי דף המל״ג שאונדקס: נפתחת באוקטובר ונסגרת בתחילת נובמבר מדי שנה — יום מדויק לתשפ״ז לא אומת במשיכה ישירה", {
       kind: "annual_window",
       windowHe: "אוקטובר–נובמבר",
+      uncertain: true,
     }),
     whoItsForHe:
       "סטודנטים לתואר ראשון מהחברה הערבית, הדרוזית והצ׳רקסית, שנה א׳ מן המניין, במקצועות מועדפים (רמות א׳–ג׳ של המל״ג), בהיקף 12 שעות שבועיות לפחות.",
@@ -250,8 +269,8 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "הרשמה במערכת אירתקאא דרך פר״ח לפי הפרסום השנתי.",
     applyUrl: "https://che.org.il/scholarships/%D7%9E%D7%9C%D7%92%D7%AA-%D7%90%D7%99%D7%A8%D7%AA%D7%A7%D7%90%D7%90/",
     notesHe:
-      "כוללת התנדבות (40 שעות בשנה א׳; בשנים מתקדמות 75+20). רמת עדיפות ד׳ אינה זכאית. הסטודנט יכול במקביל להגיש למיל־GO ולפר״ח.",
-    lastVerified: VERIFIED,
+      "כוללת התנדבות (40 שעות בשנה א׳; בשנים מתקדמות 75+20). רמת עדיפות ד׳ אינה זכאית. הסטודנט יכול במקביל להגיש למיל־GO ולפר״ח. דף che.org.il/scholarships/אירתקאא הוחזר 403 ב־2026-09-01.",
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: ["https://che.org.il/scholarships/%D7%9E%D7%9C%D7%92%D7%AA-%D7%90%D7%99%D7%A8%D7%AA%D7%A7%D7%90%D7%90/"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba"] },
@@ -268,11 +287,14 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "מל״ג / ות״ת, ליווי זרקור / אלומה",
     types: ["population", "need"],
     scope: "national",
-    amounts: amount("עד 70% משכר הלימוד לשנת לימוד תקנית (פורסמו גם סכומים של 4,000–7,000 ₪ במסלולים ישנים)", {
-      min: 4000,
-      max: null,
-      uncertain: true,
-    }),
+    amounts: amount(
+      `עד 70% משכר הלימוד לשנת לימוד תקנית (פורסמו גם סכומים של 4,000–7,000 ₪ במסלולים ישנים; ${TASHPAZ_UNPUBLISHED}; דף המל״ג הוחזר 403)`,
+      {
+        min: 4000,
+        max: null,
+        uncertain: true,
+      },
+    ),
     cadence: "annual",
     deadline: CHECK_ANNUALLY,
     whoItsForHe:
@@ -280,8 +302,8 @@ export const NATIONAL: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, ...DOCS_INCOME, "אישור רקע חינוך חרדי"],
     howToApplyHe: "דרך תוכנית טנא / זרקור לפי הפרסום השנתי באתר המל״ג.",
     applyUrl: "https://che.org.il/scholarships/%D7%9E%D7%9C%D7%92%D7%AA-%D7%98%D7%A0%D7%90/",
-    notesHe: "ניתן לשלב עם מיל־GO ופר״ח. סכום מדויק תלוי במדרג המקצוע ובהכנסה.",
-    lastVerified: VERIFIED,
+    notesHe: `ניתן לשלב עם מיל־GO ופר״ח. סכום מדויק תלוי במדרג המקצוע ובהכנסה. ${TASHPAZ_UNPUBLISHED}.`,
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: ["https://che.org.il/scholarships/%D7%9E%D7%9C%D7%92%D7%AA-%D7%98%D7%A0%D7%90/"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma"] },
@@ -295,13 +317,15 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "מל״ג / ות״ת, מופעלת על ידי פר״ח",
     types: ["population", "need"],
     scope: "national",
-    amounts: amount("50%–100% משכ״ל בתואר ראשון לפי רמת עדיפות המקצוע; בתואר שני 85%–100%", {
-      uncertain: true,
-    }),
+    amounts: amount(
+      `50%–100% משכ״ל בתואר ראשון לפי רמת עדיפות המקצוע; בתואר שני 85%–100% (${TASHPAZ_UNPUBLISHED}. אתר פר״ח: תנאי מרום לנרשמים חדשים בתשפ״ז ישתנו ויפורסמו בספטמבר 2026)`,
+      { uncertain: true },
+    ),
     cadence: "annual",
-    deadline: deadline("נפתחת בספטמבר ונסגרת בתחילת נובמבר מדי שנה", {
+    deadline: deadline("ההרשמה לתשפ״ז תיפתח בספטמבר 2026 לפי אתר פר״ח; תנאים וסכומים חדשים טרם פורסמו במלואם", {
       kind: "annual_window",
-      windowHe: "ספטמבר–נובמבר",
+      windowHe: "ספטמבר 2026 — יום מדויק לא פורסם",
+      uncertain: true,
     }),
     whoItsForHe:
       "סטודנטים יוצאי אתיופיה בתואר ראשון או שני בתוכנית מוכרת, שנמצאים בארץ מעל 15 שנה או ילידי הארץ שהוריהם נולדו באתיופיה, בהיקף לימודים מספק.",
@@ -309,8 +333,8 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "הרשמה במערכת מרום של פר״ח.",
     applyUrl: "https://che.org.il/scholarships/marom/",
     notesHe:
-      "מי שנמצא בארץ פחות מ־15 שנה מופנה למינהל לסטודנטים עולים. מתשפ״ז בוטלה חובת ההתנדבות במלגה זו.",
-    lastVerified: VERIFIED,
+      "מי שנמצא בארץ פחות מ־15 שנה מופנה למינהל לסטודנטים עולים. מתשפ״ז בוטלה חובת ההתנדבות במלגה זו (לפי דף המל״ג שאומת במחזור הקודם). דף che.org.il/scholarships/marom הוחזר 403 ב־2026-09-01.",
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: ["https://che.org.il/scholarships/marom/"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma"] },
@@ -407,7 +431,7 @@ export const NATIONAL: Scholarship[] = [
     types: ["service"],
     scope: "national",
     amounts: amount(
-      "תשפ״ו: עד 3,000 ₪ במדרג א׳+/א׳, עד 2,500 ₪ במדרג ב׳, עד 2,000 ₪ במדרגים ג׳–ה׳; תשפ״ד/ה׳: עד 3,000 ₪ ללוחמים ב־100+ ימים, עד 2,000 ₪ לכלל המשרתים ב־21+ ימים",
+      `תשפ״ו: עד 3,000 ₪ במדרג א׳+/א׳, עד 2,500 ₪ במדרג ב׳, עד 2,000 ₪ במדרגים ג׳–ה׳; תשפ״ד/ה׳: עד 3,000 ₪ ללוחמים ב־100+ ימים, עד 2,000 ₪ לכלל המשרתים ב־21+ ימים (${TASHPAZ_UNPUBLISHED})`,
       { min: 2000, max: 3000 },
     ),
     cadence: "one_time",
@@ -424,7 +448,7 @@ export const NATIONAL: Scholarship[] = [
     applyUrl: "https://mushlam-frontend.wiz.digital.idf.il/m/v2fnx2a8lp",
     notesHe:
       "זה החזר עזר לימודי, לא מענק שכר לימוד. מענק שכר הלימוד של חרבות ברזל מתועד ברשומה נפרדת.",
-    lastVerified: VERIFIED,
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: ["https://mushlam-frontend.wiz.digital.idf.il/m/v2fnx2a8lp"],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "ma", "phd", "practical_engineer", "teaching_certificate"] },
@@ -438,7 +462,7 @@ export const NATIONAL: Scholarship[] = [
     types: ["service"],
     scope: "national",
     amounts: amount(
-      "תשפ״ו: אחוז משכר לימוד אוניברסיטאי 12,017 ₪ לפי מדרג היחידה (א׳+ עד 100%, א׳ עד 85%, ב׳ עד 65%, ג׳–ד׳ עד 30%, ה׳ עד 22%), ולא יותר מהתשלום בפועל. תשפ״ה: לוחם עד 11,653 ₪ / אחרים עד 3,495 ₪. תשפ״ד: לוחם עד 11,296 ₪ / אחרים עד 3,388.80 ₪",
+      `תשפ״ו: אחוז משכר לימוד אוניברסיטאי 12,017 ₪ לפי מדרג היחידה (א׳+ עד 100%, א׳ עד 85%, ב׳ עד 65%, ג׳–ד׳ עד 30%, ה׳ עד 22%), ולא יותר מהתשלום בפועל. תשפ״ה: לוחם עד 11,653 ₪ / אחרים עד 3,495 ₪. תשפ״ד: לוחם עד 11,296 ₪ / אחרים עד 3,388.80 ₪ (${TASHPAZ_UNPUBLISHED} — פורטל המילואים עדיין מציע תשפ״ד/ה׳/ו׳ בלבד)`,
       { min: 2644, max: 12017 },
     ),
     cadence: "one_time",
@@ -455,7 +479,7 @@ export const NATIONAL: Scholarship[] = [
     applyUrl: "https://mushlam-frontend.wiz.digital.idf.il/m/v2fnx2a8lp",
     notesHe:
       "לא יתאפשר כפל מלגות במימון המדינה, למעט מלגת הצטיינות או התנדבות. המדרג הקובע הוא המדרג שבו בוצעו מרבית הימים. גובה המענק האישי תלוי במדרג היחידה ובתשלום בפועל.",
-    lastVerified: VERIFIED,
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: [
       "https://mushlam-frontend.wiz.digital.idf.il/m/v2fnx2a8lp",
       "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/UniformToStudies.aspx",
@@ -473,14 +497,14 @@ export const NATIONAL: Scholarship[] = [
     types: ["service", "population"],
     scope: "national",
     amounts: amount(
-      "עד 100% משכר הלימוד האוניברסיטאי (תקרת תשפ״ו 12,017 ₪). במהלך התואר החזר שנתי עד 85% (10,214.45 ₪ בתשפ״ו); השלמה ל־100% בשנה האחרונה",
+      `עד 100% משכר הלימוד האוניברסיטאי (תקרה 12,017 ₪). במהלך התואר החזר שנתי עד 85% (10,214.45 ₪); השלמה ל־100% בשנה האחרונה (${TASHPAZ_UNPUBLISHED} — כותרת הדף עדיין «ממדים ללימודים תשפ״ו»)`,
       { min: 10214, max: 12017 },
     ),
-    // TODO(human): לאמת סכומי תשפ״ז לממדים ללימודים כשיפורסמו — לא להמציא.
     cadence: "multi_year",
-    deadline: deadline("הרשמה לתשפ״ו: 3.11.2025–31.10.2026 (הוארכה); העלאת מסמכים עד 31.10.2026", {
+    deadline: deadline("הרשמה לתשפ״ו: 3.11.2025–31.10.2026 (הוארכה); העלאת מסמכים עד 31.10.2026. מועד תשפ״ז נפרד לא פורסם.", {
       date: "2026-10-31",
       kind: "fixed",
+      windowHe: "3.11.2025–31.10.2026",
     }),
     whoItsForHe:
       "חיילות וחיילים משוחררים ששירתו שירות מלא ותקין: לוחמות ולוחמים בעלי תעודת שחרור בכבוד־זהב, או אוכלוסיות ייחודיות (זכאי תשמ״ש הורים / תשלומי משפחה, חיילים בודדים שהוכרו עד תום השירות, בני מיעוטים, החברה הערבית/הדרוזית/הצ׳רקסית, עולים שהוגדרו כך בשירות). תואר ראשון, שני או לימודי תעודה באמנות במוסד מוכר. הגשה ראשונה עד 5 שנים מהשחרור (עם הארכות לקבע/מכינה).",
@@ -495,7 +519,7 @@ export const NATIONAL: Scholarship[] = [
     applyUrl: "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/UniformToStudies.aspx",
     notesHe:
       "ללא חובת התנדבות. אין כפל עם מלגת חרבות ברזל באותה שנת לימודים. עם ייעוד 44 — מימוש ממדים משנה ב׳ בלבד. עם ייעוד 45 ניתן לשלב (85% לחשבון, 15% לפיקדון). עם ייעוד 46 — אין כפל לפי דף האגף.",
-    lastVerified: VERIFIED,
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: [
       "https://www.hachvana.mod.gov.il/MainEducation/HachvanaScholarship/Pages/UniformToStudies.aspx",
     ],
@@ -716,19 +740,25 @@ export const NATIONAL: Scholarship[] = [
     funderHe: "קרן ק.מ.ח. (קידום מקצועי חרדי)",
     types: ["population", "need"],
     scope: "national",
-    amounts: amount("עד 5,000 ₪ מלגת לימודים לשנה א׳ + סדנאות (שווי שפורסם כ־2,500 ₪)", {
+    amounts: amount(`עד 5,000 ₪ מלגת לימודים לשנה א׳ + סדנאות (שווי שפורסם כ־2,500 ₪) — ${TASHPAZ_UNPUBLISHED}`, {
       min: 5000,
       max: 5000,
     }),
     cadence: "one_time",
-    deadline: CHECK_ANNUALLY,
+    deadline: deadline("הרשמה לתשפ״ו נסגרה ב־15.2.2026; מועד תשפ״ז טרם פורסם באתר הקרן", {
+      date: "2026-02-15",
+      kind: "annual_window",
+    }),
+    archivedReasonHe:
+      "מחזור תשפ״ו נסגר ב־15.2.2026. הרשומה נשארת להתאמה למחזור הבא — לא זכאות עכשיו.",
     whoItsForHe:
       "סטודנטים חרדים גברים בשנה א׳ לתואר ראשון (למעט חינוך), המקיימים אורח חיים חרדי. אין חובה ללמוד במוסד בפיקוח חרדי.",
-    documentsHe: [...DOCS_BASIC],
-    howToApplyHe: "הרשמה באתר קרן קמ״ח / טופס מלגה לדרך.",
+    documentsHe: [...DOCS_BASIC, "ראיון אישי לפי הנחיות הקרן"],
+    howToApplyHe: "הרשמה באתר קרן קמ״ח / טופס מלגה לדרך. קבלה בכפוף לוועדה ולראיון.",
     applyUrl: "https://keren-kemach.org/milga-laderech/",
-    lastVerified: VERIFIED,
+    lastVerified: FETCHED_FLAGSHIP,
     sourceUrls: ["https://keren-kemach.org/milga-laderech/", "https://keren-kemach.org/"],
+    treatment: "selective",
     eligibility: allOf(
       { type: "sectorIn", values: ["haredi"] },
       { type: "genderIn", values: ["male"] },
