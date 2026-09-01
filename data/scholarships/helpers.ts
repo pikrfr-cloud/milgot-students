@@ -21,6 +21,10 @@ export const PREFERRED_EMPLOYMENT: FieldGroup[] = [
 ];
 
 export const VERIFIED = "2026-08";
+/** Fetch date for flagship records re-checked against official pages. */
+export const FETCHED_FLAGSHIP = "2026-09-01";
+/** Label when last year's published figure is kept because תשפ״ז is not on the official page. */
+export const TASHPAZ_UNPUBLISHED = "סכום תשפ״ו; טרם פורסם לתשפ״ז";
 
 export function allOf(...rules: Rule[]): Rule {
   return { op: "allOf", rules };

@@ -23,6 +23,6 @@ export function getScholarshipById(id: string): Scholarship | undefined {
 export const CATALOG_STATS = {
   total: SCHOLARSHIPS.length,
   tips: TIPS.length,
-  lastVerifiedMonth: "2026-08",
+  lastVerifiedMonth: "2026-09",
 };
 

@@ -4,7 +4,7 @@ import { SCHOLARSHIPS } from "@/data/scholarships";
 import { TIPS, TIP_IDS } from "@/data/tips";
 import { citiesMatch, isPeripheryCity, neighborhoodMatches } from "@/lib/cities";
 import { catalogAgeBanner, deadlineSortValue, deadlineStatus, isDeadlineClosed, matchHeadline, shouldHideIcs } from "@/lib/format";
-import { allOf, anyOf, collectInstitutionIn, deadline, not } from "@/data/scholarships/helpers";
+import { allOf, anyOf, collectInstitutionIn, deadline, not, TASHPAZ_UNPUBLISHED } from "@/data/scholarships/helpers";
 import { mostUrgentOpen, partialKnownAmountSum } from "@/lib/match-insights";
 import { bestSourceGrade, gradeSourceUrl, hasOfficialSource, isValidHttpUrl } from "@/lib/sources";
 import { deriveIncomeBand } from "@/lib/income";
@@ -517,7 +517,7 @@ describe("empty institutions have check-at-institution records", () => {
   });
 });
 
-describe("closed-cycle matching students see Schulich and ISEF", () => {
+describe("closed-cycle matching students see Schulich", () => {
   const asOf = new Date("2026-09-01T12:00:00Z");
 
   it("puts a matching STEM first-year in closedCycle for Schulich, not hidden ineligible", () => {
@@ -537,7 +537,7 @@ describe("closed-cycle matching students see Schulich and ISEF", () => {
     expect(match.bucket).not.toBe("eligible");
   });
 
-  it("puts a matching first-generation periphery student in closedCycle for ISEF", () => {
+  it("puts a matching first-generation periphery student in needInfo/eligible for ISEF, not a fake closed July date", () => {
     const profile: StudentProfile = {
       degreeLevel: "ba",
       firstGeneration: true,
@@ -546,9 +546,9 @@ describe("closed-cycle matching students see Schulich and ISEF", () => {
       willingToVolunteer: true,
     };
     const match = matchScholarship(byId("isef"), profile, { asOf });
-    expect(isDeadlineClosed(byId("isef").deadline, asOf)).toBe(true);
-    expect(match.bucket).toBe("closedCycle");
-    expect(match.bucket).not.toBe("ineligible");
+    expect(isDeadlineClosed(byId("isef").deadline, asOf)).toBe(false);
+    expect(match.bucket).not.toBe("closedCycle");
+    expect(["eligible", "needInfo"]).toContain(match.bucket);
   });
 });
 
@@ -643,8 +643,8 @@ describe("source grades and catalog URLs", () => {
     expect(urls).not.toContain("Perypheria45");
   });
 
-  it("does not cite gruss.org.il/blank as the official source", () => {
-    expect(byId("gruss").sourceUrls.some((u) => u.includes("gruss.org.il/blank"))).toBe(false);
+  it("does cite the Gruss scholarships page (/blank) plus the MOD Gruss.aspx page", () => {
+    expect(byId("gruss").sourceUrls.some((u) => u.includes("gruss.org.il/blank"))).toBe(true);
     expect(byId("gruss").sourceUrls.some((u) => u.includes("Gruss.aspx"))).toBe(true);
   });
 
@@ -684,9 +684,9 @@ describe("source grades and catalog URLs", () => {
 describe("closed deadline wins over needInfo", () => {
   const asOf = new Date("2026-09-01T12:00:00Z");
 
-  it("puts a partial ISEF profile in closedCycle, not needInfo asking for more fields", () => {
-    const match = matchScholarship(byId("isef"), { degreeLevel: "ba" }, { asOf });
-    expect(isDeadlineClosed(byId("isef").deadline, asOf)).toBe(true);
+  it("puts a partial Kemach profile in closedCycle, not needInfo asking for more fields", () => {
+    const match = matchScholarship(byId("kemach-derech-tzlacha"), { degreeLevel: "ba" }, { asOf });
+    expect(isDeadlineClosed(byId("kemach-derech-tzlacha").deadline, asOf)).toBe(true);
     expect(match.bucket).toBe("closedCycle");
     expect(match.bucket).not.toBe("needInfo");
   });
@@ -734,8 +734,10 @@ describe("catalog freshness", () => {
     }
   });
 
-  it("treats perach as notYetOpen before 2026-09-03", () => {
-    expect(byId("perach").deadline.opensAt).toBe("2026-09-03");
+  it("treats perach as notYetOpen before 2026-09-02", () => {
+    expect(byId("perach").deadline.opensAt).toBe("2026-09-02");
+    expect(byId("perach").deadline.date).toBeUndefined();
+    expect(byId("perach").deadline.uncertain).toBe(true);
     expect(deadlineStatus(byId("perach").deadline, asOf).kind).toBe("notYetOpen");
   });
 });
@@ -840,7 +842,7 @@ describe("Gruss window is notYetOpen on 2026-09-01", () => {
   it("sets opensAt 2026-09-15 so deadlineStatus is notYetOpen, not open", () => {
     const gruss = byId("gruss");
     expect(gruss.deadline.opensAt).toBe("2026-09-15");
-    expect(gruss.deadline.date).toBe("2026-12-11");
+    expect(gruss.deadline.date).toBe("2026-12-15");
     expect(deadlineStatus(gruss.deadline, asOf).kind).toBe("notYetOpen");
     expect(deadlineStatus(gruss.deadline, asOf).kind).not.toBe("open");
     expect(shouldHideIcs(gruss.deadline, asOf)).toBe(true);
@@ -949,15 +951,25 @@ describe("olim student authority is not a fake age-30 gate", () => {
   });
 });
 
-describe("selective treatment only on records that already describe interviews", () => {
-  it("tags Rothschild ambassadors as selective; does not invent tags on Atidim/Gruss/Eilim", () => {
-    expect(byId("rothschild-ambassadors").treatment).toBe("selective");
+describe("selective treatment on programs whose official pages describe interviews or quotas", () => {
+  it("tags competitive programs as selective; Gruss stays untagged without interviews on the official page", () => {
+    const selectiveIds = [
+      "rothschild-ambassadors",
+      "atidim-industry",
+      "heznek-academy",
+      "eilim",
+      "impact-fidf",
+      "schulich-leaders",
+      "technion-schulich-entrepreneurship",
+      "kemach-derech-tzlacha",
+    ];
+    for (const id of selectiveIds) {
+      expect(byId(id).treatment, id).toBe("selective");
+    }
     expect(byId("rothschild-ambassadors").documentsHe.some((d) => d.includes("ראיון"))).toBe(true);
-    expect(byId("atidim-industry").treatment).not.toBe("selective");
+    expect(byId("atidim-industry").documentsHe.some((d) => d.includes("ראיון"))).toBe(true);
+    expect(byId("heznek-academy").documentsHe.some((d) => d.includes("ראיון"))).toBe(true);
     expect(byId("gruss").treatment).not.toBe("selective");
-    expect(byId("eilim").treatment).not.toBe("selective");
-    expect(byId("heznek-academy").treatment).not.toBe("selective");
-    expect(byId("impact-fidf").treatment).not.toBe("selective");
   });
 });
 
@@ -965,5 +977,64 @@ describe("bidirectional excludes already claimed in card text", () => {
   it("keeps yeud-44 and memadim excluding each other", () => {
     expect(byId("yeud-44").excludes).toContain("mod-uniform-to-studies");
     expect(byId("mod-uniform-to-studies").excludes).toContain("yeud-44");
+  });
+});
+
+const FLAGSHIP_IDS = [
+  "schulich-leaders",
+  "technion-schulich-entrepreneurship",
+  "isef",
+  "mod-uniform-to-studies",
+  "yeud-44",
+  "yeud-45",
+  "yeud-46",
+  "iron-swords-reservist",
+  "perach",
+  "perach-reserves",
+  "mil-go",
+  "mil-go-loan",
+  "gruss",
+  "rothschild-ambassadors",
+  "atidim-industry",
+  "heznek-academy",
+  "eilim",
+  "impact-fidf",
+  "irtikaa",
+  "tena",
+  "marom",
+  "moshal",
+  "kemach-derech-tzlacha",
+  "reservist-tuition-grant",
+] as const;
+
+describe("flagship catalog honesty for תשפ״ז", () => {
+  it("gives every flagship a numeric amount or an explicit unpublished/תשפ״ז tag", () => {
+    const unpublished = /טרם פורסם לתשפ״ז|תשפ״ז טרם/;
+    for (const id of FLAGSHIP_IDS) {
+      const s = byId(id);
+      const hasNumber = s.amounts.minIls != null || s.amounts.maxIls != null;
+      const tagged =
+        unpublished.test(s.amounts.textHe) || s.amounts.textHe.includes(TASHPAZ_UNPUBLISHED);
+      expect(hasNumber || tagged, `${id} needs a number or ${TASHPAZ_UNPUBLISHED}`).toBe(true);
+    }
+  });
+
+  it("keeps lastVerified at the 2026-09-01 fetch for every flagship", () => {
+    for (const id of FLAGSHIP_IDS) {
+      expect(byId(id).lastVerified, id).toBe("2026-09-01");
+    }
+  });
+
+  it("marks guessed annual_window dates uncertain when no ISO close date was confirmed", () => {
+    for (const id of FLAGSHIP_IDS) {
+      const d = byId(id).deadline;
+      if (d.kind === "annual_window" && !d.date) {
+        expect(d.uncertain, id).toBe(true);
+      }
+    }
+  });
+
+  it("does not shrink the catalog below 111 records", () => {
+    expect(SCHOLARSHIPS.length).toBeGreaterThanOrEqual(111);
   });
 });
