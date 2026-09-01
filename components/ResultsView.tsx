@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
 import { groupMatches, matchAll } from "@/lib/matcher";
-import { missingFieldUnlocks, mostUrgentOpen, partialKnownAmountSum } from "@/lib/match-insights";
+import { missingFieldUnlocks, mostUrgentOpen } from "@/lib/match-insights";
 import { loadProfile, profileIsEmpty } from "@/lib/profile-storage";
 import type { ScholarshipMatch, ScholarshipScope, StudentProfile } from "@/lib/types";
-import { amountSortValue, deadlineSortValue, deadlineStatus, formatIls, shouldHideIcs } from "@/lib/format";
+import { amountSortValue, deadlineSortValue, deadlineStatus, shouldHideIcs } from "@/lib/format";
 import { fieldLabelHe } from "@/lib/labels";
 import { profileFocusHref } from "@/lib/profile-fields";
 import { CoverageNote } from "@/components/CoverageNote";
@@ -146,7 +146,6 @@ export function ResultsView() {
   const visibleActionable = [...eligible, ...needInfo, ...nearMiss, ...checkAtInstitution];
   const urgent = mostUrgentOpen(visibleActionable, asOf, 3);
   const topUnlock = missingFieldUnlocks(allMatches)[0];
-  const partialSum = partialKnownAmountSum([...grouped.eligible, ...grouped.needInfo]);
 
   const filterControls = (
     <>
@@ -270,11 +269,6 @@ export function ResultsView() {
                 .replace("{field}", fieldLabelHe(topUnlock.field))
                 .replace("{n}", String(topUnlock.count))}
             </Link>
-          </p>
-        ) : null}
-        {partialSum ? (
-          <p className="mt-3 text-sm text-ink-soft">
-            {formatIls(partialSum.sum)} · {HE.results.partialSum} ({partialSum.counted} מלגות)
           </p>
         ) : null}
       </section>

@@ -5,7 +5,7 @@ import { TIPS, TIP_IDS } from "@/data/tips";
 import { citiesMatch, isPeripheryCity, neighborhoodMatches } from "@/lib/cities";
 import { deadlineSortValue, deadlineStatus, isDeadlineClosed, matchHeadline, shouldHideIcs } from "@/lib/format";
 import { allOf, anyOf, collectInstitutionIn, deadline, not } from "@/data/scholarships/helpers";
-import { mostUrgentOpen } from "@/lib/match-insights";
+import { mostUrgentOpen, partialKnownAmountSum } from "@/lib/match-insights";
 import { bestSourceGrade, gradeSourceUrl, hasOfficialSource, isValidHttpUrl } from "@/lib/sources";
 import { deriveIncomeBand } from "@/lib/income";
 import { INSTITUTIONS } from "@/lib/institutions";
@@ -904,6 +904,25 @@ describe("mostUrgentOpen uses real published dates", () => {
       expect(deadlineSortValue(urgent[i]!.scholarship.deadline, asOf)).toBeGreaterThanOrEqual(
         deadlineSortValue(urgent[i - 1]!.scholarship.deadline, asOf),
       );
+    }
+  });
+});
+
+describe("partialKnownAmountSum skips sparse catalogs", () => {
+  it("returns null when too few eligible/needInfo records have a known maxIls", () => {
+    const matches = matchAll(SCHOLARSHIPS, { institution: "colman" });
+    const numbered = matches.filter(
+      (m) =>
+        (m.bucket === "eligible" || m.bucket === "needInfo") &&
+        m.scholarship.amounts.maxIls != null &&
+        !m.scholarship.amounts.uncertain,
+    );
+    if (numbered.length < 3) {
+      expect(partialKnownAmountSum(matches)).toBeNull();
+    } else {
+      const result = partialKnownAmountSum(matches);
+      expect(result).not.toBeNull();
+      expect(result!.counted).toBe(numbered.length);
     }
   });
 });
