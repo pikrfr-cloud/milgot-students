@@ -2,14 +2,33 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { Providers } from "@/components/Providers";
+import { HE } from "@/lib/i18n/he";
 import "./globals.css";
 
+const SITE = "https://pikrfr-cloud.github.io/milgot-students";
+
 export const metadata: Metadata = {
-  title: "מלגות לסטודנטים — דוח זכאות מלא",
+  metadataBase: new URL(SITE),
+  title: {
+    default: `${HE.siteName} — ${HE.tagline}`,
+    template: `%s · ${HE.siteName}`,
+  },
   description:
     "ממלאים פרופיל פעם אחת ומקבלים דוח מפורט: כל המלגות שעומדים בתנאיהן, מה חסר לאישור, ומה כמעט מתאים. בלי התחברות, הנתונים נשארים במכשיר.",
-  applicationName: "מלגות לסטודנטים",
+  applicationName: HE.siteName,
   icons: { icon: "/milgot-students/favicon.svg" },
+  openGraph: {
+    type: "website",
+    locale: "he_IL",
+    siteName: HE.siteName,
+    title: `${HE.siteName} — ${HE.tagline}`,
+    description:
+      "דוח זכאות מלא מול קטלוג מלגות. הנתונים נשארים במכשיר.",
+    url: SITE,
+    images: [{ url: "/og.svg", width: 1200, height: 630, alt: HE.siteName }],
+  },
+  alternates: { canonical: "/" },
 };
 
 export const viewport: Viewport = {
@@ -18,18 +37,22 @@ export const viewport: Viewport = {
   themeColor: "#1e4a3a",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+type LayoutProps = { children: ReactNode };
+
+export default function RootLayout({ children }: LayoutProps) {
   return (
     <html lang="he" dir="rtl" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-paper text-ink">
         <a className="skip-link" href="#main">
-          דילוג לתוכן
+          {HE.skipToContent}
         </a>
-        <SiteHeader />
-        <main id="main" className="flex-1">
-          {children}
-        </main>
-        <SiteFooter />
+        <Providers>
+          <SiteHeader />
+          <main id="main" className="flex-1">
+            {children}
+          </main>
+          <SiteFooter />
+        </Providers>
       </body>
     </html>
   );

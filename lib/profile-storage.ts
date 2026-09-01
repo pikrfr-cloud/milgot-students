@@ -1,4 +1,5 @@
 import type { StudentProfile } from "./types";
+import { parseStudentProfile } from "./profile-schema";
 
 export const PROFILE_STORAGE_KEY = "milgot-profile-v1";
 
@@ -9,7 +10,8 @@ export function loadProfile(): StudentProfile {
   try {
     const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
     if (!raw) return {};
-    return JSON.parse(raw) as StudentProfile;
+    const data = JSON.parse(raw) as unknown;
+    return parseStudentProfile(data) ?? {};
   } catch {
     return {};
   }
@@ -17,12 +19,20 @@ export function loadProfile(): StudentProfile {
 
 export function saveProfile(profile: StudentProfile): void {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+  try {
+    window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+  } catch {
+    // quota / private mode
+  }
 }
 
 export function clearProfile(): void {
   if (typeof window === "undefined") return;
-  window.localStorage.removeItem(PROFILE_STORAGE_KEY);
+  try {
+    window.localStorage.removeItem(PROFILE_STORAGE_KEY);
+  } catch {
+    // ignore
+  }
 }
 
 export function exportProfileJson(profile: StudentProfile): string {
@@ -31,12 +41,11 @@ export function exportProfileJson(profile: StudentProfile): string {
 
 export function parseImportedProfile(raw: string): StudentProfile | null {
   try {
-    const data = JSON.parse(raw) as { profile?: StudentProfile } | StudentProfile;
-    if (data && typeof data === "object" && "profile" in data && data.profile) {
-      return data.profile as StudentProfile;
+    const data = JSON.parse(raw) as { profile?: unknown } | unknown;
+    if (data && typeof data === "object" && "profile" in (data as object)) {
+      return parseStudentProfile((data as { profile: unknown }).profile);
     }
-    if (data && typeof data === "object") return data as StudentProfile;
-    return null;
+    return parseStudentProfile(data);
   } catch {
     return null;
   }
@@ -48,12 +57,20 @@ export function profileIsEmpty(profile: StudentProfile): boolean {
   );
 }
 
-export function downloadProfileJson(profile: StudentProfile): void {
-  const blob = new Blob([exportProfileJson(profile)], { type: "application/json;charset=utf-8" });
+function triggerBlobDownload(body: string, filename: string, mime: string): void {
+  const blob = new Blob([body], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "milgot-profile.json";
+  a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+export function downloadProfileJson(profile: StudentProfile): void {
+  triggerBlobDownload(
+    exportProfileJson(profile),
+    "milgot-profile.json",
+    "application/json;charset=utf-8",
+  );
 }

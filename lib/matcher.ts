@@ -60,7 +60,15 @@ const IMMUTABLE_TYPES = new Set<Predicate["type"]>([
   "serviceIn",
   "degreeLevelIn",
   "fieldOfStudyIn",
+  "yearOfStudyIn",
+  "yearOfStudyMin",
+  "yearOfStudyMax",
+  "minBagrut",
+  "minPsychometric",
+  "minSechem",
+  "completedMechina",
   "hasDisability",
+  "disabilityRecognizedBy",
   "familyFlagIn",
   "combatRole",
   "loneSoldier",
@@ -69,7 +77,6 @@ const IMMUTABLE_TYPES = new Set<Predicate["type"]>([
   "ageMin",
   "ageMax",
   "yearsSinceDischargeMax",
-  "reservistDaysMin",
   "periphery",
   "nationalPriority",
   "neighborhoodIn",
@@ -77,6 +84,13 @@ const IMMUTABLE_TYPES = new Set<Predicate["type"]>([
 
 function isImmutablePredicate(pred: Predicate): boolean {
   return IMMUTABLE_TYPES.has(pred.type);
+}
+
+/** True when every leaf in the rule tree is an identity predicate. */
+function innerImmutable(rule: Rule): boolean {
+  if (isPredicate(rule)) return isImmutablePredicate(rule);
+  if (rule.op === "not") return innerImmutable(rule.rule);
+  return rule.rules.length > 0 && rule.rules.every(innerImmutable);
 }
 
 function cityMatches(
@@ -186,7 +200,16 @@ function detailFor(
     : "הקריטריון אינו מתקיים לפי הפרופיל.";
 }
 
-function fieldFor(pred: Predicate): ProfileField | undefined {
+function incomeMissingField(profile: StudentProfile): ProfileField {
+  const hasSize = !isUnknown(profile.householdSize);
+  const hasBand = !isUnknown(profile.householdIncomeBand);
+  if (hasBand && !hasSize) return "householdSize";
+  if (hasSize && !hasBand) return "householdIncomeBand";
+  if (!hasBand) return "householdIncomeBand";
+  return "householdSize";
+}
+
+function fieldFor(pred: Predicate, profile?: StudentProfile): ProfileField | undefined {
   switch (pred.type) {
     case "institutionIn":
     case "institutionNotIn":
@@ -212,7 +235,7 @@ function fieldFor(pred: Predicate): ProfileField | undefined {
     case "nationalPriority":
       return "nationalPriorityResidence";
     case "incomeAtMost":
-      return "householdIncomeBand";
+      return profile ? incomeMissingField(profile) : "householdIncomeBand";
     case "minBagrut":
       return "bagrutAverage";
     case "minPsychometric":
@@ -261,6 +284,10 @@ function fieldFor(pred: Predicate): ProfileField | undefined {
       return "firstGeneration";
     case "completedMechina":
       return "completedMechina";
+    case "weeklyHoursMin":
+      return "weeklyHours";
+    case "disabilityRecognizedBy":
+      return "disabilityRecognizedBy";
     default:
       return undefined;
   }
@@ -287,8 +314,13 @@ function evalPredicate(pred: Predicate, profile: StudentProfile): EvalStatus {
     case "minAverage":
       return numPred(profile.average, (n) => n >= pred.value);
     case "studyLoadFull": {
-      if (isUnknown(profile.studyLoad)) return "unknown";
-      return profile.studyLoad === "full" ? "pass" : "fail";
+      if (profile.studyLoad === "full") return "pass";
+      if (!isUnknown(profile.weeklyHours) && (profile.weeklyHours as number) >= 12) return "pass";
+      if (profile.studyLoad === "partial") return "fail";
+      if (!isUnknown(profile.weeklyHours)) {
+        return (profile.weeklyHours as number) >= 12 ? "pass" : "fail";
+      }
+      return "unknown";
     }
     case "cityIn":
       return cityMatches(profile, pred.values, pred.of ?? "residence");
@@ -362,6 +394,15 @@ function evalPredicate(pred: Predicate, profile: StudentProfile): EvalStatus {
       return boolPred(profile.firstGeneration, pred.value ?? true);
     case "completedMechina":
       return boolPred(profile.completedMechina, pred.value ?? true);
+    case "weeklyHoursMin": {
+      if (!isUnknown(profile.weeklyHours)) {
+        return (profile.weeklyHours as number) >= pred.value ? "pass" : "fail";
+      }
+      if (profile.studyLoad === "full" && pred.value <= 12) return "pass";
+      return "unknown";
+    }
+    case "disabilityRecognizedBy":
+      return listPred(profile.disabilityRecognizedBy, pred.values);
     default: {
       const _exhaustive: never = pred;
       return _exhaustive;
@@ -396,7 +437,7 @@ function failSplit(
 function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
   if (isPredicate(rule)) {
     const status = evalPredicate(rule, profile);
-    const field = fieldFor(rule);
+    const field = fieldFor(rule, profile);
     const criterion: CriterionResult = {
       id: nextId("c"),
       labelHe: rule.labelHe ?? predicateLabelHe(rule),
@@ -416,9 +457,13 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
     const inner = evalRule(rule.rule, profile);
     const status: EvalStatus =
       inner.status === "pass" ? "fail" : inner.status === "fail" ? "pass" : "unknown";
-    const failImmutable = status === "fail" && !!inner.immutablePass;
+    const treeImmutable = innerImmutable(rule.rule);
+    const failImmutable = status === "fail" && (!!inner.immutablePass || treeImmutable);
     const passImmutable =
-      status === "pass" && inner.immutableFailCount > 0 && inner.mutableFailCount === 0;
+      status === "pass" &&
+      treeImmutable &&
+      inner.mutableFailCount === 0 &&
+      (inner.immutableFailCount > 0 || inner.status === "fail");
     const innerIsCompound = !isPredicate(rule.rule);
 
     if (innerIsCompound) {
@@ -572,7 +617,10 @@ function applyPostEval(
 ): { bucket: MatchBucket; evaluation: RuleEval } {
   const extra: CriterionResult[] = [];
 
-  if (bucket === "eligible" && isDeadlineClosed(scholarship.deadline, asOf)) {
+  if (
+    (bucket === "eligible" || bucket === "needInfo" || bucket === "nearMiss") &&
+    isDeadlineClosed(scholarship.deadline, asOf)
+  ) {
     extra.push({
       id: nextId("deadline"),
       labelHe: "מועד ההגשה",

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /profile/
+Disallow: /results/
+Disallow: /milgot-students/profile/
+Disallow: /milgot-students/results/
+
+Sitemap: https://pikrfr-cloud.github.io/milgot-students/sitemap.xml

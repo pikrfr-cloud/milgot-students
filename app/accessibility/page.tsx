@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "הצהרת נגישות",
+  description: "מצב הנגישות של האתר — בלי הצהרה מוסמכת.",
+  alternates: { canonical: "/accessibility/" },
+};
+
 export default function AccessibilityPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 leading-relaxed">
@@ -5,7 +13,7 @@ export default function AccessibilityPage() {
       <p className="mt-2 text-sm text-ink-soft">עודכן לאחרונה: 1 בספטמבר 2026</p>
 
       <p className="mt-6">
-        אתר «מלגות לסטודנטים» הוא כלי ציבורי להתאמת מלגות. אנו שואפים לאפשר שימוש גם לאנשים עם מוגבלות,
+        אתר «מלגות לסטודנטים» הוא שירות להתאמת מלגות. אנו שואפים לאפשר שימוש גם לאנשים עם מוגבלות,
         בהתאם לרוח{' '}
         <span className="whitespace-nowrap">תקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), תשע״ג–2013</span>
         {' '}ול־WCAG 2.2 ברמה AA — אך האתר <strong>אינו מוסמך</strong> כרגע כעומד במלוא התקן, ולא נערך

@@ -85,6 +85,12 @@ export const JERUSALEM_INSTITUTION_IDS = [
   "jca",
 ];
 
+export const INSTITUTION_GROUPS: { labelHe: string; items: Institution[] }[] = [
+  { labelHe: "אוניברסיטאות", items: INSTITUTIONS.filter((i) => i.kind === "university") },
+  { labelHe: "מכללות", items: INSTITUTIONS.filter((i) => i.kind === "college") },
+  { labelHe: "אחר", items: INSTITUTIONS.filter((i) => i.kind === "other") },
+];
+
 export function isPeripheryInstitution(id: string | null | undefined): boolean {
   if (!id) return false;
   return PERIPHERY_INSTITUTION_IDS.has(id);

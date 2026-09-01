@@ -129,9 +129,15 @@ export const SCHOLARSHIP_TREATMENTS = [
 ] as const;
 export type ScholarshipTreatment = (typeof SCHOLARSHIP_TREATMENTS)[number];
 
-/** Best official-source URL quality for this record. Green UI tag only for `dedicated`. */
-export const SOURCE_GRADES = ["dedicated", "homepage", "secondary"] as const;
-export type SourceGrade = (typeof SOURCE_GRADES)[number];
+/** Best official-source URL quality. Green UI tag only for `official_page`. */
+/** Official scholarship page vs institution/org site vs aggregator/encyclopedia. */
+export const SOURCE_LEVELS = ["official_page", "institution_site", "indirect"] as const;
+export type SourceLevel = (typeof SOURCE_LEVELS)[number];
+/** @deprecated Use SourceLevel. Kept as an alias for older comments. */
+export type SourceGrade = SourceLevel;
+
+export const DISABILITY_AUTHORITIES = ["btl", "mod", "hostilities", "work_injury"] as const;
+export type DisabilityAuthority = (typeof DISABILITY_AUTHORITIES)[number];
 
 export const CATALOG_KINDS = ["scholarship", "tip"] as const;
 export type CatalogKind = (typeof CATALOG_KINDS)[number];
@@ -191,6 +197,10 @@ export type StudentProfile = {
   isOleh?: boolean | null;
   yearsInIsrael?: number | null;
   hasDisability?: boolean | null;
+  /** Which authority recognized the disability / rehab track. */
+  disabilityRecognizedBy?: DisabilityAuthority | null;
+  /** Credit / weekly study hours (נק״ז / שעות שבועיות). */
+  weeklyHours?: number | null;
   incomeBand?: IncomeBand | null;
   socialBenefits?: SocialBenefit[] | null;
   firstGeneration?: boolean | null;
@@ -211,6 +221,8 @@ export type Deadline = {
   kind: "fixed" | "annual_window" | "varies" | "rolling";
   /** ISO date when known, e.g. 2026-10-31 */
   date?: string;
+  /** ISO date the window opens; before this the status is notYetOpen. */
+  opensAt?: string;
   windowHe?: string;
   textHe: string;
   uncertain?: boolean;
@@ -255,7 +267,9 @@ export type Predicate =
   | { type: "ageMax"; value: number; labelHe?: string }
   | { type: "outstandingIn"; values: OutstandingActivity[]; labelHe?: string }
   | { type: "firstGeneration"; value?: boolean; labelHe?: string }
-  | { type: "completedMechina"; value?: boolean; labelHe?: string };
+  | { type: "completedMechina"; value?: boolean; labelHe?: string }
+  | { type: "weeklyHoursMin"; value: number; labelHe?: string }
+  | { type: "disabilityRecognizedBy"; values: DisabilityAuthority[]; labelHe?: string };
 
 export type Rule =
   | { op: "allOf"; rules: Rule[]; labelHe?: string }
@@ -283,6 +297,8 @@ export type Scholarship = {
   /** True when at least one sourceUrl is an official domain (not a news aggregator). */
   officialSource?: boolean;
   eligibility: Rule;
+  /** Why a closed published cycle remains in the catalog. Required when a dated deadline is >30 days past. */
+  archivedReasonHe?: string;
   /** Institutions this scholarship is tied to; empty/omitted = national or not institution-specific. */
   institutionIds?: string[];
   /** Default `scholarship`. Tips are listed separately and not counted as scholarships. */
@@ -298,8 +314,8 @@ export type Scholarship = {
    * Shown as «בחרו אחת מ‑…» when several in the set would otherwise be eligible.
    */
   excludes?: string[];
-  /** Best source URL grade; computed at catalog load. */
-  sourceGrade?: SourceGrade;
+  /** Best source URL level; computed at catalog load. Green UI tag only for `official_page`. */
+  sourceLevel?: SourceLevel;
 };
 
 export type EvalStatus = "pass" | "fail" | "unknown";

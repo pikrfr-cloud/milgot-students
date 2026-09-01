@@ -1,5 +1,5 @@
 import type { Amount, Deadline, FieldGroup, Rule, Scholarship } from "@/lib/types";
-import { bestSourceGrade, hasOfficialSource } from "@/lib/sources";
+import { bestSourceLevel, hasOfficialSource } from "@/lib/sources";
 
 export const STEM: FieldGroup[] = [
   "stem",
@@ -61,15 +61,30 @@ export function amount(
 
 export function deadline(
   textHe: string,
-  opts?: { date?: string; kind?: Deadline["kind"]; uncertain?: boolean; windowHe?: string },
+  opts?: {
+    date?: string;
+    kind?: Deadline["kind"];
+    uncertain?: boolean;
+    windowHe?: string;
+    opensAt?: string;
+  },
 ): Deadline {
   return {
     kind: opts?.kind ?? (opts?.date ? "fixed" : "annual_window"),
     date: opts?.date,
+    opensAt: opts?.opensAt,
     windowHe: opts?.windowHe,
     textHe,
     uncertain: opts?.uncertain ?? false,
   };
+}
+
+export function collectInstitutionIn(rule: Rule): string[] {
+  if ("type" in rule) {
+    return rule.type === "institutionIn" ? [...rule.values] : [];
+  }
+  if (rule.op === "not") return collectInstitutionIn(rule.rule);
+  return rule.rules.flatMap(collectInstitutionIn);
 }
 
 export const CHECK_ANNUALLY = deadline("משתנה / יש לבדוק מדי שנה באתר המלגה", {
@@ -85,12 +100,24 @@ export const DOCS_INCOME = [
 export const DOCS_BANK = ["אישור בעלות על חשבון בנק"];
 export const DOCS_SERVICE = ["תעודת שחרור / אישור שירות לאומי או אזרחי"];
 
+function isSinglePredicateRule(rule: Rule): boolean {
+  if ("type" in rule) return true;
+  if (rule.op === "allOf" && rule.rules.length === 1 && "type" in rule.rules[0]) return true;
+  return false;
+}
+
 export function s(entry: Scholarship): Scholarship {
-  const sourceGrade = entry.sourceGrade ?? bestSourceGrade(entry.sourceUrls);
+  const sourceLevel = entry.sourceLevel ?? bestSourceLevel(entry.sourceUrls);
+  const thin =
+    !entry.treatment &&
+    isSinglePredicateRule(entry.eligibility) &&
+    !!entry.amounts.uncertain &&
+    (!!entry.deadline.uncertain || entry.deadline.kind === "varies");
   return {
     ...entry,
     officialSource: entry.officialSource ?? hasOfficialSource(entry.sourceUrls),
-    sourceGrade,
+    sourceLevel,
+    treatment: thin ? "checkAtInstitution" : entry.treatment,
   };
 }
 

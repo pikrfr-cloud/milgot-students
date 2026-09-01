@@ -1,18 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import type { ScholarshipMatch, SourceGrade, TrackingStatus } from "@/lib/types";
+import { useState } from "react";
+import type { ScholarshipMatch, SourceLevel, TrackingStatus } from "@/lib/types";
 import { deadlineStatus, formatAmount, formatDeadline, matchHeadline, scopeLabelHe } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { INSTITUTIONS } from "@/lib/institutions";
-import { bestSourceGrade, sourceGradeLabelHe } from "@/lib/sources";
+import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
 import { profileFocusHref } from "@/lib/profile-fields";
 import { downloadIcs } from "@/lib/ics";
-import { loadTracking, setTrackingStatus, trackingLabelHe } from "@/lib/tracking";
+import { trackingLabelHe } from "@/lib/tracking";
 import { TRACKING_STATUSES } from "@/lib/types";
 import { ExternalLink } from "@/components/ExternalLink";
 import { HeWithEn } from "@/components/HeWithEn";
+import { useTracking } from "@/components/TrackingProvider";
+import { HE } from "@/lib/i18n/he";
 
 const bucketStyle: Record<string, string> = {
   eligible: "border-ok/30 bg-ok/5",
@@ -22,37 +24,45 @@ const bucketStyle: Record<string, string> = {
   ineligible: "border-line bg-card",
 };
 
-const gradeStyle: Record<SourceGrade, string> = {
-  dedicated: "bg-ok/10 text-ok",
-  homepage: "bg-info/10 text-info",
-  secondary: "bg-warn/10 text-warn",
+const levelStyle: Record<SourceLevel, string> = {
+  official_page: "bg-ok/10 text-ok",
+  institution_site: "bg-info/10 text-info",
+  indirect: "bg-warn/10 text-warn",
 };
 
 export function ScholarshipCard({
   match,
   defaultOpen = false,
+  compact = false,
 }: {
   match: ScholarshipMatch;
   defaultOpen?: boolean;
+  compact?: boolean;
 }) {
   const s = match.scholarship;
   const inst = s.institutionIds
     ?.map((id) => INSTITUTIONS.find((i) => i.id === id)?.nameHe)
     .filter(Boolean)
     .join(", ");
-  const grade = s.sourceGrade ?? bestSourceGrade(s.sourceUrls);
-  const [tracking, setTracking] = useState<TrackingStatus | null>(null);
+  const level = s.sourceLevel ?? bestSourceLevel(s.sourceUrls);
+  const { tracking, setStatus } = useTracking();
   const [expanded, setExpanded] = useState(defaultOpen);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
-    setTracking(loadTracking()[s.id]?.status ?? null);
-  }, [s.id]);
+  const tracked = tracking[s.id]?.status ?? null;
 
   const unknownFields = [
     ...new Map(match.unknown.filter((c) => c.field).map((c) => [c.field, c])).values(),
   ];
   const due = deadlineStatus(s.deadline);
+  const hideIcs = due.kind === "closed" || !s.deadline.date;
+
+  if (compact && match.bucket === "ineligible") {
+    return (
+      <article className="print-ineligible-line rounded-xl border border-line px-3 py-2 text-sm">
+        <span className="font-medium">{s.nameHe}</span>
+        <span className="text-ink-soft"> — {matchHeadline(match)}</span>
+      </article>
+    );
+  }
 
   const details = (
     <>
@@ -63,7 +73,7 @@ export function ScholarshipCard({
           {s.sourceUrls.map((url, i) => (
             <span key={url}>
               {i > 0 ? " · " : null}
-              <ExternalLink className="underline underline-offset-2 break-all" href={url}>
+              <ExternalLink className="underline underline-offset-2 break-all ltr-isolate" href={url}>
                 {new URL(url).hostname.replace(/^www\./, "")}
               </ExternalLink>
             </span>
@@ -89,15 +99,14 @@ export function ScholarshipCard({
 
       <div className="no-print mt-4 flex flex-wrap items-center gap-2">
         <label className="flex min-h-11 items-center gap-2 text-sm">
-          <span className="text-ink-soft">הרשימה שלי</span>
+          <span className="text-ink-soft">{HE.buckets.myList}</span>
           <select
             className="min-h-11 rounded-xl border border-line bg-card px-2"
             aria-label={`סטטוס הגשה עבור ${s.nameHe}`}
-            value={tracking ?? ""}
+            value={tracked ?? ""}
             onChange={(e) => {
               const value = (e.target.value || null) as TrackingStatus | null;
-              setTracking(value);
-              setTrackingStatus(loadTracking(), s.id, value);
+              setStatus(s.id, value);
             }}
           >
             <option value="">לא במעקב</option>
@@ -108,13 +117,13 @@ export function ScholarshipCard({
             ))}
           </select>
         </label>
-        {s.deadline.date ? (
+        {!hideIcs ? (
           <button
             type="button"
             className="min-h-11 rounded-full border border-line px-3 text-sm"
             onClick={() => downloadIcs(s)}
           >
-            הוספה ליומן (ICS)
+            {HE.actions.addToCalendar}
           </button>
         ) : null}
       </div>
@@ -179,7 +188,7 @@ export function ScholarshipCard({
           </p>
           {s.applyUrl ? (
             <p>
-              <ExternalLink className="underline underline-offset-4" href={s.applyUrl}>
+              <ExternalLink className="underline underline-offset-4 ltr-isolate" href={s.applyUrl}>
                 קישור להגשה / מידע
               </ExternalLink>
             </p>
@@ -190,7 +199,7 @@ export function ScholarshipCard({
               <ul className="mt-1 list-disc pr-5 break-all">
                 {s.sourceUrls.map((url) => (
                   <li key={url}>
-                    <ExternalLink className="underline underline-offset-4" href={url}>
+                    <ExternalLink className="underline underline-offset-4 ltr-isolate" href={url}>
                       {url}
                     </ExternalLink>
                   </li>
@@ -223,10 +232,15 @@ export function ScholarshipCard({
       </div>
       <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
         {match.bucket === "closedCycle" ? (
-          <span className="rounded-full bg-gold/20 px-2 py-0.5 text-ink">נסגר למחזור זה — מתאים למחזור הבא</span>
+          <span className="rounded-full bg-gold/20 px-2 py-0.5 text-ink">{HE.buckets.closedCycleLong}</span>
         ) : null}
-        <span className={`rounded-full px-2 py-0.5 ${gradeStyle[grade]}`}>{sourceGradeLabelHe(grade)}</span>
+        <span className={`rounded-full px-2 py-0.5 ${level === "official_page" ? levelStyle.official_page : level === "institution_site" ? levelStyle.institution_site : levelStyle.indirect}`}>
+          {sourceLevelLabelHe(level)}
+        </span>
         <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">{due.labelHe}</span>
+        {s.deadline.windowHe ? (
+          <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">{s.deadline.windowHe}</span>
+        ) : null}
         <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft sm:hidden">
           {s.types.map(scholarshipTypeLabel).join(" · ")}
         </span>
@@ -269,7 +283,7 @@ export function ScholarshipCard({
         aria-expanded={expanded}
         onClick={() => setExpanded((v) => !v)}
       >
-        {expanded ? "הסתר פרטים" : "הצג פרטים"}
+        {expanded ? HE.actions.hideDetails : HE.actions.showDetails}
       </button>
       <div className={expanded ? "block" : "hidden sm:block print:block"}>{details}</div>
     </article>

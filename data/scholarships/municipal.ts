@@ -32,7 +32,7 @@ export const MUNICIPAL: Scholarship[] = [
       "https://jerusalemfoundation.org/he/news/%D7%A7%D7%A8%D7%9F-%D7%94%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%94%D7%A2%D7%99%D7%A8%D7%95%D7%A0%D7%99%D7%AA-%D7%9C%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D-%D7%94%D7%94%D7%A8%D7%A9%D7%9E%D7%94/",
       "https://www.jerusalem.muni.il/",
     ],
-    institutionIds: ["huji", "bezalel", "azrieli", "hadassah", "jca", "david_yellin"],
+    institutionIds: ["huji", "bezalel", "azrieli", "hadassah", "jca", "david_yellin", "other_che"],
     eligibility: allOf(
       {
         type: "institutionIn",
@@ -65,7 +65,7 @@ export const MUNICIPAL: Scholarship[] = [
         of: "either",
       },
       { type: "neighborhoodIn", values: TEL_AVIV_SOUTH_NEIGHBORHOODS },
-      { type: "studyLoadFull" },
+      { type: "weeklyHoursMin", value: 10 },
     ),
   }),
   s({
@@ -279,6 +279,7 @@ export const MUNICIPAL: Scholarship[] = [
     applyUrl: "https://www.sderot.muni.il/",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.sderot.muni.il/", "https://www.sapir.ac.il/"],
+    institutionIds: ["sapir"],
     eligibility: allOf(
       {
         op: "anyOf",

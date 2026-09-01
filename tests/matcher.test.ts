@@ -4,8 +4,8 @@ import { SCHOLARSHIPS } from "@/data/scholarships";
 import { TIPS, TIP_IDS } from "@/data/tips";
 import { citiesMatch, isPeripheryCity, neighborhoodMatches } from "@/lib/cities";
 import { deadlineSortValue, deadlineStatus, isDeadlineClosed } from "@/lib/format";
-import { allOf, anyOf, deadline, not } from "@/data/scholarships/helpers";
-import { bestSourceGrade, gradeSourceUrl, hasOfficialSource } from "@/lib/sources";
+import { allOf, anyOf, collectInstitutionIn, deadline, not } from "@/data/scholarships/helpers";
+import { bestSourceGrade, gradeSourceUrl, hasOfficialSource, isValidHttpUrl } from "@/lib/sources";
 import { deriveIncomeBand } from "@/lib/income";
 import { INSTITUTIONS } from "@/lib/institutions";
 import type { StudentProfile } from "@/lib/types";
@@ -248,8 +248,8 @@ describe("first-year BA at TAU from the periphery", () => {
     );
   });
 
-  it("does not treat yeud 46 as eligible without a mechina", () => {
-    expect(bucketOf(tauPeripheryFirstYear, "yeud-46")).toBe("nearMiss");
+  it("does not treat yeud 46 as eligible without a mechina (immutable)", () => {
+    expect(bucketOf(tauPeripheryFirstYear, "yeud-46")).toBe("ineligible");
   });
 
   it("is not eligible for Schulich (STEM field is identity, not a near-miss)", () => {
@@ -313,15 +313,14 @@ describe("oleh at Hebrew University", () => {
 });
 
 describe("near-miss counting", () => {
-  it("counts a single failed conjunct as near-miss", () => {
+  it("treats a failed year-of-study conjunct as ineligible (immutable)", () => {
     const almost = matchScholarship(byId("yeud-45"), {
       ...tauPeripheryFirstYear,
       nationalPriorityResidence: true,
       yearOfStudy: 2,
     });
-    expect(almost.bucket).toBe("nearMiss");
-    expect(almost.eval.failCount).toBe(1);
-    expect(almost.failed.length).toBe(almost.eval.failCount);
+    expect(almost.bucket).toBe("ineligible");
+    expect(almost.eval.immutableFailCount).toBeGreaterThan(0);
   });
 
   it("keeps anyOf failCount in sync with failed.length", () => {
@@ -336,14 +335,22 @@ describe("near-miss counting", () => {
 });
 
 describe("ordinary Colman BA year-2 profile near-miss cap", () => {
-  it("has a tight volunteering-related near-miss list after field/reservist immutability", () => {
+  it("has a tight volunteering-related near-miss list after field immutability", () => {
     const matches = matchAll(SCHOLARSHIPS, ordinaryColmanProfile);
     const near = matches.filter((m) => m.bucket === "nearMiss");
     const ids = near.map((m) => m.scholarship.id).sort();
-    expect(ids).toEqual(["eilim", "negev-galil-students-future", "nuis-community", "perach", "sahlav"]);
+    expect(ids).toEqual([
+      "eilim",
+      "iron-swords-reservist",
+      "nuis-community",
+      "perach",
+      "perach-reserves",
+      "reservist-tuition-grant",
+      "sahlav",
+    ]);
     for (const m of near) {
       expect(m.failed.some((c) => c.field === "fieldOfStudy")).toBe(false);
-      expect(m.failed.some((c) => c.field === "reservistDaysLastYear")).toBe(false);
+      expect(m.eval.immutableFailCount).toBe(0);
     }
   });
 
@@ -546,12 +553,12 @@ describe("closed-cycle matching students see Schulich and ISEF", () => {
 describe("disability-only profile does not auto-qualify rehab trio", () => {
   const disabilityOnly: StudentProfile = { hasDisability: true };
 
-  it("sends the rehab trio to needInfo / check-at-authority, not eligible now", () => {
-    for (const id of ["bituach-leumi-rehab", "hostilities-victims-studies", "work-injury-studies"]) {
+  it("sends the rehab records to needInfo when only a generic disability flag is set", () => {
+    for (const id of ["bituach-leumi-rehab", "hostilities-victims-studies", "work-injury-studies", "mod-disabled-veterans-education"]) {
       const match = matchScholarship(byId(id), disabilityOnly);
       expect(match.bucket, id).not.toBe("eligible");
       expect(match.bucket, id).toBe("needInfo");
-      expect(byId(id).treatment).toBe("checkAtAuthority");
+      expect(match.unknown.some((c) => c.field === "disabilityRecognizedBy"), id).toBe(true);
     }
   });
 });
@@ -615,19 +622,17 @@ describe("yeud mutex", () => {
 
 describe("source grades and catalog URLs", () => {
   it("does not treat kolzchut as an official dedicated source", () => {
-    expect(
-      gradeSourceUrl(
+      expect(gradeSourceUrl(
         "https://www.kolzchut.org.il/he/%D7%9E%D7%99%D7%9E%D7%95%D7%9F_%D7%A9%D7%9B%D7%A8_%D7%9C%D7%99%D7%9E%D7%95%D7%93",
-      ),
-    ).toBe("secondary");
+      )).toBe("indirect");
     expect(hasOfficialSource(["https://www.kolzchut.org.il/he/x"])).toBe(false);
   });
 
-  it("gives a dedicated tag only to scholarship pages, not every .ac.il homepage", () => {
-    const grades = SCHOLARSHIPS.map((s) => s.sourceGrade ?? bestSourceGrade(s.sourceUrls));
-    expect(grades.some((g) => g === "dedicated")).toBe(true);
-    expect(grades.some((g) => g !== "dedicated")).toBe(true);
-    expect(grades.filter((g) => g === "dedicated").length).toBeLessThan(SCHOLARSHIPS.length);
+  it("gives an official_page tag only to deeper scholarship pages, not every homepage", () => {
+    const grades = SCHOLARSHIPS.map((s) => s.sourceLevel ?? bestSourceGrade(s.sourceUrls));
+    expect(grades.some((g) => g === "official_page")).toBe(true);
+    expect(grades.some((g) => g !== "official_page")).toBe(true);
+    expect(grades.filter((g) => g === "official_page").length).toBeLessThan(SCHOLARSHIPS.length);
   });
 
   it("points yeud-44 at the yeud-44 page, not yeud-45", () => {
@@ -654,5 +659,138 @@ describe("source grades and catalog URLs", () => {
         expect(ids.has(ex), `${s.id} excludes missing ${ex}`).toBe(true);
       }
     }
+  });
+
+  it("keeps institutionIds in sync with institutionIn predicates", () => {
+    for (const s of SCHOLARSHIPS) {
+      const fromRule = [...new Set(collectInstitutionIn(s.eligibility))].sort();
+      if (!fromRule.length) continue;
+      expect([...(s.institutionIds ?? [])].sort(), s.id).toEqual(fromRule);
+    }
+  });
+
+  it("validates source and apply URLs", () => {
+    for (const s of SCHOLARSHIPS) {
+      for (const url of s.sourceUrls) {
+        expect(isValidHttpUrl(url), `${s.id} ${url}`).toBe(true);
+      }
+      if (s.applyUrl) expect(isValidHttpUrl(s.applyUrl), s.id).toBe(true);
+    }
+  });
+});
+
+describe("closed deadline wins over needInfo", () => {
+  const asOf = new Date("2026-09-01T12:00:00Z");
+
+  it("puts a partial ISEF profile in closedCycle, not needInfo asking for more fields", () => {
+    const match = matchScholarship(byId("isef"), { degreeLevel: "ba" }, { asOf });
+    expect(isDeadlineClosed(byId("isef").deadline, asOf)).toBe(true);
+    expect(match.bucket).toBe("closedCycle");
+    expect(match.bucket).not.toBe("needInfo");
+  });
+});
+
+describe("incomeAtMost missing-field reporting", () => {
+  it("asks for householdSize when the band is filled", () => {
+    const match = matchScholarship(byId("mechina-worthy-of-aid"), {
+      degreeLevel: "prep",
+      householdIncomeBand: "band_8_15k",
+    });
+    expect(match.bucket).toBe("needInfo");
+    expect(match.unknown.some((c) => c.field === "householdSize")).toBe(true);
+  });
+
+  it("asks for householdIncomeBand when size is filled", () => {
+    const match = matchScholarship(byId("mechina-worthy-of-aid"), {
+      degreeLevel: "prep",
+      householdSize: 4,
+    });
+    expect(match.bucket).toBe("needInfo");
+    expect(match.unknown.some((c) => c.field === "householdIncomeBand")).toBe(true);
+  });
+});
+
+describe("catalog freshness", () => {
+  const asOf = new Date("2026-09-01T12:00:00+03:00");
+
+  it("requires archivedReasonHe when a dated deadline is more than 30 days past", () => {
+    for (const s of SCHOLARSHIPS) {
+      if (!s.deadline.date) continue;
+      const days = Math.round(
+        (Date.parse(`${s.deadline.date}T12:00:00Z`) - Date.parse("2026-09-01T12:00:00Z")) / 86_400_000,
+      );
+      if (days < -30) {
+        expect(s.archivedReasonHe && s.archivedReasonHe.length > 5, s.id).toBeTruthy();
+      }
+    }
+  });
+
+  it("fails if lastVerified is older than 6 months before 2026-09-01", () => {
+    const cutoff = "2026-03";
+    for (const s of SCHOLARSHIPS) {
+      expect(s.lastVerified >= cutoff, `${s.id} lastVerified ${s.lastVerified}`).toBe(true);
+    }
+  });
+
+  it("treats perach as notYetOpen before 2026-09-03", () => {
+    expect(byId("perach").deadline.opensAt).toBe("2026-09-03");
+    expect(deadlineStatus(byId("perach").deadline, asOf).kind).toBe("notYetOpen");
+  });
+});
+
+describe("deadline calendar uses Israel timezone", () => {
+  it("treats 2026-09-01T01:00+03:00 as the same Israel calendar day", () => {
+    const asOf = new Date("2026-09-01T01:00:00+03:00");
+    const d = deadline("היום", { date: "2026-09-01", kind: "fixed" });
+    const status = deadlineStatus(d, asOf);
+    expect(status.kind).toBe("closingSoon");
+    expect(status.daysLeft).toBe(0);
+    expect(status.labelHe).toBe("נסגרת היום");
+  });
+});
+
+describe("deadlineSortValue stays finite", () => {
+  it("does not use Infinity arithmetic", () => {
+    const past = deadline("עבר", { date: "2020-01-01", kind: "fixed" as const });
+    const future = deadline("עתיד", { date: "2026-12-17", kind: "fixed" as const });
+    const asOf = new Date("2026-08-31T12:00:00Z");
+    const closed = deadlineSortValue(past, asOf);
+    const open = deadlineSortValue(future, asOf);
+    expect(Number.isFinite(closed)).toBe(true);
+    expect(Number.isFinite(open)).toBe(true);
+    expect(open).toBeLessThan(closed);
+  });
+});
+
+describe("weekly hours", () => {
+  it("keeps south TA eligible when studyLoad is full (implies ≥12 ≥ 10)", () => {
+    expect(
+      bucketOf(
+        {
+          cityOfResidence: "תל אביב",
+          hometown: "תל אביב",
+          neighborhood: "שפירא",
+          studyLoad: "full",
+        },
+        "telaviv-south-neighborhoods",
+      ),
+    ).toBe("eligible");
+  });
+});
+
+describe("disabilityRecognizedBy discriminator", () => {
+  it("is eligible for BTL rehab when recognized by BTL", () => {
+    expect(
+      bucketOf({ hasDisability: true, disabilityRecognizedBy: "btl" }, "bituach-leumi-rehab"),
+    ).toBe("eligible");
+  });
+
+  it("is ineligible for BTL rehab when recognized as a work-injury track", () => {
+    expect(
+      bucketOf(
+        { hasDisability: true, disabilityRecognizedBy: "work_injury" },
+        "bituach-leumi-rehab",
+      ),
+    ).toBe("ineligible");
   });
 });

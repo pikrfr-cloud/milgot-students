@@ -1,5 +1,6 @@
 import type { Predicate, ProfileField } from "./types";
 import { INSTITUTIONS } from "./institutions";
+import { scopeLabelHe } from "./format";
 
 const LABELS: Record<string, string> = {
   ba: "תואר ראשון",
@@ -107,6 +108,12 @@ const LABELS: Record<string, string> = {
   socialBenefits: "גמלאות",
   firstGeneration: "דור ראשון להשכלה גבוהה",
   completedMechina: "סיום מכינה קדם-אקדמית",
+  weeklyHours: "שעות שבועיות / נק״ז",
+  disabilityRecognizedBy: "גורם מכיר במוגבלות / שיקום",
+  btl: "ביטוח לאומי — שיקום כללי",
+  mod: "אגף השיקום, משרד הביטחון",
+  hostilities: "נפגעי פעולות איבה",
+  work_injury: "נפגעי עבודה",
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -129,15 +136,11 @@ export function scholarshipTypeLabel(key: string): string {
   return TYPE_LABELS[key] ?? key;
 }
 
-const SCOPE_LABELS: Record<string, string> = {
-  national: "ארצי",
-  institution: "מוסדי",
-  municipal: "עירוני",
-  regional: "אזורי",
-};
-
 export function scholarshipScopeLabel(key: string): string {
-  return SCOPE_LABELS[key] ?? key;
+  if (key === "national" || key === "institution" || key === "municipal" || key === "regional") {
+    return scopeLabelHe(key);
+  }
+  return key;
 }
 
 export function profileFieldLabel(field: ProfileField): string {
@@ -253,6 +256,10 @@ export function predicateLabelHe(pred: Predicate): string {
       return "דור ראשון להשכלה גבוהה";
     case "completedMechina":
       return pred.value === false ? "לא בוגר/ת מכינה" : "בוגר/ת מכינה קדם-אקדמית";
+    case "weeklyHoursMin":
+      return `לפחות ${pred.value} שעות שבועיות / נק״ז`;
+    case "disabilityRecognizedBy":
+      return `הכרה במוגבלות / שיקום: ${pred.values.map(fieldLabelHe).join(" / ")}`;
     default:
       return "קריטריון";
   }

@@ -9,10 +9,19 @@ export function formatAmount(amount: Amount): string {
 }
 
 export function formatDeadline(deadline: Deadline): string {
+  if (deadline.windowHe) {
+    return `${deadline.textHe} (${deadline.windowHe})`;
+  }
   return deadline.textHe;
 }
 
-export type DeadlineStatusKind = "open" | "closed" | "closingSoon" | "unpublished" | "rolling";
+export type DeadlineStatusKind =
+  | "open"
+  | "closed"
+  | "closingSoon"
+  | "unpublished"
+  | "rolling"
+  | "notYetOpen";
 
 export type DeadlineStatus = {
   kind: DeadlineStatusKind;
@@ -22,9 +31,23 @@ export type DeadlineStatus = {
 
 const MS_PER_DAY = 86_400_000;
 const CLOSING_SOON_DAYS = 14;
+const ISRAEL_TZ = "Asia/Jerusalem";
 
-function startOfDay(d: Date): number {
-  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+/** Calendar YYYY-MM-DD in Asia/Jerusalem for an instant. */
+export function israelYmd(d: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: ISRAEL_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+function daysUntilIsoDate(isoDate: string, asOf: Date): number {
+  const today = israelYmd(asOf);
+  const dueMs = Date.parse(`${isoDate}T12:00:00Z`);
+  const todayMs = Date.parse(`${today}T12:00:00Z`);
+  return Math.round((dueMs - todayMs) / MS_PER_DAY);
 }
 
 export function deadlineStatus(deadline: Deadline, asOf: Date = new Date()): DeadlineStatus {
@@ -32,10 +55,19 @@ export function deadlineStatus(deadline: Deadline, asOf: Date = new Date()): Dea
     return { kind: "rolling", labelHe: "הגשה שוטפת" };
   }
 
+  if (deadline.opensAt) {
+    const untilOpen = daysUntilIsoDate(deadline.opensAt, asOf);
+    if (untilOpen > 0) {
+      return {
+        kind: "notYetOpen",
+        daysLeft: untilOpen,
+        labelHe: untilOpen === 1 ? "נפתחת מחר" : `נפתחת בעוד ${untilOpen} ימים`,
+      };
+    }
+  }
+
   if (deadline.date) {
-    const due = startOfDay(new Date(`${deadline.date}T00:00:00Z`));
-    const today = startOfDay(asOf);
-    const daysLeft = Math.round((due - today) / MS_PER_DAY);
+    const daysLeft = daysUntilIsoDate(deadline.date, asOf);
     if (daysLeft < 0) {
       return { kind: "closed", daysLeft, labelHe: "ההרשמה נסגרה" };
     }
@@ -63,9 +95,15 @@ export function isDeadlineClosed(deadline: Deadline, asOf: Date = new Date()): b
   return deadlineStatus(deadline, asOf).kind === "closed";
 }
 
-export function amountSortValue(amount: Amount): number {
-  return amount.maxIls ?? amount.minIls ?? 0;
+export function amountSortValue(amount: Amount): number | null {
+  const n = amount.maxIls ?? amount.minIls;
+  return n == null ? null : n;
 }
+
+/** Finite sentinels — never Infinity-n, which collapses to Infinity. */
+const SORT_ROLLING = 8_000_000_000_000;
+const SORT_UNPUBLISHED = 8_500_000_000_000;
+const SORT_CLOSED = 9_000_000_000_000;
 
 /**
  * Active items: soonest upcoming first. Closed/past dates sort last so they
@@ -73,25 +111,33 @@ export function amountSortValue(amount: Amount): number {
  */
 export function deadlineSortValue(deadline: Deadline, asOf: Date = new Date()): number {
   const status = deadlineStatus(deadline, asOf);
-  if (status.kind === "closed") return Number.POSITIVE_INFINITY - 5;
-  if (deadline.date) return new Date(`${deadline.date}T00:00:00Z`).getTime();
-  if (status.kind === "rolling") return Number.POSITIVE_INFINITY - 20;
-  return Number.POSITIVE_INFINITY - 10;
+  if (status.kind === "closed") {
+    const past = deadline.date ? Date.parse(`${deadline.date}T12:00:00Z`) : 0;
+    return SORT_CLOSED + past;
+  }
+  if (status.kind === "notYetOpen" && deadline.opensAt) {
+    return Date.parse(`${deadline.opensAt}T12:00:00Z`);
+  }
+  if (deadline.date) return Date.parse(`${deadline.date}T12:00:00Z`);
+  if (status.kind === "rolling") return SORT_ROLLING;
+  return SORT_UNPUBLISHED;
 }
 
 export function countLabel(n: number, singular: string, plural: string): string {
   return `${n} ${n === 1 ? singular : plural}`;
 }
 
-const SCOPE_HE: Record<ScholarshipScope, string> = {
-  national: "ארצי",
-  institution: "מוסדי",
-  municipal: "עירוני",
-  regional: "אזורי",
-};
-
 export function scopeLabelHe(scope: ScholarshipScope): string {
-  return SCOPE_HE[scope] ?? scope;
+  switch (scope) {
+    case "national":
+      return "ארצי";
+    case "institution":
+      return "מוסדי";
+    case "municipal":
+      return "עירוני";
+    case "regional":
+      return "אזורי";
+  }
 }
 
 export function matchHeadline(match: ScholarshipMatch): string {

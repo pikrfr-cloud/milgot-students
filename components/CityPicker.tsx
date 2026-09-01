@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { normalizeCityName } from "@/lib/cities";
+import { HE } from "@/lib/i18n/he";
+import { cityInList, normalizeCityName } from "@/lib/cities";
 
 const inputClass =
   "w-full min-h-11 rounded-xl border border-line bg-card px-3 py-2.5 text-ink placeholder:text-ink-soft/70";
@@ -76,6 +77,9 @@ export function CityPicker({
     }
   }
 
+  const unknown =
+    value.trim().length > 1 && !cityInList(value, suggestions as string[]);
+
   return (
     <div
       className="relative"
@@ -131,6 +135,7 @@ export function CityPicker({
           ))}
         </ul>
       ) : null}
+      {unknown ? <p className="mt-1 text-xs text-ink-soft">{HE.profile.unknownCity}</p> : null}
     </div>
   );
 }
