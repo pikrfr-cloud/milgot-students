@@ -21,7 +21,8 @@ export const SCHOLARSHIPS: Scholarship[] = [
   ...COLLEGES,
   ...MUNICIPAL,
   ...FOUNDATIONS,
-  ...VERIFIED_EXTRA,
+  // #15 already registered tau-liber-phd in universities.ts (same official PDF).
+  ...VERIFIED_EXTRA.filter((s) => s.id !== "tau-liber-phd"),
   ...VERIFIED_EXTRA_2,
   ...VERIFIED_EXTRA_3,
 ];

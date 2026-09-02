@@ -70,6 +70,13 @@ describe("verified-extra תשפ״ז additions", () => {
     const existingApply = new Set(
       SCHOLARSHIPS.filter((s) => !VERIFIED_EXTRA.some((e) => e.id === s.id)).map((s) => s.applyUrl),
     );
+    /** Same official pages already on main as *-community / #15 tau-liber-phd. */
+    const knownApplyUrlPeers = new Set([
+      "ramat-hasharon-students",
+      "hof-hasharon-pais",
+      "hevel-modiin-pais",
+      "tau-liber-phd",
+    ]);
     for (const rec of VERIFIED_EXTRA) {
       expect(catalogIds.has(rec.id), rec.id).toBe(true);
       expect(isGuideRecord(rec), rec.id).toBe(false);
@@ -77,7 +84,9 @@ describe("verified-extra תשפ״ז additions", () => {
       expect(rec.amounts.minIls != null || rec.amounts.maxIls != null, rec.id).toBe(true);
       expect(rec.deadline.date, rec.id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(rec.applyUrl, rec.id).toBeTruthy();
-      expect(existingApply.has(rec.applyUrl), `${rec.id} duplicates applyUrl`).toBe(false);
+      if (!knownApplyUrlPeers.has(rec.id)) {
+        expect(existingApply.has(rec.applyUrl), `${rec.id} duplicates applyUrl`).toBe(false);
+      }
       expect(rec.sourceUrls.some((u) => u.startsWith("http")), rec.id).toBe(true);
     }
   });
