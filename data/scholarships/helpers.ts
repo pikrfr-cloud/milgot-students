@@ -23,8 +23,10 @@ export const PREFERRED_EMPLOYMENT: FieldGroup[] = [
 export const VERIFIED = "2026-08";
 /** Fetch date for the תשפ״ז flagship pass (official pages, 2026-09-01). */
 export const VERIFIED_TODAY = "2026-09-01";
+/** Fetch date for the amount+date gate pass (official pages, 2026-09-02). */
+export const VERIFIED_GATE = "2026-09-02";
 /** Required card copy when last year's ILS figure is kept because תשפ״ז was not published. */
-export const TASHPAV_UNPUBLISHED_HE = "סכום תשפ״ו; טרם פורסם לתשפ״ז";
+export { TASHPAV_UNPUBLISHED_HE } from "@/lib/catalog";
 
 /**
  * National competitive programs verified from official pages in the תשפ״ז pass.

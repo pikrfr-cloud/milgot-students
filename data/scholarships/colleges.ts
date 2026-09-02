@@ -4,6 +4,7 @@ import {
   DOCS_BASIC,
   DOCS_INCOME,
   VERIFIED,
+  VERIFIED_GATE,
   allOf,
   amount,
   deadline,
@@ -137,18 +138,21 @@ export const COLLEGES: Scholarship[] = [
     funderHe: "המדור למלגות ולרווחת הסטודנטיות והסטודנטים, שנקר",
     types: ["need"],
     scope: "institution",
-    amounts: amount("בדרך כלל 2,500 ₪ עד קרוב לשכר לימוד מלא, לפי דירוג והיקף לימודים", {
-      min: 2500,
-      uncertain: true,
-    }),
+    amounts: amount(
+      "בדף הדקאנט: גובה המלגה תלוי בדירוג הזכאות ובהיקף שעות הלימוד, ונע בדרך־כלל בין 2,500 ₪ עד סכום קרוב לשכר לימוד מלא",
+      { min: 2500 },
+    ),
     cadence: "annual",
-    deadline: CHECK_ANNUALLY,
+    deadline: deadline("מועד אחרון להגשה: יום חמישי 12.11.2026 בשעה 22:00 (דף דקאנט שנקר)", {
+      kind: "fixed",
+      date: "2026-11-12",
+    }),
     whoItsForHe:
       "תושבי קבע בישראל הלומדים בשנקר לקראת תואר בהיקף 60% לפחות. מחויבות לשעות תרומה לקהילה.",
     documentsHe: DEAN,
     howToApplyHe: "טופס מקוון במערכת נט־האישי: מלגות >> שנקר – סיוע.",
     applyUrl: "https://www.shenkar.ac.il/he/pages/dean-of-students-financial-support/",
-    lastVerified: VERIFIED,
+    lastVerified: VERIFIED_GATE,
     sourceUrls: ["https://www.shenkar.ac.il/he/pages/dean-of-students-financial-support/"],
     institutionIds: ["shenkar"],
     eligibility: allOf(
