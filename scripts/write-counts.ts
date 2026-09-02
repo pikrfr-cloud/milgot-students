@@ -1,8 +1,8 @@
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { SCHOLARSHIPS, TIPS } from "../data/scholarships/index.ts";
-import { computeCatalogCounts } from "../lib/catalog-counts.ts";
+import { SCHOLARSHIPS, TIPS } from "../data/scholarships";
+import { computeCatalogCounts } from "../lib/catalog-counts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const counts = computeCatalogCounts(SCHOLARSHIPS, TIPS);
