@@ -199,6 +199,10 @@ export function FastReport() {
       </div>
 
       <p className="mt-8 text-sm text-ink-soft">
+        <Link href="/chat/" className="underline underline-offset-4">
+          {HE.actions.chatIntake}
+        </Link>
+        {" · "}
         <Link href="/profile/" className="underline underline-offset-4">
           {HE.actions.completeProfile}
         </Link>

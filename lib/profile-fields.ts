@@ -1,4 +1,4 @@
-import type { ProfileField } from "./types";
+import type { ProfileField, StudentProfile } from "./types";
 
 /** Wizard step index (0-based) for each profile field. */
 export const FIELD_STEP: Partial<Record<ProfileField, number>> = {
@@ -61,6 +61,36 @@ export const HIGH_IMPACT_FIELDS: ProfileField[] = [
   "isOleh",
 ];
 
+/**
+ * Conversational intake (`/chat/`): core questions, then optional extras.
+ * Same StudentProfile keys as the wizard — not a parallel schema.
+ */
+export const CHAT_CORE_FIELDS: ProfileField[] = [
+  "institution",
+  "degreeLevel",
+  "cityOfResidence",
+  "reservistDaysLastYear",
+  "householdSize",
+  "householdIncomeBand",
+];
+
+export const CHAT_EXTRA_FIELDS: ProfileField[] = [
+  "yearOfStudy",
+  "service",
+  "willingToVolunteer",
+  "sectors",
+  "isOleh",
+];
+
+export const MIN_CHAT_ANSWERS_FOR_REPORT = 3;
+
+export function isProfileFieldFilled(profile: StudentProfile, field: ProfileField): boolean {
+  const v = profile[field];
+  if (v === null || v === undefined) return false;
+  if (Array.isArray(v) && v.length === 0) return false;
+  return true;
+}
+
 /** Fields the wizard actually collects (predicates exist in the catalog). */
 export const WIZARD_FIELDS: ProfileField[] = [
   "institution",
@@ -99,6 +129,10 @@ export const WIZARD_FIELDS: ProfileField[] = [
   "householdSize",
   "householdIncomeBand",
 ];
+
+export function filledWizardFieldCount(profile: StudentProfile): number {
+  return WIZARD_FIELDS.filter((f) => isProfileFieldFilled(profile, f)).length;
+}
 
 export function profileFocusHref(field: ProfileField): string {
   return `/profile/?focus=${encodeURIComponent(field)}`;
