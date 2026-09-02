@@ -25,18 +25,26 @@ export const UNIVERSITIES: Scholarship[] = [
     scope: "institution",
     amounts: amount("משתנה לפי ניקוד וקרנות פנימיות; לא מפורסם סכום אחיד", { uncertain: true }),
     cadence: "annual",
-    deadline: deadline("הגשה במערכת המידע האישי לתלמיד; מועדים מתפרסמים מדי שנה (לרוב לקראת שנת הלימודים)", {
-      kind: "annual_window",
-      uncertain: true,
-    }),
+    deadline: deadline(
+      "בדף מלגת הסיוע הכלכלי לשכר לימוד: הגשה בין 1.7 ל־30.9 עבור שנת הלימודים שמתחילה באוקטובר. לתשפ״ז (אוק׳ 2026): 1.7.2026–30.9.2026. אין סכום ₪ אחיד — השתתפות חלקית בשכ״ל לפי ניקוד סוציו־אקונומי.",
+      {
+        kind: "annual_window",
+        date: "2026-09-30",
+        opensAt: "2026-07-01",
+        windowHe: "1.7.2026–30.9.2026",
+      },
+    ),
     whoItsForHe: "סטודנטים באוניברסיטת תל אביב הזקוקים לסיוע כלכלי, כולל הפניה לקרנות מיוחדות.",
     documentsHe: DEAN_DOCS,
     howToApplyHe: "טופס בקשה לסיוע כלכלי במערכת המידע האישי לתלמיד.",
     applyUrl: "https://deanstudents.tau.ac.il/financial-aid/special-scholarships",
     notesHe:
       "כפילות: אותו דף דיקן כמו מלגות מיוחדות / קרנות פנימיות ומלגת שנה א׳ ללא מימון חיצוני. הרשומות נשארו נפרדות.",
-    lastVerified: VERIFIED,
-    sourceUrls: ["https://deanstudents.tau.ac.il/financial-aid/special-scholarships"],
+    lastVerified: VERIFIED_GATE,
+    sourceUrls: [
+      "https://deanstudents.tau.ac.il/financial-aid/special-scholarships",
+      "https://deanstudents.tau.ac.il/financial-aid/tuition-scholarship",
+    ],
     institutionIds: ["tau"],
     eligibility: allOf(
       { type: "institutionIn", values: ["tau"] },
@@ -223,16 +231,24 @@ export const UNIVERSITIES: Scholarship[] = [
     scope: "institution",
     amounts: amount("משתנה לפי קריטריונים כלכליים", { uncertain: true }),
     cadence: "annual",
-    deadline: deadline("סטודנטים חדשים: עם הרישום. ותיקים: יולי–אוגוסט. מועד מאוחר בתחילת סמסטר אביב.", {
-      kind: "annual_window",
-      windowHe: "יולי–אוגוסט",
-    }),
+    deadline: deadline(
+      "בדף מלגת סיוע לחדשים, סמסטר חורף תשפ״ז: המערכת נפתחת ב־8.2.2026 ונסגרת ב־14.11.2026. אין סכום ₪ אחיד.",
+      {
+        kind: "annual_window",
+        date: "2026-11-14",
+        opensAt: "2026-02-08",
+        windowHe: "8.2.2026–14.11.2026",
+      },
+    ),
     whoItsForHe: "סטודנטים בטכניון לפי מצב כלכלי.",
     documentsHe: DEAN_DOCS,
-    howToApplyHe: "אתר לשכת דיקן הסטודנטים / אתר הרישום לחדשים.",
-    applyUrl: "https://dean.technion.ac.il/financeaid/%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%95%D7%94%D7%9C%D7%95%D7%95%D7%90%D7%95%D7%AA/",
-    lastVerified: VERIFIED,
-    sourceUrls: ["https://dean.technion.ac.il/financeaid/%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%95%D7%94%D7%9C%D7%95%D7%95%D7%90%D7%95%D7%AA/"],
+    howToApplyHe: "פורטל הסטודנטים: קמפוס — שירותים לסטודנט — הבקשות שלי.",
+    applyUrl: "https://dean.technion.ac.il/financeaid/16142-2/",
+    lastVerified: VERIFIED_GATE,
+    sourceUrls: [
+      "https://dean.technion.ac.il/financeaid/16142-2/",
+      "https://dean.technion.ac.il/financeaid/%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%95%D7%94%D7%9C%D7%95%D7%95%D7%90%D7%95%D7%AA/",
+    ],
     institutionIds: ["technion"],
     eligibility: allOf(
       { type: "institutionIn", values: ["technion"] },
@@ -455,18 +471,24 @@ export const UNIVERSITIES: Scholarship[] = [
     funderHe: "הקדש קראון / אוניברסיטת בר־אילן",
     types: ["population", "need"],
     scope: "institution",
-    amounts: amount("מלגת סיוע לשכר לימוד למשך שלוש שנים + ליווי; התנדבות 30 שעות בשנה", {
+    amounts: amount("מלגת סיוע לשכר לימוד למשך שנתיים + ליווי; התחייבות להתנדבות (קול קורא תשפ״ז ב־PDF). אין ₪ אחיד.", {
       uncertain: true,
     }),
     cadence: "multi_year",
-    deadline: CHECK_ANNUALLY,
+    deadline: deadline(
+      "קול קורא תשפ״ז באתר בר־אילן (PDF יולי 2026). מופיע גרפיקה «13/02/2025» ליד מועד אחרון — לא אומץ כיום תשפ״ז (תאריך שכבר חלף לפני פרסום הקול).",
+      { kind: "varies", uncertain: true },
+    ),
     whoItsForHe:
       "יוצאי אתיופיה המתחילים תואר ראשון ב־STEM בבר־אילן (מדעים מדויקים, מדעי החיים, הנדסה, מדעי המח).",
     documentsHe: [...DOCS_BASIC, "קבלה לחוג STEM"],
-    howToApplyHe: "קול קורא באתר בר־אילן.",
+    howToApplyHe: "הגשה במערכת האינ־בר, לפי הקול הקורא.",
     applyUrl: "https://www.biu.ac.il/scholarship/583640",
-    lastVerified: VERIFIED,
-    sourceUrls: ["https://www.biu.ac.il/scholarship/583640"],
+    lastVerified: VERIFIED_GATE,
+    sourceUrls: [
+      "https://www.biu.ac.il/scholarship/583640",
+      "https://www.biu.ac.il/sites/default/files/2026-07/%D7%A7%D7%95%D7%9C%20%D7%A7%D7%95%D7%A8%D7%90%20%D7%99%D7%95%D7%A6%D7%90%D7%99%20%D7%90%D7%AA%D7%99%D7%95%D7%A4%D7%99%D7%94%202026.pdf",
+    ],
     institutionIds: ["biu"],
     eligibility: allOf(
       { type: "institutionIn", values: ["biu"] },
@@ -614,11 +636,13 @@ export const UNIVERSITIES: Scholarship[] = [
     types: ["research", "merit"],
     scope: "institution",
     amounts: amount(
-      "בדף מלגות המוסמך של המכון: 7,000 ₪ לחודש. בדף הדוקטורט פורסם 8,500 ₪ לחודש. אין מועד הגשת מלגה נפרד — הקבלה לתוכנית.",
-      { min: 7000, max: 8500 },
+      "דפי מלגות WSoS (עודכנו 30.8.2026): מוסמך 7,000 ₪ לחודש, מלגת תמריץ 8,400 ₪. דוקטורט 9,000 ₪ לחודש (רופאים/וטרינרים 11,500 ₪); מלגת תמריץ 10,800 ₪. אין מועד הגשת מלגה נפרד — הקבלה לתוכנית (מוסמך+דוקטורט באותה רשומה, בלי יום אחיד).",
+      { min: 7000, max: 11500 },
     ),
     cadence: "monthly",
-    deadline: deadline("כחלק מקבלה לתוכנית, לא הגשת מלגה נפרדת בדרך כלל", { kind: "rolling" }),
+    deadline: deadline("כחלק מקבלה לתוכנית, לא הגשת מלגה נפרדת בדרך כלל. אין יום הגשה אחיד למסלולי מוסמך ודוקטורט.", {
+      kind: "rolling",
+    }),
     whoItsForHe: "מתקבלים למסלולי מוסמך ודוקטורט במכון ויצמן.",
     documentsHe: ["קבלה לתוכנית"],
     howToApplyHe: "עם המועמדות ללימודים במכון.",
@@ -626,6 +650,7 @@ export const UNIVERSITIES: Scholarship[] = [
     lastVerified: VERIFIED_GATE,
     sourceUrls: [
       "https://www.weizmann.ac.il/wsos/fellowship-aid/msc-students",
+      "https://www.weizmann.ac.il/wsos/fellowship-aid/phd-students",
       "https://www.weizmann.ac.il/feinberg/",
     ],
     institutionIds: ["weizmann"],

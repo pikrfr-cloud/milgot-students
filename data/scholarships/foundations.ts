@@ -303,17 +303,21 @@ export const FOUNDATIONS: Scholarship[] = [
     funderHe: "ארגון HIAS",
     types: ["population", "need"],
     scope: "national",
-    amounts: amount("פורסם סכום בסביבות 2,500 דולר לפי הישגים, צורך כלכלי ומעורבות", {
-      uncertain: true,
-    }),
+    amounts: amount(
+      "כ־2,500 דולר להוצאות לימודים ומחייה (דף מלגות הסטודנטים של HIAS Israel). לא הומר לשקלים — שער משתנה. אין ₪ אחיד.",
+      { uncertain: true },
+    ),
     cadence: "annual",
-    deadline: CHECK_ANNUALLY,
+    deadline: deadline(
+      "בדף HIAS הרשמי: ההרשמה לשנת 2026–2027 תיפתח באוקטובר — בלי יום. לא אומצו 23.11–17.12.2026 מדף אונו, כי הדף הרשמי סותר.",
+      { kind: "annual_window", windowHe: "אוקטובר 2026", uncertain: true },
+    ),
     whoItsForHe: "סטודנטים עולים, לפי קריטריונים סוציו־אקונומיים והישגים.",
     documentsHe: [...DOCS_BASIC, "תעודת עולה", ...DOCS_INCOME],
     howToApplyHe: "אתר HIAS Israel / קול קורא שנתי.",
-    applyUrl: "https://www.hias.org.il/",
-    lastVerified: VERIFIED,
-    sourceUrls: ["https://www.hias.org.il/"],
+    applyUrl: "https://hias.org.il/student-grants/",
+    lastVerified: VERIFIED_GATE,
+    sourceUrls: ["https://hias.org.il/student-grants/", "https://www.hias.org.il/"],
     eligibility: allOf(
       { type: "isOleh" },
       { type: "degreeLevelIn", values: ["ba", "ma"] },
