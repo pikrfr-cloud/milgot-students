@@ -624,10 +624,8 @@ export const UNIVERSITIES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.ariel.ac.il/"],
     institutionIds: ["ariel"],
-    eligibility: allOf(
-      { type: "institutionIn", values: ["ariel"] },
-      { type: "incomeAtMost", value: "lower_middle" },
-    ),
+    treatment: "checkAtInstitution",
+    eligibility: allOf({ type: "institutionIn", values: ["ariel"] }),
   }),
   s({
     id: "weizmann-graduate",

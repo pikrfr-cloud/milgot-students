@@ -17,7 +17,7 @@ import { useTracking } from "@/components/TrackingProvider";
 import { scholarshipPagePath } from "@/lib/catalog-routes";
 import { HE } from "@/lib/i18n/he";
 import { SCHOLARSHIPS } from "@/data/scholarships";
-import { duplicateNoteHe, duplicatePeers } from "@/lib/catalog";
+import { duplicateNoteHe, duplicatePeers, hasSecondaryDeadlineSource } from "@/lib/catalog";
 
 const bucketStyle: Record<string, string> = {
   eligible: "border-ok/30 bg-ok/5",
@@ -276,6 +276,9 @@ export function ScholarshipCard({
         <span className={`rounded-full px-2 py-0.5 ${level === "official_page" ? levelStyle.official_page : level === "institution_site" ? levelStyle.institution_site : levelStyle.indirect}`}>
           {sourceLevelLabelHe(level)}
         </span>
+        {hasSecondaryDeadlineSource(s) ? (
+          <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{HE.catalog.secondaryDeadline}</span>
+        ) : null}
         {isVerificationStale(s.lastVerified) ? (
           <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{STALE_VERIFICATION_LABEL_HE}</span>
         ) : null}

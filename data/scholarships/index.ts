@@ -4,6 +4,8 @@ import {
   isGuideRecord,
   isMatchableScholarship,
   maxLastVerified,
+  uniqueApplyUrlNoteHe,
+  uniqueMatchableCount,
 } from "@/lib/catalog";
 import { formatHebrewLongDate } from "@/lib/format";
 import { NATIONAL } from "./national";
@@ -40,13 +42,19 @@ export function getScholarshipById(id: string): Scholarship | undefined {
   return SCHOLARSHIPS.find((s) => s.id === id);
 }
 
+const matchableUnique = uniqueMatchableCount(MATCHABLE_SCHOLARSHIPS);
+
 export const CATALOG_STATS = {
-  /** Real matchable scholarships only — not dean/authority מדריך shells. */
-  total: MATCHABLE_SCHOLARSHIPS.length,
+  /** Unique matchable scholarships by applyUrl — the headline «מלגות להתאמה». */
+  total: matchableUnique,
+  /** Matchable rows in the list, including declared applyUrl duplicates. */
+  matchableRows: MATCHABLE_SCHOLARSHIPS.length,
   guide: GUIDE_SCHOLARSHIPS.length,
   records: SCHOLARSHIPS.length,
   tips: TIPS.length,
   lastVerifiedMonth: maxLastVerified(SCHOLARSHIPS),
+  /** Present only when the list is larger than the unique headline. */
+  uniqueApplyUrlNote: uniqueApplyUrlNoteHe(MATCHABLE_SCHOLARSHIPS.length, matchableUnique),
 };
 
 /** Shared legal-page date — derived from catalog max lastVerified, not a hardcoded string. */

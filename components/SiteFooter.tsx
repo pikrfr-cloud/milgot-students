@@ -34,7 +34,8 @@ export function SiteFooter() {
         <div>
           <p className="font-medium">{HE.nav.catalog}</p>
           <p className="mt-2 text-white/75">
-            {CATALOG_STATS.total} מלגות להתאמה · {CATALOG_STATS.guide} במדריך · עודכן{" "}
+            {CATALOG_STATS.total} מלגות להתאמה · {CATALOG_STATS.guide} במדריך
+            {CATALOG_STATS.uniqueApplyUrlNote ? ` · ${CATALOG_STATS.uniqueApplyUrlNote}` : ""} · עודכן{" "}
             {CATALOG_STATS.lastVerifiedMonth}
           </p>
           <Link href="/catalog/updates/" className="mt-2 inline-block underline underline-offset-4 text-white/90">

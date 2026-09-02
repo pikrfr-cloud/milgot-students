@@ -41,7 +41,8 @@ export default function AboutPage() {
       <h2 className="mt-8 font-display text-2xl">הקטלוג</h2>
       <p className="mt-3">
         כרגע {CATALOG_STATS.total} מלגות להתאמה מול הקטלוג, ועוד {CATALOG_STATS.guide} במדריך
-        (דיקן / רשות בלי תנאי סף מאומתים). כולן מבוססות על מקורות פומביים. סכום או מועד לא ודאי
+        (דיקן / רשות בלי תנאי סף מאומתים).
+        {CATALOG_STATS.uniqueApplyUrlNote ? ` ${CATALOG_STATS.uniqueApplyUrlNote}.` : ""} כולן מבוססות על מקורות פומביים. סכום או מועד לא ודאי
         מסומן במפורש. אימות אחרון: {CATALOG_STATS.lastVerifiedMonth}.
       </p>
       <p className="mt-3">

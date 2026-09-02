@@ -58,10 +58,8 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.telhai.ac.il/"],
     institutionIds: ["telhai"],
-    eligibility: allOf(
-      { type: "institutionIn", values: ["telhai"] },
-      { type: "incomeAtMost", value: "lower_middle" },
-    ),
+    treatment: "checkAtInstitution",
+    eligibility: allOf({ type: "institutionIn", values: ["telhai"] }),
   }),
   s({
     id: "kinneret-college-payis",
@@ -197,10 +195,8 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.afeka.ac.il/"],
     institutionIds: ["afeka"],
-    eligibility: allOf(
-      { type: "institutionIn", values: ["afeka"] },
-      { type: "incomeAtMost", value: "lower_middle" },
-    ),
+    treatment: "checkAtInstitution",
+    eligibility: allOf({ type: "institutionIn", values: ["afeka"] }),
   }),
   s({
     id: "hit-aid",
@@ -273,10 +269,8 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.ruppin.ac.il/"],
     institutionIds: ["ruppin"],
-    eligibility: allOf(
-      { type: "institutionIn", values: ["ruppin"] },
-      { type: "incomeAtMost", value: "lower_middle" },
-    ),
+    treatment: "checkAtInstitution",
+    eligibility: allOf({ type: "institutionIn", values: ["ruppin"] }),
   }),
   s({
     id: "yvc-aid",
@@ -391,10 +385,8 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.mta.ac.il/"],
     institutionIds: ["mta"],
-    eligibility: allOf(
-      { type: "institutionIn", values: ["mta"] },
-      { type: "incomeAtMost", value: "lower_middle" },
-    ),
+    treatment: "checkAtInstitution",
+    eligibility: allOf({ type: "institutionIn", values: ["mta"] }),
   }),
   s({
     id: "colman-aid",
@@ -450,10 +442,8 @@ export const COLLEGES: Scholarship[] = [
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.hadassah.ac.il/"],
     institutionIds: ["hadassah"],
-    eligibility: allOf(
-      { type: "institutionIn", values: ["hadassah"] },
-      { type: "incomeAtMost", value: "lower_middle" },
-    ),
+    treatment: "checkAtInstitution",
+    eligibility: allOf({ type: "institutionIn", values: ["hadassah"] }),
   }),
   s({
     id: "pac-aid",

@@ -20,7 +20,7 @@ import { absoluteUrl } from "@/lib/site";
 import { sourceLevelLabelHe, bestSourceLevel } from "@/lib/sources";
 import { HE } from "@/lib/i18n/he";
 import { INSTITUTIONS } from "@/lib/institutions";
-import { duplicateNoteHe, duplicatePeers, isGuideRecord } from "@/lib/catalog";
+import { duplicateNoteHe, duplicatePeers, hasSecondaryDeadlineSource, isGuideRecord } from "@/lib/catalog";
 
 export const dynamicParams = false;
 
@@ -94,6 +94,9 @@ export default async function ScholarshipPage({
         <span className="rounded-full bg-paper-deep px-2 py-0.5">
           {sourceLevelLabelHe(s.sourceLevel ?? bestSourceLevel(s.sourceUrls))}
         </span>
+        {hasSecondaryDeadlineSource(s) ? (
+          <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{HE.catalog.secondaryDeadline}</span>
+        ) : null}
       </div>
 
       <Link
@@ -174,7 +177,8 @@ export default async function ScholarshipPage({
       <CoverageNote className="mt-8" />
       <p className="mt-4 text-sm">
         {CATALOG_STATS.total} מלגות להתאמה בקטלוג
-        {CATALOG_STATS.guide ? ` · ${CATALOG_STATS.guide} במדריך` : ""}.{" "}
+        {CATALOG_STATS.guide ? ` · ${CATALOG_STATS.guide} במדריך` : ""}
+        {CATALOG_STATS.uniqueApplyUrlNote ? ` · ${CATALOG_STATS.uniqueApplyUrlNote}` : ""}.{" "}
         <Link href="/catalog/" className="underline underline-offset-4">
           לכל הקטלוג
         </Link>

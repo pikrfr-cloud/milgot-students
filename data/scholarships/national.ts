@@ -46,6 +46,7 @@ export const NATIONAL: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, ...DOCS_INCOME, ...DOCS_BANK, "מסמכי משפחה לפי הנחיות המערכת"],
     howToApplyHe: "הגשה מקוונת באתר מיל־GO (cua.org.il) כשההרשמה נפתחת.",
     applyUrl: "https://www.cua.org.il/",
+    deadlineSource: "secondary",
     notesHe:
       "מחליפה את קרן הסיוע של משרד החינוך. כפל עם מלגת ממדים ללימודים לא אומת בדף מיל־GO הרשמי — יש לבדוק בשני המקורות לפני הגשה. מדרגות הסכום פורסמו באתר המל״ג ובאתר מיל־GO; גובה המענק האישי תלוי בניקוד. תאריכי היום אומתו מדף מלגות אונו לקול הארצי (אותו דפוס כמו אירתקאא); אתר CUA עצמו עדיין מציין רק «דצמבר 2026». כפילות: אותו קישור הגשה כמו הלוואת קרן הסיוע.",
     lastVerified: VERIFIED_GATE,
@@ -286,6 +287,7 @@ export const NATIONAL: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, ...DOCS_INCOME, "אישור שעות שבועיות ותחום לימוד"],
     howToApplyHe: "הרשמה במערכת אירתקאא דרך פר״ח לפי הפרסום השנתי.",
     applyUrl: "https://che.org.il/scholarships/%D7%9E%D7%9C%D7%92%D7%AA-%D7%90%D7%99%D7%A8%D7%AA%D7%A7%D7%90%D7%90/",
+    deadlineSource: "secondary",
     notesHe:
       "כוללת התנדבות (40 שעות בשנה א׳; בשנים מתקדמות 75+20). רמת עדיפות ד׳ אינה זכאית. הסטודנט יכול במקביל להגיש למיל־GO ולפר״ח. הזכאים נבחרים לפי ניקוד סוציו־אקונומי ומקצוע מועדף — לא סף בינארי בלבד. תאריכי היום אומתו מדף מלגות אונו לקול הארצי (פר״ח); דף המל״ג עצמו עדיין בלי יום.",
     lastVerified: VERIFIED_GATE,

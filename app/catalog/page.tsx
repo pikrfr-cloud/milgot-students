@@ -29,7 +29,8 @@ export default function CatalogPage() {
       <h1 className="font-display text-4xl text-forest-deep">קטלוג המלגות</h1>
       <p className="mt-2 text-ink-soft">
         {CATALOG_STATS.total} מלגות להתאמה מול הקטלוג, {CATALOG_STATS.guide} במדריך (דיקן / רשות),
-        ועוד {TIPS.length} טיפים שאינם מלגות. לא הומצאו מלגות.
+        ועוד {CATALOG_STATS.tips} טיפים שאינם מלגות. לא הומצאו מלגות.
+        {CATALOG_STATS.uniqueApplyUrlNote ? ` ${CATALOG_STATS.uniqueApplyUrlNote}.` : ""}
       </p>
       <p className="mt-3">
         <Link href="/catalog/updates/" className="underline underline-offset-4">
