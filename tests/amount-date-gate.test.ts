@@ -52,9 +52,12 @@ describe("matchable-with-amount-and-date gate", () => {
       "emek-yizrael-community",
       "haifa-miluim-first-year",
       "hevel-modiin-community",
+      "hevel-yavne-pais",
       "hof-hasharon-community",
       "holon-hit-payis",
+      "irgun-jeckes",
       "irtikaa",
+      "isef-recanati-6000",
       "leviathan-scholarship",
       "mate-binyamin-community",
       "mil-go",
@@ -71,10 +74,16 @@ describe("matchable-with-amount-and-date gate", () => {
       "rothschild-baroness-phd",
       "schulich-leaders",
       "shenkar-aid",
+      "shomron-pais",
+      "tau-azrieli-fellows",
+      "tau-bubis",
       "tau-diaspora-phd",
       "tau-liber-phd",
+      "tau-president-orphanhood",
+      "weizmann-young-scholars",
+      "zvulun-pais",
     ]);
-    expect(counted.length).toBe(37);
+    expect(counted.length).toBe(46);
     expect(counted.length).toBeLessThan(60);
     expect(counted.length).toBe(matchableWithAmountAndDate(MATCHABLE_SCHOLARSHIPS).length);
   });
