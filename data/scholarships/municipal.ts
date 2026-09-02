@@ -605,4 +605,73 @@ export const MUNICIPAL: Scholarship[] = [
       { type: "willingToVolunteer" },
     ),
   }),
+  s({
+    id: "ramat-hasharon-community",
+    nameHe: "מלגת מפעל הפיס — עיריית רמת השרון",
+    funderHe: "עיריית רמת השרון בשיתוף מפעל הפיס",
+    types: ["volunteering"],
+    scope: "municipal",
+    amounts: amount("10,000 ₪ תמורת כ־140 שעות תרומה לקהילה (דף מלגות העירייה לתשפ״ז)", {
+      min: 10000,
+      max: 10000,
+    }),
+    cadence: "annual",
+    deadline: deadline("המועד האחרון להגשת הבקשה — 15.9.2026 (דף מלגות רמת השרון)", {
+      kind: "fixed",
+      date: "2026-09-15",
+    }),
+    whoItsForHe:
+      "כ־50 סטודנטים מבני העיר רמת השרון שיעמדו בקריטריונים העירוניים ויתרמו לקהילה כ־140 שעות. בדף גם מסלול רוטרי 5,000 ₪ (50 שעות, אותו מועד) — לא פוצל כי אותו דף הגשה.",
+    documentsHe: [...DOCS_BASIC, "ספח תושבות רמת השרון", "טופסי התחייבות למפעל הפיס ולעירייה"],
+    howToApplyHe: "טופס מקוון בדף המלגות של עיריית רמת השרון.",
+    applyUrl: "https://ramat-hasharon.muni.il/%D7%9E%D7%9C%D7%92%D7%95%D7%AA/",
+    notesHe: "מכסה כ־50. מיון לפי קריטריוני העירייה.",
+    lastVerified: VERIFIED_GATE,
+    sourceUrls: ["https://ramat-hasharon.muni.il/%D7%9E%D7%9C%D7%92%D7%95%D7%AA/"],
+    treatment: "selective",
+    eligibility: allOf(
+      { type: "cityIn", values: ["רמת השרון"] },
+      { type: "willingToVolunteer" },
+    ),
+  }),
+  s({
+    id: "hof-hasharon-community",
+    nameHe: "מלגת מעורבות חברתית — מועצה אזורית חוף השרון",
+    funderHe: "מועצה אזורית חוף השרון בשיתוף מפעל הפיס",
+    types: ["volunteering"],
+    scope: "regional",
+    amounts: amount("10,000 ₪ תמורת 140 שעות נתינה לקהילת המועצה, 25 תקנים (דף המועצה 2026–2027)", {
+      min: 10000,
+      max: 10000,
+    }),
+    cadence: "annual",
+    deadline: deadline("פתיחת רישום 20.7.2026; מועד אחרון להגשת מועמדות 8.9.2026 (טבלת לוחות הזמנים בדף המועצה)", {
+      kind: "fixed",
+      date: "2026-09-08",
+      opensAt: "2026-07-20",
+      windowHe: "20.7.2026–8.9.2026",
+    }),
+    whoItsForHe:
+      "סטודנטים תושבי מועצה אזורית חוף השרון (אישור תושבות מהוועד המקומי בחמש השנים האחרונות), אחרי שירות צבאי או לאומי, במוסד מוכר מל״ג. מכסה 25 תקנים. ועדת מלגות ב־24.9.2026.",
+    documentsHe: [
+      "קורות חיים",
+      ...DOCS_BASIC,
+      "אישור תושבות מהוועד המקומי (חמש שנים)",
+      ...DOCS_SERVICE,
+      ...DOCS_BANK,
+    ],
+    howToApplyHe: "הגשה בדף מלגות הסיוע לסטודנטים של המועצה.",
+    applyUrl: "https://hof-hasharon.co.il/%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%A1%D7%99%D7%95%D7%A2-%D7%9C%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D/",
+    notesHe: "ועדת מלגות 24.9.2026. זום הסבר התקיים ב־12.8.2026.",
+    lastVerified: VERIFIED_GATE,
+    sourceUrls: [
+      "https://hof-hasharon.co.il/%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%A1%D7%99%D7%95%D7%A2-%D7%9C%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D/",
+    ],
+    treatment: "selective",
+    eligibility: allOf(
+      { type: "cityIn", values: ["חוף השרון"] },
+      { type: "serviceIn", values: ["idf", "national"] },
+      { type: "willingToVolunteer" },
+    ),
+  }),
 ];

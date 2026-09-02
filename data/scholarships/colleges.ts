@@ -222,6 +222,42 @@ export const COLLEGES: Scholarship[] = [
     eligibility: allOf({ type: "institutionIn", values: ["hit"] }),
   }),
   s({
+    id: "holon-hit-payis",
+    nameHe: "מלגת עיריית חולון ומפעל הפיס — סטודנטי HIT",
+    funderHe: "עיריית חולון, HIT ומפעל הפיס",
+    types: ["volunteering"],
+    scope: "municipal",
+    amounts: amount(
+      "מסלול א׳: 10,000 ₪ תמורת 140 שעות התנדבות בחינוך בחולון עד יולי 2027 (דף מלגות חיצוניות של HIT)",
+      { min: 10000, max: 10000 },
+    ),
+    cadence: "annual",
+    deadline: deadline("תחילת מועד הרשמה למסלול א׳: 1.9.2026 (דף מלגות חיצוניות HIT). מועד סגירה לא פורסם באותו דף.", {
+      kind: "annual_window",
+      opensAt: "2026-09-01",
+      windowHe: "נפתחה 1.9.2026",
+    }),
+    whoItsForHe:
+      "סטודנט מן המניין לתואר ראשון או שני ב־HIT, תושב חולון או שוכר במעונות HIT. מסלול ב׳ באותו דף (2,500 ₪, פתיחה 25.10.2026) לא פוצל — אותו קישור הגשה.",
+    documentsHe: [...DOCS_BASIC, "ספח מגורים בחולון"],
+    howToApplyHe: "לפי דף המלגות החיצוניות של HIT — מסלול עיריית חולון.",
+    applyUrl:
+      "https://www.hit.ac.il/students/deanofstudents/scholarships/%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%97%D7%99%D7%A6%D7%95%D7%A0%D7%99%D7%95%D7%AA/",
+    notesHe: "מספר המקומות מוגבל; הקבלה לפי שיקול דעת העירייה.",
+    lastVerified: VERIFIED_GATE,
+    sourceUrls: [
+      "https://www.hit.ac.il/students/deanofstudents/scholarships/%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%97%D7%99%D7%A6%D7%95%D7%A0%D7%99%D7%95%D7%AA/",
+    ],
+    institutionIds: ["hit"],
+    treatment: "selective",
+    eligibility: allOf(
+      { type: "institutionIn", values: ["hit"] },
+      { type: "cityIn", values: ["חולון"] },
+      { type: "degreeLevelIn", values: ["ba", "ma"] },
+      { type: "willingToVolunteer" },
+    ),
+  }),
+  s({
     id: "ruppin-aid",
     nameHe: "מלגות — המרכז האקדמי רופין",
     funderHe: "המרכז האקדמי רופין",

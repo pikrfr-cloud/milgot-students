@@ -501,6 +501,37 @@ export const UNIVERSITIES: Scholarship[] = [
     ),
   }),
   s({
+    id: "openu-1000-scholarships",
+    nameHe: "תוכנית אלף המלגות — האוניברסיטה הפתוחה",
+    funderHe: "האוניברסיטה הפתוחה",
+    types: ["need"],
+    scope: "institution",
+    amounts: amount(
+      "מלגה ראשונה 1,500 ₪ לקורס הראשון, המשך 1,500 ₪ והמשך נוסף 1,000 ₪ (סה״כ עד 4,000 ₪) — דף תוכנית 1000 המלגות לתשפ״ז",
+      { min: 1500, max: 4000 },
+    ),
+    cadence: "annual",
+    deadline: deadline("בקשות לסמסטר סתיו תשפ״ז 2027א עד 9.9.2026 (דף תוכנית אלף המלגות)", {
+      kind: "fixed",
+      date: "2026-09-09",
+    }),
+    whoItsForHe:
+      "1,000 מלגות לסטודנטים חדשים לתואר ראשון באו״פ (סמסטר ראשון), או מחדשי הרשמה אחרי הפסקה של 7 שנים ומעלה, בלי תואר ראשון קודם. נבדק לפי מצב סוציו־אקונומי. לא למי שממומן מגורם חיצוני, לא לקורס בודד ולא לאפיק מעבר של פחות מחמישה קורסים.",
+    documentsHe: DEAN_DOCS,
+    howToApplyHe: "מערכת שאילתא — מלגות והטבות, או טופס מתעניינים אם טרם נרשמתם.",
+    applyUrl: "https://www.openu.ac.il/dean-students/scholarships/pages/1000Scholarships.aspx",
+    notesHe: "פטור מדמי הרשמה מאוחרת למגישי הבקשה. תשובה תוך 30 ימי עסקים.",
+    lastVerified: VERIFIED_GATE,
+    sourceUrls: ["https://www.openu.ac.il/dean-students/scholarships/pages/1000Scholarships.aspx"],
+    institutionIds: ["openu"],
+    eligibility: allOf(
+      { type: "institutionIn", values: ["openu"] },
+      { type: "degreeLevelIn", values: ["ba"] },
+      { type: "yearOfStudyIn", values: [1] },
+      { type: "incomeAtMost", value: "lower_middle" },
+    ),
+  }),
+  s({
     id: "reichman-financial-aid",
     nameHe: "סיוע כלכלי ומלגות — אוניברסיטת רייכמן",
     funderHe: "דיקן הסטודנטים, אוניברסיטת רייכמן",
@@ -518,6 +549,42 @@ export const UNIVERSITIES: Scholarship[] = [
     institutionIds: ["reichman"],
     treatment: "checkAtInstitution",
     eligibility: allOf({ type: "institutionIn", values: ["reichman"] }),
+  }),
+  s({
+    id: "reichman-golani-omer",
+    nameHe: "מלגת לוחמי גולני ואלכסנדרוני — אוניברסיטת רייכמן",
+    funderHe: "קרן Omer As Kind Be / אוניברסיטת רייכמן",
+    types: ["need", "service"],
+    scope: "institution",
+    amounts: amount("28,000 ₪ בכל אחת משנות הלימוד (חוברת מועמדים לתואר ראשון תשפ״ז)", {
+      min: 28000,
+      max: 28000,
+    }),
+    cadence: "multi_year",
+    deadline: deadline("מועד אחרון להגשת מועמדות לאחר קבלה ללימודים: 2.8.2026 (חוברת 2026)", {
+      kind: "fixed",
+      date: "2026-08-02",
+    }),
+    whoItsForHe:
+      "לוחמי ולוחמות חטיבות גולני או אלכסנדרוני שהתקבלו מן המניין ללימודים ברייכמן והם נזקקים כלכלית לפי קריטריוני ועדת המלגות.",
+    documentsHe: [...DEAN_DOCS, "אישור שירות לוחם בגולני או באלכסנדרוני"],
+    howToApplyHe: "לפי חוברת המועמדים לתואר ראשון של רייכמן, לאחר קבלה מן המניין.",
+    applyUrl: "https://www.runi.ac.il/media/pijdru43/ba-brochure-2026_web.pdf",
+    notesHe:
+      "חלון תשפ״ז נסגר ב־2.8.2026. באותה חוברת מסלולים נוספים עם אותו מועד — לא פוצלו כי אותו קישור.",
+    archivedReasonHe:
+      "חלון הגשת תשפ״ז נסגר ב־2.8.2026. הרשומה נשארת להתאמה למחזור הבא.",
+    lastVerified: VERIFIED_GATE,
+    sourceUrls: ["https://www.runi.ac.il/media/pijdru43/ba-brochure-2026_web.pdf"],
+    institutionIds: ["reichman"],
+    treatment: "selective",
+    eligibility: allOf(
+      { type: "institutionIn", values: ["reichman"] },
+      { type: "degreeLevelIn", values: ["ba"] },
+      { type: "serviceIn", values: ["idf"] },
+      { type: "combatRole" },
+      { type: "incomeAtMost", value: "lower_middle" },
+    ),
   }),
   s({
     id: "ariel-financial-aid",

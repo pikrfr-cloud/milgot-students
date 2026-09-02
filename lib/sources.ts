@@ -88,6 +88,10 @@ const OFFICIAL_HOSTS = new Set([
   "e4e.org.il",
   "www.e4e.org.il",
   "digitaler.cld.bz",
+  "hof-hasharon.co.il",
+  "www.hof-hasharon.co.il",
+  "leviathanproject.co.il",
+  "www.leviathanproject.co.il",
 ]);
 
 const HOMEPAGE_PATHS = new Set(["", "/", "/he", "/en", "/he/", "/en/", "/home", "/home/", "/index.html"]);
