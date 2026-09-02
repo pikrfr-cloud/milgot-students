@@ -1,4 +1,5 @@
 import { SCHOLARSHIPS } from "@/data/scholarships";
+import { searchGroupsWithCounts } from "./catalog-groups";
 import { INSTITUTIONS } from "./institutions";
 import { fieldLabelHe } from "./labels";
 import { collectCityValues, collectInstitutionValues, collectSectorValues } from "./rule-walk";
@@ -110,6 +111,7 @@ export function sitemapEntries(): { url: string }[] {
     ...catalogInstitutionIds().map((id) => absoluteUrl(institutionCollectionPath(id))),
     ...catalogCities().map((c) => absoluteUrl(cityCollectionPath(cityToSlug(c)))),
     ...catalogSectors().map((id) => absoluteUrl(sectorCollectionPath(id))),
+    ...searchGroupsWithCounts().map((g) => absoluteUrl(g.href)),
   ];
   return [...new Set(urls)].map((url) => ({ url }));
 }

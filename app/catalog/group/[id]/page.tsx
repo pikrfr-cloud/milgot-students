@@ -1,22 +1,23 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { INSTITUTIONS } from "@/lib/institutions";
 import { CatalogListCard } from "@/components/CatalogListCard";
 import { CoverageNote } from "@/components/CoverageNote";
-import { uniqueMatchableCount } from "@/lib/catalog";
+import { uniqueMatchableByApplyUrl } from "@/lib/catalog";
 import {
-  institutionCollectionPath,
-  institutionStaticParams,
-  scholarshipsForInstitution,
-} from "@/lib/catalog-routes";
+  groupCollectionPath,
+  groupStaticParams,
+  isSearchGroupId,
+  SEARCH_GROUP_LABEL_HE,
+  scholarshipsForGroup,
+} from "@/lib/catalog-groups";
 import { deadlineSortValue } from "@/lib/format";
 import { HE } from "@/lib/i18n/he";
 
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return institutionStaticParams();
+  return groupStaticParams();
 }
 
 export async function generateMetadata({
@@ -25,23 +26,26 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const inst = INSTITUTIONS.find((i) => i.id === id);
+  if (!isSearchGroupId(id)) return { title: HE.nav.catalog };
+  const label = SEARCH_GROUP_LABEL_HE[id];
+  const list = uniqueMatchableByApplyUrl(scholarshipsForGroup(id));
   return {
-    title: inst ? `מלגות — ${inst.nameHe}` : "מוסד",
-    description: inst ? `מלגות בקטלוג הקשורות ל${inst.nameHe}` : undefined,
-    alternates: { canonical: institutionCollectionPath(id) },
+    title: `מלגות — ${label}`,
+    description: `${list.length} מלגות · ${label}`,
+    alternates: { canonical: groupCollectionPath(id) },
   };
 }
 
-export default async function InstitutionCollectionPage({
+export default async function GroupCollectionPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const inst = INSTITUTIONS.find((i) => i.id === id);
-  const list = scholarshipsForInstitution(id);
-  if (!inst || list.length === 0) notFound();
+  if (!isSearchGroupId(id)) notFound();
+  const list = uniqueMatchableByApplyUrl(scholarshipsForGroup(id));
+  if (!list.length) notFound();
+  const label = SEARCH_GROUP_LABEL_HE[id];
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -50,8 +54,10 @@ export default async function InstitutionCollectionPage({
           {HE.nav.catalog}
         </Link>
       </p>
-      <h1 className="mt-2 font-display text-4xl text-forest-deep">מלגות — {inst.nameHe}</h1>
-      <p className="mt-2 text-ink-soft">{uniqueMatchableCount(list)} מלגות</p>
+      <h1 className="mt-2 font-display text-4xl text-forest-deep">מלגות — {label}</h1>
+      <p className="mt-2 text-ink-soft">
+        {list.length} {list.length === 1 ? "מלגה" : "מלגות"}
+      </p>
       <Link
         href="/chat/"
         className="mt-4 inline-flex min-h-11 items-center rounded-full bg-clay px-5 text-white"

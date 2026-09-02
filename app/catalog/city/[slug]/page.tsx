@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  cityCollectionPath,
-  cityFromSlug,
-  cityStaticParams,
-  scholarshipPagePath,
-  scholarshipsForCity,
-} from "@/lib/catalog-routes";
-import { amountHeadlineHe, deadlineSortValue, formatDeadline } from "@/lib/format";
-import { HE } from "@/lib/i18n/he";
+import { CatalogListCard } from "@/components/CatalogListCard";
 import { CoverageNote } from "@/components/CoverageNote";
+import { uniqueMatchableCount } from "@/lib/catalog";
+import { cityCollectionPath, cityFromSlug, cityStaticParams, scholarshipsForCity } from "@/lib/catalog-routes";
+import { deadlineSortValue } from "@/lib/format";
+import { HE } from "@/lib/i18n/he";
 
 export const dynamicParams = false;
 
@@ -51,26 +47,19 @@ export default async function CityCollectionPage({
         </Link>
       </p>
       <h1 className="mt-2 font-display text-4xl text-forest-deep">מלגות לתושבי {city}</h1>
-      <p className="mt-2 text-ink-soft">{list.length} רשומות עם תנאי מגורים בעיר זו.</p>
+      <p className="mt-2 text-ink-soft">{uniqueMatchableCount(list)} מלגות</p>
       <Link
-        href="/profile/fast/"
+        href="/chat/"
         className="mt-4 inline-flex min-h-11 items-center rounded-full bg-clay px-5 text-white"
       >
-        {HE.actions.checkFit}
+        {HE.actions.chatIntake}
       </Link>
       <ul className="mt-8 space-y-4">
         {[...list]
           .sort((a, b) => deadlineSortValue(a.deadline) - deadlineSortValue(b.deadline))
           .map((s) => (
-          <li key={s.id} className="rounded-2xl border border-line bg-card p-4">
-            <Link href={scholarshipPagePath(s.id)} className="font-display text-xl text-forest-deep underline-offset-4 hover:underline">
-              {s.nameHe}
-            </Link>
-            <p className="mt-1 text-sm text-ink-soft">
-              {amountHeadlineHe(s.amounts)} · {formatDeadline(s.deadline)}
-            </p>
-          </li>
-        ))}
+            <CatalogListCard key={s.id} scholarship={s} />
+          ))}
       </ul>
       <CoverageNote className="mt-8" />
     </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { COUNTS, studentCountsLine } from "@/data/counts";
+import { GroupChipRow } from "@/components/GroupChipRow";
 import { UrgentNowStrip } from "@/components/UrgentNowStrip";
 import { HE } from "@/lib/i18n/he";
 
@@ -32,6 +33,10 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-3xl px-4 py-8">
+        <GroupChipRow />
       </section>
 
       <UrgentNowStrip />

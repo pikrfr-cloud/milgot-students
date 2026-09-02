@@ -45,6 +45,9 @@ export const HE = {
     back: "הקודם",
     edit: "עריכה",
     print: "הדפסה",
+    copyReportLink: "העתק קישור לדוח",
+    copied: "הקישור הועתק",
+    skipRestShowReport: "דלג על השאר → הצג דוח",
     exportJson: "שמירת עותק",
     importJson: "טעינת עותק",
     deleteAll: "מחק את כל הנתונים שלי",
@@ -121,6 +124,10 @@ export const HE = {
     duplicate: "כפילות",
     secondaryDeadline: "מקור משני למועד",
     verificationSummary: "מקורות",
+    amountLegend: "סכום מאושר · צפי · לא פורסם",
+    amountApproved: "סכום מאושר",
+    amountEstimate: "צפי",
+    amountUnpublished: "לא פורסם",
   },
 
   errors: {

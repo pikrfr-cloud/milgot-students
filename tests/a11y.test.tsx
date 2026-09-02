@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import { Field } from "@/components/Field";
 import { CityPicker, moveActiveIndex } from "@/components/CityPicker";
 import { HeWithEn } from "@/components/HeWithEn";
+import { ScholarshipFaceChips } from "@/components/ScholarshipFaceChips";
 import { TriStateSelect } from "@/components/TriStateSelect";
+import { MATCHABLE_SCHOLARSHIPS } from "@/data/scholarships";
+import { faceChips } from "@/lib/card-chips";
 
 describe("ProfileWizard Field accessible names", () => {
   it("associates a select with htmlFor and aria-labelledby", () => {
@@ -52,6 +55,18 @@ describe("CityPicker keyboard helper", () => {
     expect(moveActiveIndex(0, 5, 1)).toBe(1);
     expect(moveActiveIndex(4, 5, 1)).toBe(4);
     expect(moveActiveIndex(0, 5, -1)).toBe(0);
+  });
+});
+
+describe("collapsed card face chips", () => {
+  it("renders amount, deadline, and volunteering on the card face", () => {
+    const s = MATCHABLE_SCHOLARSHIPS[0]!;
+    const chips = faceChips(s);
+    const html = renderToStaticMarkup(<ScholarshipFaceChips scholarship={s} />);
+    expect(html).toContain(chips.amountHe);
+    expect(html).toContain(chips.deadlineHe);
+    expect(html).toContain(chips.volunteeringHe);
+    expect(html).toContain("aria-label=\"סכום, מועד והתנדבות\"");
   });
 });
 

@@ -193,21 +193,26 @@ export function FastReport() {
         >
           {HE.actions.back}
         </button>
-        <button type="button" onClick={next} className={`${tapBtn} bg-forest text-white hover:bg-forest-deep`}>
-          {step < STEPS.length - 1 ? HE.actions.continue : "הצגת דוח חלקי"}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {step >= 1 ? (
+            <button
+              type="button"
+              onClick={() => router.push("/results/")}
+              className="min-h-11 text-sm text-ink-soft underline underline-offset-4"
+            >
+              {HE.actions.skipRestShowReport}
+            </button>
+          ) : null}
+          <button type="button" onClick={next} className={`${tapBtn} bg-forest text-white hover:bg-forest-deep`}>
+            {step < STEPS.length - 1 ? HE.actions.continue : "הצגת דוח חלקי"}
+          </button>
+        </div>
       </div>
 
       <p className="mt-8 text-sm text-ink-soft">
         <Link href="/chat/" className="underline underline-offset-4">
           {HE.actions.chatIntake}
         </Link>
-        {" · "}
-        <Link href="/profile/" className="underline underline-offset-4">
-          {HE.actions.completeProfile}
-        </Link>
-        {" — "}
-        האשף המלא נשאר ההמשך, לא מבוי סתום.
       </p>
       <p className="sr-only" id={fieldDomId(FAST_REPORT_FIELDS[step] ?? "institution")}>
         {current.title}

@@ -4,7 +4,10 @@ import { useMemo, useState } from "react";
 import type { Scholarship, ScholarshipScope, ScholarshipType } from "@/lib/types";
 import { ExternalLink } from "@/components/ExternalLink";
 import { HeWithEn } from "@/components/HeWithEn";
-import { amountDisplay, deadlineSortValue, deadlineStatus, formatDeadline, isVerificationStale, publicDeadlineLabelHe, scopeLabelHe, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
+import { AmountLegend } from "@/components/AmountLegend";
+import { GroupChipRow } from "@/components/GroupChipRow";
+import { ScholarshipFaceChips } from "@/components/ScholarshipFaceChips";
+import { deadlineSortValue, deadlineStatus, isVerificationStale, scopeLabelHe, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
 import { HE } from "@/lib/i18n/he";
@@ -60,6 +63,8 @@ export function CatalogExplorer({
 
   return (
     <>
+      <GroupChipRow className="mt-6" />
+      <AmountLegend className="mt-4" />
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <input
           className="min-h-11 w-full rounded-xl border border-line bg-card px-3 py-2"
@@ -113,7 +118,6 @@ export function CatalogExplorer({
         {list.map((s) => {
           const grade = s.sourceLevel ?? bestSourceLevel(s.sourceUrls);
           const status = deadlineStatus(s.deadline);
-          const shownAmount = amountDisplay(s.amounts);
           return (
             <li key={s.id} id={s.id} className="scroll-mt-24 rounded-2xl border border-line bg-card p-5">
               <div className="flex flex-wrap justify-between gap-2">
@@ -122,16 +126,11 @@ export function CatalogExplorer({
                     <HeWithEn text={s.nameHe} />
                   </Link>
                 </h2>
-                <div className="text-end">
-                  <span className="text-sm font-medium">{shownAmount.headlineHe}</span>
-                  {shownAmount.noteHe ? (
-                    <p className="text-xs text-ink-soft">{shownAmount.noteHe}</p>
-                  ) : null}
-                </div>
               </div>
               <p className="mt-1 text-sm text-ink-soft">
                 <HeWithEn text={s.funderHe} />
               </p>
+              <ScholarshipFaceChips scholarship={s} className="mt-3" />
               <p className="mt-2 text-sm">{s.whoItsForHe}</p>
               <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
                 {isVerificationStale(s.lastVerified) ? (
@@ -143,12 +142,8 @@ export function CatalogExplorer({
                 {s.treatment === "selective" ? (
                   <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{HE.buckets.selective}</span>
                 ) : null}
-                {s.deadline.windowHe ? (
-                  <span className="rounded-full bg-paper-deep px-2 py-0.5">{s.deadline.windowHe}</span>
-                ) : null}
                 <span>
-                  {publicDeadlineLabelHe(s.deadline, s.lastVerified)} · {formatDeadline(s.deadline)} · {s.types.map(scholarshipTypeLabel).join(", ")} ·{" "}
-                  {scopeLabelHe(s.scope)}
+                  {s.types.map(scholarshipTypeLabel).join(", ")} · {scopeLabelHe(s.scope)}
                 </span>
               </p>
               <p className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
@@ -206,6 +201,7 @@ export function CatalogExplorer({
                       <HeWithEn text={s.funderHe} />
                     </p>
                     <p className="mt-2 text-sm">{s.whoItsForHe}</p>
+                    <ScholarshipFaceChips scholarship={s} className="mt-3" />
                     {s.applyUrl ? (
                       <ExternalLink className="mt-2 inline-block text-sm underline ltr-isolate" href={s.applyUrl}>
                         הגשה / מידע

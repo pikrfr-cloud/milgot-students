@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ScholarshipMatch, SourceLevel, TrackingStatus } from "@/lib/types";
-import { amountDisplay, formatDeadline, isVerificationStale, matchHeadline, publicDeadlineLabelHe, scopeLabelHe, shouldHideIcs, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
+import { ScholarshipFaceChips } from "@/components/ScholarshipFaceChips";
+import { formatDeadline, isVerificationStale, matchHeadline, publicDeadlineLabelHe, scopeLabelHe, shouldHideIcs, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { INSTITUTIONS } from "@/lib/institutions";
 import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
@@ -44,7 +45,6 @@ export function ScholarshipCard({
   compact?: boolean;
 }) {
   const s = match.scholarship;
-  const shownAmount = amountDisplay(s.amounts);
   const inst = s.institutionIds
     ?.map((id) => INSTITUTIONS.find((i) => i.id === id)?.nameHe)
     .filter(Boolean)
@@ -226,14 +226,9 @@ export function ScholarshipCard({
             <HeWithEn text={s.funderHe} />
           </p>
         </div>
-        <div className="text-end">
-          <p className="text-sm font-medium text-ink">{shownAmount.headlineHe}</p>
-          {shownAmount.noteHe ? (
-            <p className="mt-0.5 text-xs text-ink-soft">{shownAmount.noteHe}</p>
-          ) : null}
-        </div>
       </div>
-      <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
+      <ScholarshipFaceChips scholarship={s} className="mt-3" />
+      <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
         {match.bucket === "closedCycle" ? (
           <span className="rounded-full bg-gold/20 px-2 py-0.5 text-ink">{HE.buckets.closedCycleLong}</span>
         ) : null}
@@ -251,15 +246,6 @@ export function ScholarshipCard({
         {isVerificationStale(s.lastVerified) ? (
           <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{STALE_VERIFICATION_LABEL_HE}</span>
         ) : null}
-        <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">
-          {publicDeadlineLabelHe(s.deadline, s.lastVerified)}
-        </span>
-        {s.deadline.windowHe ? (
-          <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">{s.deadline.windowHe}</span>
-        ) : null}
-        <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft sm:hidden">
-          {s.types.map(scholarshipTypeLabel).join(" · ")}
-        </span>
       </div>
       <p className="mt-3 text-sm">{matchHeadline(match)}</p>
       {match.mutexNoteHe ? (

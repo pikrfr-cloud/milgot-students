@@ -15,7 +15,11 @@ export default function CatalogPage() {
     <div className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="font-display text-4xl text-forest-deep">{HE.nav.catalog}</h1>
       <p className="mt-2 text-ink-soft">{studentCountsLineFull(COUNTS)}</p>
-      <CatalogExplorer scholarships={MATCHABLE_SCHOLARSHIPS} guide={GUIDE_SCHOLARSHIPS} tips={TIPS} />
+      <CatalogExplorer
+        scholarships={MATCHABLE_SCHOLARSHIPS}
+        guide={GUIDE_SCHOLARSHIPS}
+        tips={TIPS}
+      />
     </div>
   );
 }

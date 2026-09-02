@@ -19,6 +19,8 @@ import { profileIsEmpty } from "@/lib/profile-storage";
 import type { ScholarshipMatch, ScholarshipScope, StudentProfile } from "@/lib/types";
 import { amountSortValue, deadlineSortValue, deadlineStatus, formatDeadline, shouldHideIcs } from "@/lib/format";
 import { fieldLabelHe } from "@/lib/labels";
+import { AmountLegend } from "@/components/AmountLegend";
+import { CopyReportLink } from "@/components/CopyReportLink";
 import { CoverageNote } from "@/components/CoverageNote";
 import { CatalogAgeBanner } from "@/components/CatalogAgeBanner";
 import { EmptyBucket, ScholarshipCard } from "@/components/ScholarshipCard";
@@ -254,6 +256,7 @@ export function ResultsView() {
           <Link href="/profile" className="inline-flex min-h-11 items-center rounded-full border border-line px-4 text-sm">
             {HE.results.editProfile}
           </Link>
+          <CopyReportLink profile={profile} />
           <button
             type="button"
             onClick={() => window.print()}
@@ -263,6 +266,7 @@ export function ResultsView() {
           </button>
         </div>
       </div>
+      <AmountLegend className="mt-3 no-print" />
       <p className="mt-2 text-xs text-ink-soft no-print">{HE.results.iphonePrint}</p>
 
       <section className="mt-6 rounded-2xl border border-forest/20 bg-forest/5 p-5" aria-label="פוטנציאל בשקלים">
