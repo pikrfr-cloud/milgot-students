@@ -17,7 +17,8 @@ import {
 import { HE } from "@/lib/i18n/he";
 import { fieldLabelHe, formatProfileValueHe } from "@/lib/labels";
 import { filledWizardFieldCount } from "@/lib/profile-fields";
-import { loadProfile, saveProfile } from "@/lib/profile-storage";
+import { loadProfileHydratingShare } from "@/lib/profile-share";
+import { saveProfile } from "@/lib/profile-storage";
 import type { StudentProfile } from "@/lib/types";
 
 type ChatMessage = {
@@ -55,7 +56,7 @@ export function ChatIntake() {
   const showReportAction = canOfferChatReport(profile) || (reportOpen && filled >= 1);
 
   useEffect(() => {
-    const p = loadProfile();
+    const p = loadProfileHydratingShare();
     // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
     setProfile(p);
     const first = nextChatQuestion(p, []);

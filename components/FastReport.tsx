@@ -7,7 +7,8 @@ import { DEGREE_LEVELS, SERVICE_TYPES } from "@/lib/types";
 import { INSTITUTION_GROUPS } from "@/lib/institutions";
 import { CITY_SUGGESTIONS } from "@/lib/cities";
 import { fieldLabelHe } from "@/lib/labels";
-import { loadProfile, saveProfile } from "@/lib/profile-storage";
+import { loadProfileHydratingShare } from "@/lib/profile-share";
+import { saveProfile } from "@/lib/profile-storage";
 import { FAST_REPORT_FIELDS, fieldDomId } from "@/lib/profile-fields";
 import { CityPicker } from "@/components/CityPicker";
 import { Field } from "@/components/Field";
@@ -35,7 +36,7 @@ export function FastReport() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
-    setProfile(loadProfile());
+    setProfile(loadProfileHydratingShare());
     setReady(true);
   }, []);
 

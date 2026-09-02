@@ -3,10 +3,12 @@ import { chatReportCounts, type ChatReportCounts } from "./chat-intake";
 import { formatIls } from "./format";
 import { HE } from "./i18n/he";
 import { groupMatches, matchAll } from "./matcher";
+import { sharedResultsUrl } from "./profile-share";
 import { absoluteUrl } from "./site";
 import type { Amount, Deadline, ScholarshipMatch, StudentProfile } from "./types";
 
-export const WHATSAPP_CHAT_URL = absoluteUrl("/chat/");
+/** Full results page — the compact report links here with a shared profile hash. */
+export const WHATSAPP_RESULTS_URL = absoluteUrl("/results/");
 export const WHATSAPP_TOP_MATCH_LIMIT = 5;
 
 export type WhatsAppReportMatch = {
@@ -116,7 +118,8 @@ export function buildWhatsAppReport(
   lines.push(HE.chat.reportHint);
   lines.push("");
   lines.push(HE.whatsapp.fullReportLink);
-  lines.push(WHATSAPP_CHAT_URL);
+  lines.push(sharedResultsUrl(profile));
+  lines.push(HE.whatsapp.fullReportHint);
   lines.push("");
   lines.push(HE.whatsapp.disclaimer);
   lines.push(HE.whatsapp.continueAfterReport);
