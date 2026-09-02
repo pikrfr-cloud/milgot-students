@@ -33,11 +33,12 @@ export const NATIONAL: Scholarship[] = [
     ),
     cadence: "annual",
     deadline: deadline(
-      "באתר מיל־GO: ברכות למקבלי תשפ״ו; צפי לפתיחת הרשמת תשפ״ז — דצמבר 2026, תאריך מדויק טרם פורסם. מועדי תשפ״ו שפורסמו באותו דף (14.12.2025–13.1.2026) כבר חלפו.",
+      "בדף מלגות אונו לקול הקורא הארצי: פתיחה 14.12.2026, סגירה 27.1.2027. תואם את צפי דצמבר 2026 באתר מיל־GO / CUA (שם עדיין אין יום). מועדי תשפ״ו שפורסמו ב־CUA (14.12.2025–13.1.2026) כבר חלפו.",
       {
-        kind: "varies",
-        windowHe: "צפי: דצמבר 2026",
-        uncertain: true,
+        kind: "fixed",
+        date: "2027-01-27",
+        opensAt: "2026-12-14",
+        windowHe: "14.12.2026–27.1.2027",
       },
     ),
     whoItsForHe:
@@ -46,12 +47,13 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "הגשה מקוונת באתר מיל־GO (cua.org.il) כשההרשמה נפתחת.",
     applyUrl: "https://www.cua.org.il/",
     notesHe:
-      "מחליפה את קרן הסיוע של משרד החינוך. כפל עם מלגת ממדים ללימודים לא אומת בדף מיל־GO הרשמי — יש לבדוק בשני המקורות לפני הגשה. מדרגות הסכום פורסמו באתר המל״ג ובאתר מיל־GO; גובה המענק האישי תלוי בניקוד.",
-    lastVerified: VERIFIED_TODAY,
+      "מחליפה את קרן הסיוע של משרד החינוך. כפל עם מלגת ממדים ללימודים לא אומת בדף מיל־GO הרשמי — יש לבדוק בשני המקורות לפני הגשה. מדרגות הסכום פורסמו באתר המל״ג ובאתר מיל־GO; גובה המענק האישי תלוי בניקוד. תאריכי היום אומתו מדף מלגות אונו לקול הארצי (אותו דפוס כמו אירתקאא); אתר CUA עצמו עדיין מציין רק «דצמבר 2026». כפילות: אותו קישור הגשה כמו הלוואת קרן הסיוע.",
+    lastVerified: VERIFIED_GATE,
     sourceUrls: [
       "https://www.cua.org.il/",
       "https://www.cua.org.il/about",
       "https://che.org.il/scholarships/milgo/",
+      "https://scholarships.ono.ac.il/edu-gov/",
     ],
     eligibility: allOf(
       { type: "degreeLevelIn", values: ["ba", "prep", "practical_engineer"] },
@@ -115,8 +117,9 @@ export const NATIONAL: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, ...DOCS_BANK],
     howToApplyHe: "הרשמה באתר פר״ח. השיבוץ נעשה דרך מינהלות אזוריות; מ־14.9.2026 רכזים מתאמים ראיון שיבוץ.",
     applyUrl: "https://www.perach.org.il/",
-    notesHe: "החונכות כ־100 שעות. מלגות מוגדלות בשיתוף רשויות/מוסדות, בכפוף למכסות. אין תאריך סגירה מאושר כ־17.12.2026.",
-    lastVerified: VERIFIED_TODAY,
+    notesHe:
+      "החונכות כ־100 שעות. מלגות מוגדלות בשיתוף רשויות/מוסדות, בכפוף למכסות. אין תאריך סגירה מאושר כ־17.12.2026. בדף אונו /perach/ מופיע 17.12.2026 — לא אומץ כי דף פר״ח הרשמי עדיין כותב סגירה בנובמבר בלי יום.",
+    lastVerified: VERIFIED_GATE,
     sourceUrls: [
       "https://www.perach.org.il/%D7%A2%D7%9C-%D7%94%D7%9E%D7%9C%D7%92%D7%94",
       "https://www.perach.org.il/%D7%94%D7%A8%D7%A9%D7%9E%D7%94-%D7%A9%D7%90%D7%9C%D7%95%D7%AA-%D7%A0%D7%A4%D7%95%D7%A6%D7%95%D7%AA",

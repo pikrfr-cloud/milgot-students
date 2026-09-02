@@ -23,16 +23,22 @@ export const MUNICIPAL: Scholarship[] = [
     funderHe: "עיריית ירושלים, מפעל הפיס וקרן ירושלים",
     types: ["volunteering"],
     scope: "municipal",
-    amounts: amount("כ־10,000 ₪ כנגד כ־130 שעות מעורבות חברתית", { min: 10000, max: 10000, uncertain: true }),
+    amounts: amount(
+      "כ־10,000 ₪ כנגד כ־130 שעות מעורבות חברתית — סכום תשפ״ו; טרם פורסם לתשפ״ז. דף הקרן לירושלים עדיין קול תשפ״ו (סגירה 31.8.2025).",
+      { min: 10000, max: 10000, uncertain: true },
+    ),
     cadence: "annual",
-    deadline: CHECK_ANNUALLY,
+    deadline: deadline("קול תשפ״ו נסגר ב־31.8.2025; מועד יום לתשפ״ז לא פורסם בדף הרשמי שאומת", {
+      kind: "varies",
+      uncertain: true,
+    }),
     whoItsForHe:
       "סטודנטים הלומדים במוסד להשכלה גבוהה בירושלים (ובמסלולים מסוימים גם כפרי סטודנטים). בתשפ״ו פורסם תקציב של כ־20 מיליון ₪.",
     documentsHe: [...DOCS_BASIC, "הוכחת לימודים בירושלים", "שיבוץ להתנדבות"],
     howToApplyHe: "מערכת קרן המלגות העירונית של עיריית ירושלים.",
     applyUrl: "https://jerusalemfoundation.org/he/news/%D7%A7%D7%A8%D7%9F-%D7%94%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%94%D7%A2%D7%99%D7%A8%D7%95%D7%A0%D7%99%D7%AA-%D7%9C%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D-%D7%94%D7%94%D7%A8%D7%A9%D7%9E%D7%94/",
     notesHe: "קיים גם מסלול כפרי סטודנטים. הסכום והשעות עלולים להתעדכן. תשפ״ז טרם פורסמה באתר העירייה.",
-    lastVerified: VERIFIED,
+    lastVerified: VERIFIED_GATE,
     sourceUrls: [
       "https://jerusalemfoundation.org/he/news/%D7%A7%D7%A8%D7%9F-%D7%94%D7%9E%D7%9C%D7%92%D7%95%D7%AA-%D7%94%D7%A2%D7%99%D7%A8%D7%95%D7%A0%D7%99%D7%AA-%D7%9C%D7%A1%D7%98%D7%95%D7%93%D7%A0%D7%98%D7%99%D7%9D-%D7%94%D7%94%D7%A8%D7%A9%D7%9E%D7%94/",
       "https://www.jerusalem.muni.il/",
@@ -126,16 +132,23 @@ export const MUNICIPAL: Scholarship[] = [
     funderHe: "עיריית אילת / קרן אילת לפיתוח חינוך ותרבות",
     types: ["need", "volunteering"],
     scope: "municipal",
-    amounts: amount("2,500–10,000 ₪ לפי מסלול, מספר זכאים ותקציב", { min: 2500, max: 10000 }),
+    amounts: amount(
+      "2,500–10,000 ₪ לפי מסלול, מספר זכאים ותקציב — סכום תשפ״ו; טרם פורסם לתשפ״ז. בדף קרן אילת ב־2026-09-02: מלגת תשפ״ו «ההרשמה סגורה»; אין קול תשפ״ז עם יום.",
+      { min: 2500, max: 10000, uncertain: true },
+    ),
     cadence: "annual",
-    deadline: CHECK_ANNUALLY,
+    deadline: deadline("מחזור תשפ״ו נסגר; מועד יום לתשפ״ז לא פורסם באתר קרן אילת / מרכז הצעירים", {
+      kind: "varies",
+      uncertain: true,
+    }),
     whoItsForHe:
       "תושבי אילת עם ותק תושבות לפי הקריטריונים, הלומדים במוסד מוכר (תואר, הנדסאי, מכינה ועוד). חלק מהמסלולים דורשים 130–140 שעות בקהילה.",
     documentsHe: [...DOCS_BASIC, "הוכחת תושבות באילת", "אישור לימודים"],
     howToApplyHe: "מערכת מלגה / מרכז הצעירים אילת.",
     applyUrl: "https://yeilat.co.il/keilat/",
-    notesHe: "מי שמקבל מימון מלא של שכ״ל ממקור אחר לא זכאי. מי שלומד מחוץ לאילת מקצוע שקיים באילת — עלול להיפסל.",
-    lastVerified: VERIFIED,
+    notesHe:
+      "מי שמקבל מימון מלא של שכ״ל ממקור אחר לא זכאי. מי שלומד מחוץ לאילת מקצוע שקיים באילת — עלול להיפסל. סכומי המסלולים אומתו בדף תשפ״ו; אין לאמץ אותם כסכום תשפ״ז בלי קול חדש.",
+    lastVerified: VERIFIED_GATE,
     sourceUrls: ["https://yeilat.co.il/keilat/", "https://www.milgasys.co.il/met25/"],
     eligibility: allOf(
       { type: "cityIn", values: ["אילת"], of: "residence" },

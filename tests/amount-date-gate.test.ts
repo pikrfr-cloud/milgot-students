@@ -30,6 +30,7 @@ describe("matchable-with-amount-and-date gate", () => {
       "no-concrete-2026-date",
     );
     expect(amountDateGateReason(SCHOLARSHIPS.find((s) => s.id === "irtikaa")!)).toBe("yes");
+    expect(amountDateGateReason(SCHOLARSHIPS.find((s) => s.id === "mil-go")!)).toBe("yes");
   });
 
   it("reports the honest counted total (do not raise this until records actually qualify)", () => {
@@ -56,6 +57,7 @@ describe("matchable-with-amount-and-date gate", () => {
       "irtikaa",
       "leviathan-scholarship",
       "mate-binyamin-community",
+      "mil-go",
       "moshal",
       "openu-1000-scholarships",
       "poalim-lehatzlacha",
@@ -72,7 +74,7 @@ describe("matchable-with-amount-and-date gate", () => {
       "tau-diaspora-phd",
       "tau-liber-phd",
     ]);
-    expect(counted.length).toBe(36);
+    expect(counted.length).toBe(37);
     expect(counted.length).toBeLessThan(60);
     expect(counted.length).toBe(matchableWithAmountAndDate(MATCHABLE_SCHOLARSHIPS).length);
   });
