@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { JsRequiredNote } from "@/components/ProfileLoadingFallback";
 import { ResultsView } from "@/components/ResultsView";
 
 export const metadata: Metadata = {
@@ -9,5 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function ResultsPage() {
-  return <ResultsView />;
+  return (
+    <>
+      <JsRequiredNote />
+      <ResultsView />
+    </>
+  );
 }

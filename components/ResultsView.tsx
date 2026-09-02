@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { SCHOLARSHIPS, TIPS, CATALOG_STATS } from "@/data/scholarships";
+import { COUNTS } from "@/data/counts";
+import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
+import { ProfileLoadingFallback } from "@/components/ProfileLoadingFallback";
+import { loadProfileHydratingShare } from "@/lib/profile-share";
 import { groupMatches, matchAll } from "@/lib/matcher";
 import { missingFieldUnlocks, mostUrgentOpen } from "@/lib/match-insights";
 import {
@@ -13,7 +16,7 @@ import {
   unifiedDocuments,
 } from "@/lib/report-conversion";
 import { FAST_REPORT_FIELDS, WIZARD_FIELDS, profileFocusHref } from "@/lib/profile-fields";
-import { loadProfile, profileIsEmpty } from "@/lib/profile-storage";
+import { profileIsEmpty } from "@/lib/profile-storage";
 import type { ScholarshipMatch, ScholarshipScope, StudentProfile } from "@/lib/types";
 import { amountSortValue, deadlineSortValue, deadlineStatus, formatDeadline, shouldHideIcs } from "@/lib/format";
 import { fieldLabelHe } from "@/lib/labels";
@@ -46,7 +49,7 @@ export function ResultsView() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
-    setProfile(loadProfile());
+    setProfile(loadProfileHydratingShare());
   }, []);
 
   useEffect(() => {
@@ -111,7 +114,7 @@ export function ResultsView() {
   }, [query, minAmount, scope, type, sort, asOf]);
 
   if (profile === null) {
-    return <p className="px-4 py-16 text-center text-ink-soft">{HE.profile.loading}</p>;
+    return <ProfileLoadingFallback />;
   }
 
   if (profileIsEmpty(profile)) {
@@ -488,7 +491,7 @@ export function ResultsView() {
           {HE.buckets.guideLong} ({checkAtInstitution.length})
         </h2>
         <p className="mt-1 text-sm text-ink-soft">
-          {HE.catalog.guideHint} לא נספרות ב־{CATALOG_STATS.total} המלגות להתאמה.
+          {HE.catalog.guideHint} לא נספרות ב־{COUNTS.matchable} המלגות להתאמה.
         </p>
         <div className="mt-4 grid gap-4 opacity-90">
           {checkAtInstitution.length ? checkAtInstitution.map((m) => (

@@ -61,11 +61,11 @@ export default function AccessibilityPage() {
 
       <h2 className="mt-8 font-display text-2xl">פנייה בנושא נגישות</h2>
       <p className="mt-3">
-        אין כתובת דוא״ל ייעודית לנגישות באתר זה. {HE.legal.contactGithub} אפשר לפתוח Issue ב־
+        {HE.legal.contactIssuesA11y}{" "}
         <ExternalLink className="underline underline-offset-4 ltr-isolate" href={HE.legal.githubIssuesUrl}>
           GitHub
         </ExternalLink>
-        {' '}ולציין את העמוד, הדפדפן והטכנולוגיה המסייעת. נשתדל לתקן במסגרת עדכוני הקטלוג והקוד.
+        . נשתדל לתקן במסגרת עדכוני הקטלוג והקוד.
       </p>
       <p className="mt-3 text-sm text-ink-soft">
         הצהרה זו מתארת את מצב האתר במועד העדכון. היא אינה מחליפה ייעוץ משפטי ואינה מהווה אישור

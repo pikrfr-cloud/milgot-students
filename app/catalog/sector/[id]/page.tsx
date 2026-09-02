@@ -10,7 +10,7 @@ import {
   scholarshipPagePath,
   scholarshipsForSector,
 } from "@/lib/catalog-routes";
-import { formatAmount, formatDeadline } from "@/lib/format";
+import { amountHeadlineHe, deadlineSortValue, formatDeadline } from "@/lib/format";
 import { HE } from "@/lib/i18n/he";
 import { CoverageNote } from "@/components/CoverageNote";
 
@@ -67,13 +67,15 @@ export default async function SectorCollectionPage({
         {HE.actions.checkFit}
       </Link>
       <ul className="mt-8 space-y-4">
-        {list.map((s) => (
+        {[...list]
+          .sort((a, b) => deadlineSortValue(a.deadline) - deadlineSortValue(b.deadline))
+          .map((s) => (
           <li key={s.id} className="rounded-2xl border border-line bg-card p-4">
             <Link href={scholarshipPagePath(s.id)} className="font-display text-xl text-forest-deep underline-offset-4 hover:underline">
               {s.nameHe}
             </Link>
             <p className="mt-1 text-sm text-ink-soft">
-              {formatAmount(s.amounts)} · {formatDeadline(s.deadline)}
+              {amountHeadlineHe(s.amounts)} · {formatDeadline(s.deadline)}
             </p>
           </li>
         ))}

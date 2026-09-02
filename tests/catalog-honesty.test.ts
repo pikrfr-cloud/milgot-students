@@ -220,6 +220,8 @@ describe("guide shells vs matchable programs", () => {
       "hadassah-aid",
       "afeka-aid",
       "telhai-dean-aid",
+      "haifa-financial-aid",
+      "huji-financial-aid",
     ];
     for (const id of moved) {
       const rec = SCHOLARSHIPS.find((s) => s.id === id);
@@ -237,7 +239,6 @@ describe("guide shells vs matchable programs", () => {
       "kinneret-college-payis",
       "tau-financial-aid",
       "technion-financial-aid",
-      "huji-financial-aid",
       "openu-financial-aid",
     ];
     for (const id of keep) {

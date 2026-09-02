@@ -8,6 +8,41 @@ export function formatAmount(amount: Amount): string {
   return amount.textHe;
 }
 
+export type AmountDisplay = {
+  /** Number-first line for cards, e.g. «עד 12,480 ₪». */
+  headlineHe: string;
+  /** Short optional caveat — never the kitchen paragraph. */
+  noteHe?: string;
+};
+
+/** Student-facing amount: a number first, long `textHe` stays in verification notes. */
+export function amountDisplay(amount: Amount): AmountDisplay {
+  const min = amount.minIls;
+  const max = amount.maxIls;
+  const hasMin = typeof min === "number" && min > 0;
+  const hasMax = typeof max === "number" && max > 0;
+
+  let headlineHe: string;
+  if (hasMin && hasMax && min === max) {
+    headlineHe = formatIls(min);
+  } else if (hasMax) {
+    headlineHe = `עד ${formatIls(max)}`;
+  } else if (hasMin) {
+    headlineHe = `מ־${formatIls(min)}`;
+  } else {
+    const short = amount.textHe.trim();
+    headlineHe = short.length <= 28 ? short : "סכום משתנה";
+  }
+
+  const noteHe =
+    (hasMin || hasMax) && amount.uncertain ? "סכום לא ודאי — יש לאמת במקור" : undefined;
+  return { headlineHe, noteHe };
+}
+
+export function amountHeadlineHe(amount: Amount): string {
+  return amountDisplay(amount).headlineHe;
+}
+
 export function formatDeadline(deadline: Deadline): string {
   if (deadline.windowHe) {
     return `${deadline.textHe} (${deadline.windowHe})`;
@@ -199,6 +234,22 @@ const HEBREW_MONTHS = [
 ] as const;
 
 /** `2026-09-01` or `2026-09` → `1 בספטמבר 2026`. */
+export function whatsappScholarshipShareText(opts: {
+  nameHe: string;
+  amounts: Amount;
+  deadline: Deadline;
+}): string {
+  const amountHe = amountHeadlineHe(opts.amounts);
+  const closeHe = opts.deadline.date
+    ? formatHebrewLongDate(opts.deadline.date)
+    : "מועד טרם פורסם";
+  return `מלגת ${opts.nameHe}, ${amountHe}, נסגרת ב-${closeHe}`;
+}
+
+export function whatsappShareHref(text: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
 export function formatHebrewLongDate(iso: string): string {
   const dayIso = /^\d{4}-\d{2}$/.test(iso) ? `${iso}-01` : iso;
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dayIso);

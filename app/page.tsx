@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CATALOG_STATS } from "@/data/scholarships";
+import { COUNTS, studentCountsLine } from "@/data/counts";
 import { CoverageNote } from "@/components/CoverageNote";
-import { WaitlistForm } from "@/components/WaitlistForm";
+import { IssuesLink } from "@/components/IssuesLink";
+import { UrgentNowStrip } from "@/components/UrgentNowStrip";
 import { HE } from "@/lib/i18n/he";
 
 export const metadata: Metadata = {
   title: `${HE.siteName} — ${HE.tagline}`,
   description:
-    "ממלאים פרופיל פעם אחת ומקבלים דוח מול הקטלוג: מי עומד בתנאי הסף, מה חסר לאישור, ומה כמעט מתאים. האתר לא מגיש בקשות בשמכם.",
+    "ממלאים פעם אחת ומקבלים את המלגות שבקטלוג — עם הסבר על כל אחת. האתר לא מגיש בקשות בשמכם.",
   alternates: { canonical: "/" },
 };
 
@@ -21,71 +22,37 @@ export default function HomePage() {
           <h1 className="mt-4 max-w-3xl font-display text-4xl sm:text-5xl leading-tight">
             ממלאים פעם אחת.
             <br />
-            את המלגות שבקטלוג — עם הסבר על כל אחת.
+            ומקבלים את המלגות שבקטלוג — עם הסבר על כל אחת.
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-white/85 leading-relaxed">
-            מנוע התאמה לפי כללים — לא לפי מילות מפתח. לכל מלגה בקטלוג תראו למה אתם מתאימים, מה חסר
-            לאישור, ומה כמעט מתאים. האתר לא מגיש בקשות בשמכם — ההגשה תמיד באתר המלגה.
+            כמה שאלות קצרות, ואז דוח מול הקטלוג: מה מתאים, מה חסר, ומה כמעט מתאים. ההגשה תמיד באתר
+            המלגה — לא כאן.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <p className="mt-4 text-sm text-white/70">{studentCountsLine(COUNTS)}</p>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
             <Link
               href="/chat"
-              className="rounded-full bg-clay px-6 py-3 text-white font-medium hover:bg-clay-deep"
+              className="rounded-full bg-clay px-7 py-3.5 text-lg text-white font-medium hover:bg-clay-deep"
             >
               {HE.actions.chatIntake}
             </Link>
-            <Link
-              href="/profile/fast"
-              className="rounded-full border border-white/30 px-6 py-3 text-white hover:bg-white/10"
-            >
-              {HE.actions.fastReport}
-            </Link>
-            <Link
-              href="/profile"
-              className="rounded-full border border-white/30 px-6 py-3 text-white hover:bg-white/10"
-            >
-              {HE.actions.completeProfile}
-            </Link>
-            <Link
-              href="/catalog"
-              className="rounded-full border border-white/30 px-6 py-3 text-white hover:bg-white/10"
-            >
-              לעיין בקטלוג ({CATALOG_STATS.total})
+            <Link href="/catalog" className="text-white/80 underline underline-offset-4 hover:text-white">
+              {HE.actions.toCatalog}
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-14 grid gap-6 md:grid-cols-3">
-        {[
-          {
-            title: "מול הקטלוג שלנו",
-            body: "כל מלגה מקודדת ככללי זכאות מובְנים. התוצאה מחולקת למי שעומד בתנאי הסף שבקטלוג, חסר פרט, כמעט זכאים, בדיקה במוסד, ולא זכאים.",
-          },
-          {
-            title: "אפשר לדלג",
-            body: "שדה לא ידוע לא פוסל מלגה. אם חסר פרט קריטי — המלגה עוברת ל«חסר פרט לאישור», לא נעלמת.",
-          },
-          {
-            title: "הנתונים אצלכם",
-            body: "הפרופיל נשמר במכשיר בלבד. לא שולחים מידע אישי לשרתים של צד שלישי.",
-          },
-        ].map((c) => (
-          <article key={c.title} className="rounded-2xl border border-line bg-card p-6 shadow-[0_8px_30px_rgba(28,24,20,0.04)]">
-            <h2 className="font-display text-2xl text-forest-deep">{c.title}</h2>
-            <p className="mt-3 text-ink-soft leading-relaxed">{c.body}</p>
-          </article>
-        ))}
-      </section>
+      <UrgentNowStrip />
 
       <section className="mx-auto max-w-6xl px-4 pb-16">
         <div className="rounded-3xl bg-paper-deep p-8 sm:p-10">
           <h2 className="font-display text-3xl text-forest-deep">איך זה עובד</h2>
           <ol className="mt-6 grid gap-4 sm:grid-cols-3">
             {[
-              " ממלאים בשיחה קצרה או בטופס מודרך: מוסד, תואר, מגורים, שירות, מצב כלכלי וקהילה — רק מה שרלוונטי, עם אפשרות לדלג.",
-              "המערכת בודקת כל מלגה בקטלוג מול הכללים שלה, קריטריון־קריטריון.",
-              "מתקבל דוח להדפסה: למה מתאימים, מה חסר, ומה הפער במלגות כמעט־זכאות.",
+              "עונים בשיחה קצרה — רק מה שרלוונטי, עם אפשרות לדלג.",
+              "האתר בודק כל מלגה בקטלוג מול מה שמילאתם.",
+              "מתקבל דוח: למה מתאימים, מה חסר, ומה הפער.",
             ].map((t, i) => (
               <li key={i} className="flex gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-forest text-white text-sm">
@@ -96,25 +63,10 @@ export default function HomePage() {
             ))}
           </ol>
           <CoverageNote className="mt-8" />
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/chat"
-              className="inline-flex rounded-full bg-clay px-6 py-3 text-white hover:bg-clay-deep"
-            >
-              {HE.actions.chatIntake}
-            </Link>
-            <Link
-              href="/profile/fast"
-              className="inline-flex rounded-full bg-forest px-6 py-3 text-white hover:bg-forest-deep"
-            >
-              {HE.actions.fastReport}
-            </Link>
-          </div>
+          <p className="mt-6 text-sm text-ink-soft">
+            {HE.legal.contactIssues} <IssuesLink />
+          </p>
         </div>
-      </section>
-
-      <section className="mx-auto max-w-6xl px-4 pb-16">
-        <WaitlistForm />
       </section>
     </div>
   );

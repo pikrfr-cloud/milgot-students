@@ -56,8 +56,10 @@ export const HE = {
     hide: "הסתר",
     tryAgain: "נסו שוב",
     startProfile: "להתחיל את הפרופיל",
-    toCatalog: "לעיין בקטלוג",
+    toCatalog: "לקטלוג",
     toHome: "לעמוד הראשי",
+    shareWhatsapp: "שיתוף בוואטסאפ",
+    urgentNow: "דחוף עכשיו",
     produceReport: "להפקת דוח הזכאות",
     skip: "לא יודע/ת — דלג",
     showFilters: "סינון",
@@ -70,6 +72,10 @@ export const HE = {
 
   profile: {
     loading: "טוען את הפרופיל…",
+    loadingStuck:
+      "אם זה נשאר כאן — יכול להיות שהדפדפן חוסם JavaScript, או שהטעינה נתקעה. אפשר לעיין בקטלוג בלי פרופיל.",
+    jsRequired:
+      "העמוד הזה צריך JavaScript כדי לטעון את מה ששמרתם במכשיר. אפשר לעיין בקטלוג בלי פרופיל.",
     emptyTitle: "אין עדיין פרופיל",
     emptyBody: "כדי לקבל דוח זכאות יש למלא את הפרטים פעם אחת.",
     fillProfile: "למילוי הפרופיל",
@@ -106,17 +112,10 @@ export const HE = {
       "הדוח אינו החלטת זכאות רשמית של הקרן או של רשות. תמיד יש לאמת באתר המלגה לפני הגשה.",
     localOnly: "הנתונים נשמרים ב־localStorage במכשיר זה בלבד ואינם נשלחים לשרת.",
     deletionRight: "אפשר למחוק את כל הנתונים השמורים במכשיר בכל עת.",
-    identityUnpublished:
-      "פרטי זהות של מפעיל האתר וכתובת דוא״ל ליצירת קשר עדיין לא פורסמו. אין חשבון משתמש, והנתונים נשארים במכשיר זה בלבד.",
     githubRepoUrl: "https://github.com/pikrfr-cloud/milgot-students",
     githubIssuesUrl: "https://github.com/pikrfr-cloud/milgot-students/issues",
-    contactGithub:
-      "פניות, דיווחי תקלות ונגישות: Issues במאגר GitHub הציבורי. פרטי זהות של המפעיל עדיין לא פורסמו, ואין דוא״ל באתר.",
-  },
-
-  waitlist: {
-    title: "עדכונים בדוא״ל",
-    body: "בקרוב — עדיין אין שרת ששולח מיילים.",
+    contactIssues: "מצאתם טעות או מלגה חסרה? כתבו לנו ב־GitHub.",
+    contactIssuesA11y: "פנייה בנושא נגישות: כתבו לנו ב־GitHub וציינו את העמוד ואת מה שלא עבד.",
   },
 
   catalog: {
@@ -127,6 +126,7 @@ export const HE = {
       "רשומות אלה אינן נספרות כמלגות להתאמה: אין תנאי סף מאומתים בקטלוג. יש לבדוק במקור.",
     duplicate: "כפילות",
     secondaryDeadline: "מקור משני למועד",
+    verificationSummary: "מקורות והערות אימות",
   },
 
 

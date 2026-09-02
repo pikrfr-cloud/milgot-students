@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     description:
       "דוח מול הקטלוג שלנו. הנתונים נשארים במכשיר.",
     url: SITE,
-    images: [{ url: "/og.svg", width: 1200, height: 630, alt: HE.siteName }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: HE.siteName }],
   },
   alternates: { canonical: "/" },
 };

@@ -18,6 +18,7 @@ import { HE } from "@/lib/i18n/he";
 import { fieldLabelHe, formatProfileValueHe } from "@/lib/labels";
 import { filledWizardFieldCount } from "@/lib/profile-fields";
 import { loadProfile, saveProfile } from "@/lib/profile-storage";
+import { ProfileLoadingFallback } from "@/components/ProfileLoadingFallback";
 import type { StudentProfile } from "@/lib/types";
 
 type ChatMessage = {
@@ -196,7 +197,7 @@ export function ChatIntake() {
   );
 
   if (!ready) {
-    return <p className="px-4 py-16 text-center text-ink-soft">{HE.profile.loading}</p>;
+    return <ProfileLoadingFallback />;
   }
 
   return (

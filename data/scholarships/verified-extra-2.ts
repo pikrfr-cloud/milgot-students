@@ -239,7 +239,7 @@ export const VERIFIED_EXTRA_2: Scholarship[] = [
     funderHe: "מכון ויצמן למדע — Feinberg Graduate School",
     types: ["research", "merit"],
     scope: "institution",
-    amounts: amount("A grant of NIS 15,000, received in two equal payments (official Weizmann page)", {
+    amounts: amount("מענק של 15,000 ₪ בשני תשלומים שווים (דף ויצמן הרשמי)", {
       min: 15000,
       max: 15000,
     }),

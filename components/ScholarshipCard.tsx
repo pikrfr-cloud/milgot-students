@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { ScholarshipMatch, SourceLevel, TrackingStatus } from "@/lib/types";
-import { formatAmount, formatDeadline, isVerificationStale, matchHeadline, publicDeadlineLabelHe, scopeLabelHe, shouldHideIcs, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
+import { amountDisplay, formatDeadline, isVerificationStale, matchHeadline, publicDeadlineLabelHe, scopeLabelHe, shouldHideIcs, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { INSTITUTIONS } from "@/lib/institutions";
 import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
@@ -14,10 +14,10 @@ import { TRACKING_STATUSES } from "@/lib/types";
 import { ExternalLink } from "@/components/ExternalLink";
 import { HeWithEn } from "@/components/HeWithEn";
 import { useTracking } from "@/components/TrackingProvider";
+import { VerificationNotes } from "@/components/VerificationNotes";
+import { WhatsAppShareLink } from "@/components/WhatsAppShareLink";
 import { scholarshipPagePath } from "@/lib/catalog-routes";
 import { HE } from "@/lib/i18n/he";
-import { SCHOLARSHIPS } from "@/data/scholarships";
-import { duplicateNoteHe, duplicatePeers, hasSecondaryDeadlineSource } from "@/lib/catalog";
 
 const bucketStyle: Record<string, string> = {
   eligible: "border-ok/30 bg-ok/5",
@@ -44,6 +44,7 @@ export function ScholarshipCard({
   compact?: boolean;
 }) {
   const s = match.scholarship;
+  const shownAmount = amountDisplay(s.amounts);
   const inst = s.institutionIds
     ?.map((id) => INSTITUTIONS.find((i) => i.id === id)?.nameHe)
     .filter(Boolean)
@@ -71,20 +72,6 @@ export function ScholarshipCard({
   const details = (
     <>
       <p className="mt-3 text-sm leading-relaxed">{s.whoItsForHe}</p>
-      {s.sourceUrls.length > 0 ? (
-        <p className="mt-2 text-xs text-ink-soft">
-          מקורות:{" "}
-          {s.sourceUrls.map((url, i) => (
-            <span key={url}>
-              {i > 0 ? " · " : null}
-              <ExternalLink className="underline underline-offset-2 break-all ltr-isolate" href={url}>
-                {new URL(url).hostname.replace(/^www\./, "")}
-              </ExternalLink>
-            </span>
-          ))}
-        </p>
-      ) : null}
-
       {match.bucket === "needInfo" && unknownFields.length > 0 ? (
         <div className="no-print mt-3 flex flex-wrap gap-2">
           {unknownFields.map((c) =>
@@ -130,6 +117,7 @@ export function ScholarshipCard({
             {HE.actions.addToCalendar}
           </button>
         ) : null}
+        <WhatsAppShareLink scholarship={s} />
       </div>
 
       <details className="mt-4" open={defaultOpen}>
@@ -213,33 +201,12 @@ export function ScholarshipCard({
               </ExternalLink>
             </p>
           ) : null}
-          {s.sourceUrls.length > 0 ? (
-            <section>
-              <h4 className="font-medium">מקורות</h4>
-              <ul className="mt-1 list-disc pr-5 break-all">
-                {s.sourceUrls.map((url) => (
-                  <li key={url}>
-                    <ExternalLink className="underline underline-offset-4 ltr-isolate" href={url}>
-                      {url}
-                    </ExternalLink>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-          {s.notesHe ? <p className="text-ink-soft">{s.notesHe}</p> : null}
-          {(() => {
-            const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
-            return note ? (
-              <p className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">{note}</p>
-            ) : null;
-          })()}
           {s.amounts.uncertain || s.deadline.uncertain ? (
             <p className="text-ink-soft">חלק מהפרטים מסומנים כלא ודאיים — יש לאמת במקור.</p>
           ) : null}
-          <p className="text-xs text-ink-soft">אומת לאחרונה: {s.lastVerified}</p>
         </div>
       </details>
+      <VerificationNotes scholarship={s} amountTextHe={s.amounts.textHe} />
     </>
   );
 
@@ -259,7 +226,12 @@ export function ScholarshipCard({
             <HeWithEn text={s.funderHe} />
           </p>
         </div>
-        <p className="text-sm font-medium text-ink">{formatAmount(s.amounts)}</p>
+        <div className="text-end">
+          <p className="text-sm font-medium text-ink">{shownAmount.headlineHe}</p>
+          {shownAmount.noteHe ? (
+            <p className="mt-0.5 text-xs text-ink-soft">{shownAmount.noteHe}</p>
+          ) : null}
+        </div>
       </div>
       <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
         {match.bucket === "closedCycle" ? (
@@ -276,9 +248,6 @@ export function ScholarshipCard({
         <span className={`rounded-full px-2 py-0.5 ${level === "official_page" ? levelStyle.official_page : level === "institution_site" ? levelStyle.institution_site : levelStyle.indirect}`}>
           {sourceLevelLabelHe(level)}
         </span>
-        {hasSecondaryDeadlineSource(s) ? (
-          <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{HE.catalog.secondaryDeadline}</span>
-        ) : null}
         {isVerificationStale(s.lastVerified) ? (
           <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{STALE_VERIFICATION_LABEL_HE}</span>
         ) : null}

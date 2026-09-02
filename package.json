@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "counts": "tsx scripts/write-counts.ts",
+    "prebuild": "tsx scripts/write-counts.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

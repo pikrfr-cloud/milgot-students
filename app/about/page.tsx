@@ -1,9 +1,9 @@
 import { CoverageNote } from "@/components/CoverageNote";
-import { CATALOG_STATS } from "@/data/scholarships";
+import { COUNTS, studentCountsLine } from "@/data/counts";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { HE } from "@/lib/i18n/he";
-import { ExternalLink } from "@/components/ExternalLink";
+import { IssuesLink } from "@/components/IssuesLink";
 
 export const metadata: Metadata = {
   title: "אודות ואיך זה עובד",
@@ -40,21 +40,16 @@ export default function AboutPage() {
       </p>
       <h2 className="mt-8 font-display text-2xl">הקטלוג</h2>
       <p className="mt-3">
-        כרגע {CATALOG_STATS.total} מלגות להתאמה מול הקטלוג, ועוד {CATALOG_STATS.guide} במדריך
-        (דיקן / רשות בלי תנאי סף מאומתים).
-        {CATALOG_STATS.uniqueApplyUrlNote ? ` ${CATALOG_STATS.uniqueApplyUrlNote}.` : ""} כולן מבוססות על מקורות פומביים. סכום או מועד לא ודאי
-        מסומן במפורש. אימות אחרון: {CATALOG_STATS.lastVerifiedMonth}.
+        כרגע {studentCountsLine(COUNTS)}. כולן מבוססות על מקורות פומביים. סכום או מועד לא ודאי
+        מסומן במפורש. אימות אחרון: {COUNTS.lastVerifiedMonth}.
       </p>
       <p className="mt-3">
         רשומות דיקן / עירייה בלי תנאי סף מאומתים מופיעות בדוח תחת «מדריך» — לא כזכאות ולא כספירת מלגות להתאמה.
       </p>
       <CoverageNote className="mt-4" />
       <h2 className="mt-8 font-display text-2xl">קוד פתוח ויצירת קשר</h2>
-      <p className="mt-3">{HE.legal.contactGithub}</p>
       <p className="mt-3">
-        <ExternalLink className="underline underline-offset-4 ltr-isolate" href={HE.legal.githubRepoUrl}>
-          {HE.legal.githubRepoUrl.replace(/^https?:\/\//, "")}
-        </ExternalLink>
+        {HE.legal.contactIssues} <IssuesLink />
       </p>
       <p className="mt-4">
         <Link href="/accessibility" className="underline underline-offset-4">

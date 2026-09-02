@@ -23,8 +23,13 @@ export default function TermsPage() {
       </p>
       <p className="mt-3">{HE.legal.localOnly}</p>
       <p className="mt-3">{HE.legal.deletionRight}</p>
-      <h2 className="mt-8 font-display text-2xl">זהות המפעיל</h2>
-      <p className="mt-3">{HE.legal.identityUnpublished}</p>
+      <h2 className="mt-8 font-display text-2xl">פניות</h2>
+      <p className="mt-3">
+        {HE.legal.contactIssues}{" "}
+        <a className="underline underline-offset-4 ltr-isolate" href={HE.legal.githubIssuesUrl}>
+          GitHub
+        </a>
+      </p>
       <p className="mt-6">
         <Link href="/privacy" className="underline underline-offset-4">
           מדיניות פרטיות

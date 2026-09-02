@@ -283,7 +283,7 @@ describe("Arab first-year student at Haifa in CS", () => {
   it("is eligible for Irtikaa, Perach, Haifa aid, and not Tena", () => {
     expect(bucketOf(arabHaifaBa, "irtikaa")).toBe("eligible");
     expect(bucketOf(arabHaifaBa, "perach")).toBe("eligible");
-    expect(bucketOf(arabHaifaBa, "haifa-financial-aid")).toBe("eligible");
+    expect(bucketOf(arabHaifaBa, "haifa-financial-aid")).toBe("checkAtInstitution");
     expect(bucketOf(arabHaifaBa, "tena")).not.toBe("eligible");
     expect(bucketOf(arabHaifaBa, "marom")).not.toBe("eligible");
   });
@@ -309,7 +309,7 @@ describe("oleh at Hebrew University", () => {
     expect(bucketOf(olehStudent, "olim-student-authority")).toBe("checkAtInstitution");
     expect(bucketOf(olehStudent, "hias-olim")).toBe("eligible");
     expect(bucketOf(olehStudent, "marom")).not.toBe("eligible");
-    expect(bucketOf(olehStudent, "huji-financial-aid")).toBe("eligible");
+    expect(bucketOf(olehStudent, "huji-financial-aid")).toBe("checkAtInstitution");
   });
 });
 

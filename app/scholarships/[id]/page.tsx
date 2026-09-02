@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SCHOLARSHIPS, CATALOG_STATS, getScholarshipById } from "@/data/scholarships";
+import { COUNTS, studentCountsLine } from "@/data/counts";
+import { getScholarshipById } from "@/data/scholarships";
 import { ExternalLink } from "@/components/ExternalLink";
 import { HeWithEn } from "@/components/HeWithEn";
 import { CoverageNote } from "@/components/CoverageNote";
 import {
-  formatAmount,
+  amountDisplay,
   formatDeadline,
   isVerificationStale,
   publicDeadlineLabelHe,
@@ -20,7 +21,9 @@ import { absoluteUrl } from "@/lib/site";
 import { sourceLevelLabelHe, bestSourceLevel } from "@/lib/sources";
 import { HE } from "@/lib/i18n/he";
 import { INSTITUTIONS } from "@/lib/institutions";
-import { duplicateNoteHe, duplicatePeers, hasSecondaryDeadlineSource, isGuideRecord } from "@/lib/catalog";
+import { isGuideRecord } from "@/lib/catalog";
+import { VerificationNotes } from "@/components/VerificationNotes";
+import { WhatsAppShareLink } from "@/components/WhatsAppShareLink";
 
 export const dynamicParams = false;
 
@@ -87,24 +90,27 @@ export default async function ScholarshipPage({
         <span className="rounded-full bg-paper-deep px-2 py-0.5">
           {publicDeadlineLabelHe(s.deadline, s.lastVerified)}
         </span>
-        <span className="rounded-full bg-paper-deep px-2 py-0.5">{formatAmount(s.amounts)}</span>
+        <span className="rounded-full bg-paper-deep px-2 py-0.5">{amountDisplay(s.amounts).headlineHe}</span>
         <span className="rounded-full bg-paper-deep px-2 py-0.5">
           {s.types.map(scholarshipTypeLabel).join(" · ")} · {scopeLabelHe(s.scope)}
         </span>
         <span className="rounded-full bg-paper-deep px-2 py-0.5">
           {sourceLevelLabelHe(s.sourceLevel ?? bestSourceLevel(s.sourceUrls))}
         </span>
-        {hasSecondaryDeadlineSource(s) ? (
-          <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{HE.catalog.secondaryDeadline}</span>
+        {amountDisplay(s.amounts).noteHe ? (
+          <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">{amountDisplay(s.amounts).noteHe}</span>
         ) : null}
       </div>
 
-      <Link
-        href="/profile/fast/"
-        className="mt-6 inline-flex min-h-11 items-center rounded-full bg-clay px-6 text-white"
-      >
-        {HE.actions.checkFit}
-      </Link>
+      <div className="mt-6 flex flex-wrap items-center gap-4">
+        <Link
+          href="/profile/fast/"
+          className="inline-flex min-h-11 items-center rounded-full bg-clay px-6 text-white"
+        >
+          {HE.actions.checkFit}
+        </Link>
+        <WhatsAppShareLink scholarship={s} />
+      </div>
 
       <section className="mt-10">
         <h2 className="font-display text-2xl">למי זה מיועד</h2>
@@ -115,12 +121,6 @@ export default async function ScholarshipPage({
             {HE.catalog.guideHint}
           </p>
         ) : null}
-        {(() => {
-          const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
-          return note ? (
-            <p className="mt-3 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">{note}</p>
-          ) : null;
-        })()}
       </section>
 
       <section className="mt-8">
@@ -158,27 +158,11 @@ export default async function ScholarshipPage({
         ) : null}
       </section>
 
-      {s.notesHe ? <p className="mt-6 text-sm text-ink-soft">{s.notesHe}</p> : null}
-
-      <section className="mt-8">
-        <h2 className="font-display text-2xl">מקורות</h2>
-        <ul className="mt-3 list-disc space-y-1 pr-5 break-all">
-          {s.sourceUrls.map((url) => (
-            <li key={url}>
-              <ExternalLink href={url} className="underline underline-offset-4 ltr-isolate">
-                {url}
-              </ExternalLink>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-2 text-xs text-ink-soft">אומת לאחרונה: {s.lastVerified}</p>
-      </section>
+      <VerificationNotes scholarship={s} amountTextHe={s.amounts.textHe} />
 
       <CoverageNote className="mt-8" />
       <p className="mt-4 text-sm">
-        {CATALOG_STATS.total} מלגות להתאמה בקטלוג
-        {CATALOG_STATS.guide ? ` · ${CATALOG_STATS.guide} במדריך` : ""}
-        {CATALOG_STATS.uniqueApplyUrlNote ? ` · ${CATALOG_STATS.uniqueApplyUrlNote}` : ""}.{" "}
+        {studentCountsLine(COUNTS)}.{" "}
         <Link href="/catalog/" className="underline underline-offset-4">
           לכל הקטלוג
         </Link>

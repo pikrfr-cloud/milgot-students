@@ -4,13 +4,13 @@ import { useMemo, useState } from "react";
 import type { Scholarship, ScholarshipScope, ScholarshipType } from "@/lib/types";
 import { ExternalLink } from "@/components/ExternalLink";
 import { HeWithEn } from "@/components/HeWithEn";
-import { deadlineStatus, formatAmount, formatDeadline, isVerificationStale, publicDeadlineLabelHe, scopeLabelHe, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
+import { amountDisplay, deadlineSortValue, deadlineStatus, formatDeadline, isVerificationStale, publicDeadlineLabelHe, scopeLabelHe, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
 import { HE } from "@/lib/i18n/he";
 import { scholarshipPagePath } from "@/lib/catalog-routes";
-import { SCHOLARSHIPS } from "@/data/scholarships";
-import { duplicateNoteHe, duplicatePeers, hasSecondaryDeadlineSource } from "@/lib/catalog";
+import { VerificationNotes } from "@/components/VerificationNotes";
+import { WhatsAppShareLink } from "@/components/WhatsAppShareLink";
 import Link from "next/link";
 
 export function CatalogExplorer({
@@ -29,22 +29,25 @@ export function CatalogExplorer({
 
   const list = useMemo(() => {
     const t = q.trim();
-    return scholarships.filter((s) => {
-      if (t && !(s.nameHe.includes(t) || s.funderHe.includes(t) || s.whoItsForHe.includes(t))) {
-        return false;
-      }
-      if (scope !== "all" && s.scope !== scope) return false;
-      if (type !== "all" && type && !s.types.includes(type as ScholarshipType)) return false;
-      if (due !== "all") {
-        const kind = deadlineStatus(s.deadline).kind;
-        if (due === "open" && kind !== "open" && kind !== "closingSoon" && kind !== "rolling" && kind !== "notYetOpen") {
+    const asOf = new Date();
+    return scholarships
+      .filter((s) => {
+        if (t && !(s.nameHe.includes(t) || s.funderHe.includes(t) || s.whoItsForHe.includes(t))) {
           return false;
         }
-        if (due === "closed" && kind !== "closed") return false;
-        if (due === "unpublished" && kind !== "unpublished") return false;
-      }
-      return true;
-    });
+        if (scope !== "all" && s.scope !== scope) return false;
+        if (type !== "all" && type && !s.types.includes(type as ScholarshipType)) return false;
+        if (due !== "all") {
+          const kind = deadlineStatus(s.deadline).kind;
+          if (due === "open" && kind !== "open" && kind !== "closingSoon" && kind !== "rolling" && kind !== "notYetOpen") {
+            return false;
+          }
+          if (due === "closed" && kind !== "closed") return false;
+          if (due === "unpublished" && kind !== "unpublished") return false;
+        }
+        return true;
+      })
+      .sort((a, b) => deadlineSortValue(a.deadline, asOf) - deadlineSortValue(b.deadline, asOf));
   }, [scholarships, q, scope, type, due]);
 
   const tipList = useMemo(() => {
@@ -110,6 +113,7 @@ export function CatalogExplorer({
         {list.map((s) => {
           const grade = s.sourceLevel ?? bestSourceLevel(s.sourceUrls);
           const status = deadlineStatus(s.deadline);
+          const shownAmount = amountDisplay(s.amounts);
           return (
             <li key={s.id} id={s.id} className="scroll-mt-24 rounded-2xl border border-line bg-card p-5">
               <div className="flex flex-wrap justify-between gap-2">
@@ -118,20 +122,17 @@ export function CatalogExplorer({
                     <HeWithEn text={s.nameHe} />
                   </Link>
                 </h2>
-                <span className="text-sm">{formatAmount(s.amounts)}</span>
+                <div className="text-end">
+                  <span className="text-sm font-medium">{shownAmount.headlineHe}</span>
+                  {shownAmount.noteHe ? (
+                    <p className="text-xs text-ink-soft">{shownAmount.noteHe}</p>
+                  ) : null}
+                </div>
               </div>
               <p className="mt-1 text-sm text-ink-soft">
                 <HeWithEn text={s.funderHe} />
               </p>
               <p className="mt-2 text-sm">{s.whoItsForHe}</p>
-              {(() => {
-                const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
-                return note ? (
-                  <p className="mt-2 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">
-                    {note}
-                  </p>
-                ) : null;
-              })()}
               <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
                 {isVerificationStale(s.lastVerified) ? (
                   <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{STALE_VERIFICATION_LABEL_HE}</span>
@@ -162,30 +163,16 @@ export function CatalogExplorer({
                 >
                   {sourceLevelLabelHe(grade)}
                 </span>
-                {hasSecondaryDeadlineSource(s) ? (
-                  <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">
-                    {HE.catalog.secondaryDeadline}
-                  </span>
-                ) : null}
               </p>
-              {s.sourceUrls.length > 0 ? (
-                <p className="mt-2 text-xs text-ink-soft">
-                  מקורות:{" "}
-                  {s.sourceUrls.map((url, i) => (
-                    <span key={url}>
-                      {i > 0 ? " · " : null}
-                      <ExternalLink className="underline ltr-isolate" href={url}>
-                        {url.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}
-                      </ExternalLink>
-                    </span>
-                  ))}
-                </p>
-              ) : null}
               {s.applyUrl ? (
                 <ExternalLink className="mt-2 inline-block text-sm underline ltr-isolate" href={s.applyUrl}>
                   הגשה / מידע
                 </ExternalLink>
               ) : null}
+              <span className="mt-2 mr-3 inline-block">
+                <WhatsAppShareLink scholarship={s} />
+              </span>
+              <VerificationNotes scholarship={s} amountTextHe={s.amounts.textHe} />
             </li>
           );
         })}
@@ -203,7 +190,6 @@ export function CatalogExplorer({
                 return s.nameHe.includes(t) || s.funderHe.includes(t) || s.whoItsForHe.includes(t);
               })
               .map((s) => {
-                const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
                 return (
                   <li key={s.id} id={s.id} className="scroll-mt-24 rounded-2xl border border-dashed border-line bg-paper-deep/40 p-5">
                     <div className="flex flex-wrap justify-between gap-2">
@@ -220,16 +206,12 @@ export function CatalogExplorer({
                       <HeWithEn text={s.funderHe} />
                     </p>
                     <p className="mt-2 text-sm">{s.whoItsForHe}</p>
-                    {note ? (
-                      <p className="mt-2 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">
-                        {note}
-                      </p>
-                    ) : null}
                     {s.applyUrl ? (
                       <ExternalLink className="mt-2 inline-block text-sm underline ltr-isolate" href={s.applyUrl}>
                         הגשה / מידע
                       </ExternalLink>
                     ) : null}
+                    <VerificationNotes scholarship={s} amountTextHe={s.amounts.textHe} />
                   </li>
                 );
               })}
