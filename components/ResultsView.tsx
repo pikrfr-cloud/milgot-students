@@ -119,12 +119,20 @@ export function ResultsView() {
       <div className="mx-auto max-w-xl px-4 py-16 text-center">
         <h1 className="font-display text-3xl text-forest-deep">{HE.profile.emptyTitle}</h1>
         <p className="mt-3 text-ink-soft">{HE.profile.emptyBody}</p>
-        <Link
-          href="/profile"
-          className="mt-6 inline-flex rounded-full bg-forest px-6 py-3 text-white"
-        >
-          {HE.profile.fillProfile}
-        </Link>
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <Link
+            href="/chat"
+            className="inline-flex min-h-11 items-center rounded-full bg-clay px-6 py-3 text-white"
+          >
+            {HE.actions.chatIntake}
+          </Link>
+          <Link
+            href="/profile"
+            className="inline-flex min-h-11 items-center rounded-full bg-forest px-6 py-3 text-white"
+          >
+            {HE.profile.fillProfile}
+          </Link>
+        </div>
       </div>
     );
   }

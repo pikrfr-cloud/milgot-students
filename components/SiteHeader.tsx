@@ -6,6 +6,7 @@ import { HE } from "@/lib/i18n/he";
 
 const links = [
   { href: "/", label: HE.nav.home },
+  { href: "/chat", label: HE.nav.chat },
   { href: "/profile/fast", label: HE.nav.fastReport },
   { href: "/profile", label: HE.nav.profile },
   { href: "/results", label: HE.nav.results },

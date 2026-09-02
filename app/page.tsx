@@ -29,8 +29,14 @@ export default function HomePage() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              href="/profile/fast"
+              href="/chat"
               className="rounded-full bg-clay px-6 py-3 text-white font-medium hover:bg-clay-deep"
+            >
+              {HE.actions.chatIntake}
+            </Link>
+            <Link
+              href="/profile/fast"
+              className="rounded-full border border-white/30 px-6 py-3 text-white hover:bg-white/10"
             >
               {HE.actions.fastReport}
             </Link>
@@ -77,7 +83,7 @@ export default function HomePage() {
           <h2 className="font-display text-3xl text-forest-deep">איך זה עובד</h2>
           <ol className="mt-6 grid gap-4 sm:grid-cols-3">
             {[
-              " ממלאים טופס מודרך: מוסד, תואר, מגורים, שירות, מצב כלכלי וקהילה — רק מה שרלוונטי, עם אפשרות לדלג.",
+              " ממלאים בשיחה קצרה או בטופס מודרך: מוסד, תואר, מגורים, שירות, מצב כלכלי וקהילה — רק מה שרלוונטי, עם אפשרות לדלג.",
               "המערכת בודקת כל מלגה בקטלוג מול הכללים שלה, קריטריון־קריטריון.",
               "מתקבל דוח להדפסה: למה מתאימים, מה חסר, ומה הפער במלגות כמעט־זכאות.",
             ].map((t, i) => (
@@ -90,12 +96,20 @@ export default function HomePage() {
             ))}
           </ol>
           <CoverageNote className="mt-8" />
-          <Link
-            href="/profile/fast"
-            className="mt-6 inline-flex rounded-full bg-forest px-6 py-3 text-white hover:bg-forest-deep"
-          >
-            {HE.actions.fastReport}
-          </Link>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/chat"
+              className="inline-flex rounded-full bg-clay px-6 py-3 text-white hover:bg-clay-deep"
+            >
+              {HE.actions.chatIntake}
+            </Link>
+            <Link
+              href="/profile/fast"
+              className="inline-flex rounded-full bg-forest px-6 py-3 text-white hover:bg-forest-deep"
+            >
+              {HE.actions.fastReport}
+            </Link>
+          </div>
         </div>
       </section>
 

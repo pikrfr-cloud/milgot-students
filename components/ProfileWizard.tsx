@@ -291,7 +291,11 @@ export function ProfileWizard() {
         {STEPS[step].title}
       </h1>
       <p className="mt-2 text-sm text-ink-soft">
-        השלמת פרופיל מלא — המשך מהדוח המהיר, לא מבוי סתום.{" "}
+        השלמת פרופיל מלא — המשך מהדוח המהיר או מהשיחה, לא מבוי סתום.{" "}
+        <Link href="/chat/" className="underline underline-offset-4">
+          {HE.nav.chat}
+        </Link>
+        {" · "}
         <Link href="/profile/fast/" className="underline underline-offset-4">
           {HE.nav.fastReport}
         </Link>
