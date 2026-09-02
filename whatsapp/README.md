@@ -67,6 +67,9 @@ Hebrew replies as TwiML `<Response><Message>`. Choice questions list numbered
 options plus `דלג`. After the same completion rule as the site (`3` filled
 wizard fields, or the short question list is done), a compact catalog summary:
 bucket counts, a few top matches with ₪ / deadline **when the catalog has
-them**, and a link to the full report on the site. No fund decision is claimed.
+them**, and a link to `/results/` on the site. The link carries the answers
+just given (`#p=` hash — not sent to GitHub Pages as a query) so the browser
+can hydrate `localStorage` and show the same matcher report. No fund decision
+is claimed.
 
 There is no payment flow and no operator identity on this endpoint.

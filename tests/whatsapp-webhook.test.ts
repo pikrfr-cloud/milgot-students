@@ -4,7 +4,8 @@ import { applyWhatsAppTurn, formatQuestionMessage, parseInbound, questionOptions
 import { chatQuestionById, chatReportCounts, nextChatQuestion } from "@/lib/chat-intake";
 import { matchAll } from "@/lib/matcher";
 import { MIN_CHAT_ANSWERS_FOR_REPORT } from "@/lib/profile-fields";
-import { WHATSAPP_CHAT_URL, buildWhatsAppReport } from "@/lib/whatsapp-report";
+import { decodeSharedProfileFromUrl, sharedResultsUrl } from "@/lib/profile-share";
+import { WHATSAPP_RESULTS_URL, buildWhatsAppReport } from "@/lib/whatsapp-report";
 import type { StudentProfile } from "@/lib/types";
 import nextConfig from "../next.config";
 import { app } from "@/whatsapp/src/app";
@@ -176,7 +177,10 @@ describe("webhook TwiML + matcher on the built profile", () => {
     await xmlOf("שדרות");
     const early = handleInbound({ from: FROM, body: "דוח" }, { asOf: AS_OF });
     expect(early.xml).toContain("סיכום מול הקטלוג");
-    expect(early.xml).toContain(WHATSAPP_CHAT_URL);
+    expect(early.xml).toContain(WHATSAPP_RESULTS_URL);
+    expect(early.xml).toContain("#p=");
+    expect(early.xml).toContain("הדוח המלא באתר");
+    expect(early.xml).not.toContain("/chat/");
 
     const expected: StudentProfile = {
       institution: "tau",
@@ -195,6 +199,13 @@ describe("webhook TwiML + matcher on the built profile", () => {
     expect(report.text).toContain("עומדים בתנאי הסף");
     expect(report.text).toContain(String(report.counts.eligible));
     expect(report.text).not.toContain("זכאים לזכייה");
+    expect(report.text).toContain(sharedResultsUrl(expected));
+    expect(decodeSharedProfileFromUrl(sharedResultsUrl(expected))).toMatchObject({
+      institution: "tau",
+      degreeLevel: "ba",
+      cityOfResidence: "שדרות",
+    });
+    expect(report.text.length).toBeLessThan(3500);
     expect(MIN_CHAT_ANSWERS_FOR_REPORT).toBe(3);
     for (const line of report.text.split("\n").filter((l) => l.startsWith("• "))) {
       expect(line.length).toBeLessThan(160);

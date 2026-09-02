@@ -13,7 +13,8 @@ import {
   unifiedDocuments,
 } from "@/lib/report-conversion";
 import { FAST_REPORT_FIELDS, WIZARD_FIELDS, profileFocusHref } from "@/lib/profile-fields";
-import { loadProfile, profileIsEmpty } from "@/lib/profile-storage";
+import { loadProfileHydratingShare } from "@/lib/profile-share";
+import { profileIsEmpty } from "@/lib/profile-storage";
 import type { ScholarshipMatch, ScholarshipScope, StudentProfile } from "@/lib/types";
 import { amountSortValue, deadlineSortValue, deadlineStatus, formatDeadline, shouldHideIcs } from "@/lib/format";
 import { fieldLabelHe } from "@/lib/labels";
@@ -46,7 +47,7 @@ export function ResultsView() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
-    setProfile(loadProfile());
+    setProfile(loadProfileHydratingShare());
   }, []);
 
   useEffect(() => {

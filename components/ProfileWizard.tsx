@@ -26,10 +26,10 @@ import {
 import { fieldLabelHe, formatProfileValueHe } from "@/lib/labels";
 import {
   downloadProfileJson,
-  loadProfile,
   parseImportedProfile,
   saveProfile,
 } from "@/lib/profile-storage";
+import { loadProfileHydratingShare } from "@/lib/profile-share";
 import { FIELD_STEP, WIZARD_FIELDS, fieldDomId } from "@/lib/profile-fields";
 import { HOUSEHOLD_INCOME_HINT_HE, deriveIncomeBand } from "@/lib/income";
 import { CityPicker } from "@/components/CityPicker";
@@ -164,7 +164,7 @@ export function ProfileWizard() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
-    setProfile(loadProfile());
+    setProfile(loadProfileHydratingShare());
     setReady(true);
   }, []);
 
