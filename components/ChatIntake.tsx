@@ -6,17 +6,11 @@ import { CityPicker } from "@/components/CityPicker";
 import { HeWithEn } from "@/components/HeWithEn";
 import { CITY_SUGGESTIONS } from "@/lib/cities";
 import {
-  applyChatChoice,
-  applyCityAnswer,
-  applyInstitutionAnswer,
-  applyMultiAnswer,
-  askedIdsAfterAnswer,
-  askedIdsAfterSkip,
+  applyChatAction,
   canOfferChatReport,
   chatReportCounts,
   filterInstitutions,
   nextChatQuestion,
-  skipChatQuestion,
   type ChatChoice,
   type ChatQuestion,
 } from "@/lib/chat-intake";
@@ -149,35 +143,39 @@ export function ChatIntake() {
   }
 
   function onChoice(q: ChatQuestion, choice: ChatChoice) {
-    afterProfileChange(applyChatChoice(profile, choice), askedIdsAfterAnswer(askedIds, q), choice.labelHe);
+    const next = applyChatAction({ profile, askedIds }, { type: "choice", question: q, choice });
+    afterProfileChange(next.profile, next.askedIds, choice.labelHe);
   }
 
   function onSkip(q: ChatQuestion) {
-    afterProfileChange(skipChatQuestion(profile, q), askedIdsAfterSkip(askedIds, q), HE.chat.skipped);
+    const next = applyChatAction({ profile, askedIds }, { type: "skip", question: q });
+    afterProfileChange(next.profile, next.askedIds, HE.chat.skipped);
   }
 
   function onInstitution(id: string, nameHe: string) {
     if (!question) return;
-    afterProfileChange(
-      applyInstitutionAnswer(profile, id),
-      askedIdsAfterAnswer(askedIds, question),
-      nameHe,
+    const next = applyChatAction(
+      { profile, askedIds },
+      { type: "institution", question, institutionId: id },
     );
+    afterProfileChange(next.profile, next.askedIds, nameHe);
   }
 
   function onCity(city: string) {
     if (!question) return;
-    afterProfileChange(applyCityAnswer(profile, city), askedIdsAfterAnswer(askedIds, question), city);
+    const next = applyChatAction({ profile, askedIds }, { type: "city", question, city });
+    afterProfileChange(next.profile, next.askedIds, city);
   }
 
   function onSectorsConfirm() {
     if (!question) return;
-    const next = applyMultiAnswer(profile, question, sectorDraft);
+    const next = applyChatAction(
+      { profile, askedIds },
+      { type: "multi", question, values: sectorDraft },
+    );
     const label =
-      sectorDraft.length === 0
-        ? HE.chat.skipped
-        : formatProfileValueHe("sectors", sectorDraft);
-    afterProfileChange(next, askedIdsAfterAnswer(askedIds, question), label);
+      sectorDraft.length === 0 ? HE.chat.skipped : formatProfileValueHe("sectors", sectorDraft);
+    afterProfileChange(next.profile, next.askedIds, label);
   }
 
   function onShowReport() {

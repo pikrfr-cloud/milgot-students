@@ -8,9 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "whatsapp": "tsx whatsapp/src/node.ts",
+    "whatsapp:deploy": "wrangler deploy"
   },
   "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "hono": "^4.13.5",
     "next": "16.3.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -24,7 +28,9 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "wrangler": "^4.128.0"
   }
 }

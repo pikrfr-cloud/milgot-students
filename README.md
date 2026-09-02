@@ -119,3 +119,11 @@ Next.js (App Router) static export + TypeScript + Tailwind CSS v4. ממשק עב
 הכלי אינו מחליף את תנאי הקרן. תמיד יש לאמת זכאות, סכום ומועד באתר הרשמי לפני הגשה. האתר לא מגיש בקשות בשם הסטודנט.
 
 קוד: [https://github.com/pikrfr-cloud/milgot-students](https://github.com/pikrfr-cloud/milgot-students).
+
+---
+
+## WhatsApp (Twilio)
+
+The static GitHub Pages export cannot receive Twilio POSTs. A separate Hono
+server (Cloudflare Worker or `npm run whatsapp`) implements `POST /whatsapp`
+with the same intake + matcher as `/chat/`. See [`whatsapp/README.md`](whatsapp/README.md).
