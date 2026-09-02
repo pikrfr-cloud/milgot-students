@@ -342,6 +342,7 @@ describe("ordinary Colman BA year-2 profile near-miss cap", () => {
     const ids = near.map((m) => m.scholarship.id).sort();
     expect(ids).toEqual([
       "eilim",
+      "hillel-yotzim",
       "irgun-jeckes",
       "nuis-community",
       "perach",

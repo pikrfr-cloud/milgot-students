@@ -41,6 +41,9 @@ describe("matchable-with-amount-and-date gate", () => {
       "biu-isef-phd",
       "biu-president-phd",
       "biu-rotenstreich",
+      "che-ma-data-science",
+      "che-ma-diversity",
+      "che-ma-women-hightech",
       "che-phd-agriculture",
       "che-phd-data-science",
       "che-phd-diversity",
@@ -50,15 +53,18 @@ describe("matchable-with-amount-and-date gate", () => {
       "che-rotenstreich",
       "clore-fellowship",
       "emek-yizrael-community",
+      "galil-elion-council",
       "haifa-miluim-first-year",
       "hevel-modiin-community",
       "hevel-yavne-pais",
+      "hillel-yotzim",
       "hof-hasharon-community",
       "holon-hit-payis",
       "irgun-jeckes",
       "irtikaa",
       "isef-recanati-6000",
       "leviathan-scholarship",
+      "loewenstein-iron-swords",
       "mate-binyamin-community",
       "mil-go",
       "moshal",
@@ -80,10 +86,11 @@ describe("matchable-with-amount-and-date gate", () => {
       "tau-diaspora-phd",
       "tau-liber-phd",
       "tau-president-orphanhood",
+      "vanleer-journeys",
       "weizmann-young-scholars",
       "zvulun-pais",
     ]);
-    expect(counted.length).toBe(46);
+    expect(counted.length).toBe(53);
     expect(counted.length).toBeLessThan(60);
     expect(counted.length).toBe(matchableWithAmountAndDate(MATCHABLE_SCHOLARSHIPS).length);
   });

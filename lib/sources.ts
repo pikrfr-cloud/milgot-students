@@ -100,6 +100,15 @@ const OFFICIAL_HOSTS = new Set([
   "www.hevel-yavne.org.il",
   "irgun-jeckes.org",
   "www.irgun-jeckes.org",
+  "foloewenstein.org.il",
+  "www.foloewenstein.org.il",
+  "galil-elion.org.il",
+  "www.galil-elion.org.il",
+  "hillel.org.il",
+  "www.hillel.org.il",
+  "vanleer.org.il",
+  "www.vanleer.org.il",
+  "journeys.vanleer.org.il",
 ]);
 
 const HOMEPAGE_PATHS = new Set(["", "/", "/he", "/en", "/he/", "/en/", "/home", "/home/", "/index.html"]);
