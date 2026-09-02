@@ -109,6 +109,8 @@ const OFFICIAL_HOSTS = new Set([
   "vanleer.org.il",
   "www.vanleer.org.il",
   "journeys.vanleer.org.il",
+  "heseg.com",
+  "www.heseg.com",
 ]);
 
 const HOMEPAGE_PATHS = new Set(["", "/", "/he", "/en", "/he/", "/en/", "/home", "/home/", "/index.html"]);
