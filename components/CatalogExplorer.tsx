@@ -4,10 +4,12 @@ import { useMemo, useState } from "react";
 import type { Scholarship, ScholarshipScope, ScholarshipType } from "@/lib/types";
 import { ExternalLink } from "@/components/ExternalLink";
 import { HeWithEn } from "@/components/HeWithEn";
-import { deadlineStatus, formatAmount, formatDeadline, scopeLabelHe } from "@/lib/format";
+import { deadlineStatus, formatAmount, formatDeadline, isVerificationStale, publicDeadlineLabelHe, scopeLabelHe, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
 import { HE } from "@/lib/i18n/he";
+import { scholarshipPagePath } from "@/lib/catalog-routes";
+import Link from "next/link";
 
 export function CatalogExplorer({
   scholarships,
@@ -108,7 +110,9 @@ export function CatalogExplorer({
             <li key={s.id} id={s.id} className="scroll-mt-24 rounded-2xl border border-line bg-card p-5">
               <div className="flex flex-wrap justify-between gap-2">
                 <h2 className="font-display text-xl text-forest-deep">
-                  <HeWithEn text={s.nameHe} />
+                  <Link href={scholarshipPagePath(s.id)} className="underline-offset-4 hover:underline">
+                    <HeWithEn text={s.nameHe} />
+                  </Link>
                 </h2>
                 <span className="text-sm">{formatAmount(s.amounts)}</span>
               </div>
@@ -117,6 +121,9 @@ export function CatalogExplorer({
               </p>
               <p className="mt-2 text-sm">{s.whoItsForHe}</p>
               <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
+                {isVerificationStale(s.lastVerified) ? (
+                  <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{STALE_VERIFICATION_LABEL_HE}</span>
+                ) : null}
                 {status.kind === "closed" ? (
                   <span className="rounded-full bg-gold/20 px-2 py-0.5 text-ink">{HE.buckets.closedCycle}</span>
                 ) : null}
@@ -127,7 +134,7 @@ export function CatalogExplorer({
                   <span className="rounded-full bg-paper-deep px-2 py-0.5">{s.deadline.windowHe}</span>
                 ) : null}
                 <span>
-                  {status.labelHe} · {formatDeadline(s.deadline)} · {s.types.map(scholarshipTypeLabel).join(", ")} ·{" "}
+                  {publicDeadlineLabelHe(s.deadline, s.lastVerified)} · {formatDeadline(s.deadline)} · {s.types.map(scholarshipTypeLabel).join(", ")} ·{" "}
                   {scopeLabelHe(s.scope)}
                 </span>
               </p>

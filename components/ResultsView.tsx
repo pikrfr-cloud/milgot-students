@@ -5,16 +5,23 @@ import Link from "next/link";
 import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
 import { groupMatches, matchAll } from "@/lib/matcher";
 import { missingFieldUnlocks, mostUrgentOpen } from "@/lib/match-insights";
+import {
+  NO_DOUBLE_COUNT_CAVEAT_HE,
+  potentialHeadlineHe,
+  potentialOpenAmount,
+  upcomingCloseDates,
+  unifiedDocuments,
+} from "@/lib/report-conversion";
+import { FAST_REPORT_FIELDS, WIZARD_FIELDS, profileFocusHref } from "@/lib/profile-fields";
 import { loadProfile, profileIsEmpty } from "@/lib/profile-storage";
 import type { ScholarshipMatch, ScholarshipScope, StudentProfile } from "@/lib/types";
-import { amountSortValue, deadlineSortValue, deadlineStatus, shouldHideIcs } from "@/lib/format";
+import { amountSortValue, deadlineSortValue, deadlineStatus, formatDeadline, shouldHideIcs } from "@/lib/format";
 import { fieldLabelHe } from "@/lib/labels";
-import { profileFocusHref } from "@/lib/profile-fields";
 import { CoverageNote } from "@/components/CoverageNote";
 import { CatalogAgeBanner } from "@/components/CatalogAgeBanner";
 import { EmptyBucket, ScholarshipCard } from "@/components/ScholarshipCard";
 import { useTracking } from "@/components/TrackingProvider";
-import { downloadCombinedIcs } from "@/lib/ics";
+import { downloadCombinedIcs, downloadIcs } from "@/lib/ics";
 import { HE } from "@/lib/i18n/he";
 
 type SortKey = "amount" | "deadline" | "name";
@@ -146,7 +153,21 @@ export function ResultsView() {
 
   const visibleActionable = [...eligible, ...needInfo, ...nearMiss, ...checkAtInstitution];
   const urgent = mostUrgentOpen(visibleActionable, asOf, 3);
-  const topUnlock = missingFieldUnlocks(allMatches)[0];
+  const unlocks = missingFieldUnlocks(allMatches);
+  const topUnlock = unlocks[0];
+  const potential = potentialOpenAmount(allMatches, asOf);
+  const timeline = upcomingCloseDates(allMatches, asOf);
+  const docs = unifiedDocuments(allMatches);
+  const remainingUnlocks = unlocks.filter(({ field }) => !FAST_REPORT_FIELDS.includes(field));
+  const fastFieldsFilled = FAST_REPORT_FIELDS.some((f) => {
+    const v = profile[f];
+    return !(v === null || v === undefined || (Array.isArray(v) && v.length === 0));
+  });
+  const remainingWizard = WIZARD_FIELDS.filter((f) => {
+    const v = profile[f];
+    return v === null || v === undefined || (Array.isArray(v) && v.length === 0);
+  });
+  const isPartialProfile = remainingWizard.length > 0;
 
   const filterControls = (
     <>
@@ -240,6 +261,89 @@ export function ResultsView() {
       </div>
       <p className="mt-2 text-xs text-ink-soft no-print">{HE.results.iphonePrint}</p>
 
+      <section className="mt-6 rounded-2xl border border-forest/20 bg-forest/5 p-5" aria-label="פוטנציאל בשקלים">
+        <p className="font-display text-2xl text-forest-deep">{potentialHeadlineHe(potential)}</p>
+        <p className="mt-2 text-sm text-ink-soft leading-relaxed">{NO_DOUBLE_COUNT_CAVEAT_HE}</p>
+        {potential.missingAmountCount > 0 ? (
+          <p className="mt-2 text-sm text-ink-soft">
+            {HE.results.missingAmounts.replace("{n}", String(potential.missingAmountCount))}
+          </p>
+        ) : null}
+      </section>
+
+      {isPartialProfile ? (
+        <section className="no-print mt-6 rounded-2xl border border-info/30 bg-info/5 p-5">
+          <h2 className="font-display text-xl text-forest-deep">{HE.results.completeToUnlock}</h2>
+          <p className="mt-2 text-sm text-ink-soft">
+            {fastFieldsFilled ? HE.results.fastPartial : "אפשר להמשיך באשף המלא כדי לפתוח עוד התאמות."}
+          </p>
+          <ul className="mt-3 space-y-1 text-sm">
+            {(remainingUnlocks.length ? remainingUnlocks : unlocks).slice(0, 8).map(({ field, count }) => (
+              <li key={field}>
+                <Link href={profileFocusHref(field)} className="text-forest underline underline-offset-4">
+                  {HE.results.fillFieldUnlock
+                    .replace("{field}", fieldLabelHe(field))
+                    .replace("{n}", String(count))}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/profile/"
+            className="mt-4 inline-flex min-h-11 items-center rounded-full bg-forest px-4 text-sm text-white"
+          >
+            {HE.actions.completeProfile}
+          </Link>
+        </section>
+      ) : null}
+
+      <section className="mt-6 rounded-2xl border border-line bg-card p-5" aria-label="מועדי סגירה">
+        <h2 className="font-display text-xl text-forest-deep">{HE.results.timelineTitle}</h2>
+        {timeline.length ? (
+          <ol className="mt-3 space-y-2 text-sm">
+            {timeline.map((m) => (
+              <li key={m.scholarship.id} className="flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  <a href={`#${m.scholarship.id}`} className="font-medium text-forest underline underline-offset-4">
+                    {m.scholarship.nameHe}
+                  </a>
+                  <span className="text-ink-soft">
+                    {" — "}
+                    {m.scholarship.deadline.date} · {formatDeadline(m.scholarship.deadline)}
+                  </span>
+                </span>
+                {!shouldHideIcs(m.scholarship.deadline, asOf) ? (
+                  <button
+                    type="button"
+                    className="no-print min-h-11 rounded-full border border-line px-3 text-sm"
+                    onClick={() => downloadIcs(m.scholarship)}
+                  >
+                    {HE.actions.addToCalendar}
+                  </button>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-2 text-sm text-ink-soft">{HE.results.timelineNone}</p>
+        )}
+      </section>
+
+      {docs.length > 0 ? (
+        <section className="mt-6 rounded-2xl border border-line bg-card p-5">
+          <h2 className="font-display text-xl text-forest-deep">{HE.results.documentsTitle}</h2>
+          <p className="mt-1 text-sm text-ink-soft">{HE.results.documentsHint}</p>
+          <ul className="mt-3 space-y-1 text-sm">
+            {docs.slice(0, 20).map((d) => (
+              <li key={d.documentHe}>
+                <span className="font-medium">{d.documentHe}</span>
+                <span className="text-ink-soft"> — {d.count} מלגות</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <section className="no-print mt-6 rounded-2xl border border-line bg-card p-5" aria-label="סיכום פעולה">
         <h2 className="font-display text-xl text-forest-deep">{HE.results.urgentTitle}</h2>
         {urgent.length ? (
@@ -303,14 +407,14 @@ export function ResultsView() {
         aria-label="מעבר בין קטגוריות הדוח"
         className="no-print mt-6 flex flex-wrap gap-2 rounded-2xl border border-line bg-card p-3"
       >
+        <a href="#near-miss" className="inline-flex min-h-11 items-center rounded-full bg-warn/15 px-3 text-sm font-medium text-warn">
+          {HE.buckets.nearMiss} ({nearMiss.length})
+        </a>
         <a href="#eligible" className="inline-flex min-h-11 items-center rounded-full bg-ok/10 px-3 text-sm text-ok">
           {HE.buckets.eligible} ({eligible.length})
         </a>
         <a href="#need-info" className="inline-flex min-h-11 items-center rounded-full bg-info/10 px-3 text-sm text-info">
           חסר פרט ({needInfo.length})
-        </a>
-        <a href="#near-miss" className="inline-flex min-h-11 items-center rounded-full bg-warn/10 px-3 text-sm text-warn">
-          {HE.buckets.nearMiss} ({nearMiss.length})
         </a>
         <a href="#check-at-institution" className="inline-flex min-h-11 items-center rounded-full bg-paper-deep px-3 text-sm text-ink-soft">
           {HE.buckets.checkAtInstitution} ({checkAtInstitution.length})
@@ -334,6 +438,19 @@ export function ResultsView() {
         {filterControls}
       </div>
 
+      <section id="near-miss" className="mt-10 scroll-mt-28 rounded-3xl border-2 border-warn/40 bg-warn/5 p-5">
+        <h2 className="font-display text-2xl">
+          {HE.buckets.nearMiss} ({nearMiss.length})
+        </h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          {HE.results.nearMissFeatured} כישלון בזהות — מוסד, קהילה, מגדר, עיר, תחום לימוד, שנת לימוד,
+          מכינה, נתוני קבלה, עולה, סוג שירות, ימי מילואים — מופיע תחת לא זכאים.
+        </p>
+        <div className="mt-4 grid gap-4">
+          {nearMiss.length ? nearMiss.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} defaultOpen />) : <EmptyBucket />}
+        </div>
+      </section>
+
       <section id="eligible" className="mt-10 scroll-mt-28">
         <h2 className="font-display text-2xl">
           {HE.buckets.eligible} ({eligible.length})
@@ -355,19 +472,6 @@ export function ResultsView() {
         </p>
         <div className="mt-4 grid gap-4">
           {needInfo.length ? needInfo.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
-        </div>
-      </section>
-
-      <section id="near-miss" className="mt-10 scroll-mt-28">
-        <h2 className="font-display text-2xl">
-          {HE.buckets.nearMiss} ({nearMiss.length})
-        </h2>
-        <p className="mt-1 text-sm text-ink-soft">
-          פער בקריטריונים שניתן לשנות (התנדבות, היקף לימודים, ממוצע). כישלון בזהות
-          — מוסד, קהילה, מגדר, עיר, תחום לימוד, שנת לימוד, מכינה, נתוני קבלה, עולה, סוג שירות, ימי מילואים — מופיע תחת לא זכאים.
-        </p>
-        <div className="mt-4 grid gap-4">
-          {nearMiss.length ? nearMiss.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
         </div>
       </section>
 
@@ -419,7 +523,12 @@ export function ResultsView() {
             </button>
           ) : null}
         </div>
-        <p className="mt-1 text-sm text-ink-soft">מלגות שסימנתם במעקב בכרטיס.</p>
+        <p className="mt-1 text-sm text-ink-soft">
+          מלגות שסימנתם במעקב בכרטיס.{" "}
+          <Link href="/my-list/" className="underline underline-offset-4">
+            לעמוד העבודה המלא
+          </Link>
+        </p>
         <div className="mt-4 grid gap-4">
           {myList.length ? myList.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
         </div>

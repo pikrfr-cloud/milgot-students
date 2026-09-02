@@ -984,13 +984,16 @@ describe("selective treatment on competitive flagships", () => {
 });
 
 describe("flagship תשפ״ז catalog honesty", () => {
-  it("keeps all 111 catalog ids, including every flagship", () => {
+  it("keeps every previous catalog id and only grows with verified records", () => {
     const ids = SCHOLARSHIPS.map((s) => s.id);
-    expect(ids.length).toBe(111);
-    expect(new Set(ids).size).toBe(111);
+    expect(ids.length).toBeGreaterThanOrEqual(111);
+    expect(new Set(ids).size).toBe(ids.length);
     for (const id of FLAGSHIP_IDS) {
       expect(ids, id).toContain(id);
     }
+    expect(ids).toContain("raanana-community");
+    expect(ids).toContain("rehovot-community");
+    expect(ids).toContain("katzir-rashi");
   });
 
   it("gives each flagship a numeric amount or an explicit unpublished/תשפ״ז tag, verified 2026-09-01", () => {

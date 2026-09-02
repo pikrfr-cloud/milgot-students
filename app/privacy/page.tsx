@@ -20,6 +20,10 @@ export default function PrivacyPage() {
       </p>
       <h2 className="mt-8 font-display text-2xl">מה נשמר</h2>
       <p className="mt-3">{HE.legal.localOnly} אין ניתוח שימוש, אין גופנים מצד שלישי, ואין שליחת הפרופיל לרשת.</p>
+      <p className="mt-3">
+        טופס רשימת המתנה שומר כתובת דוא״ל ואישור במכשיר זה בלבד. אין שרת דיוור — האימייל לא נשלח לשום צד
+        שלישי.
+      </p>
       <h2 className="mt-8 font-display text-2xl">זכות מחיקה</h2>
       <p className="mt-3">{HE.legal.deletionRight}</p>
       <div className="mt-4">

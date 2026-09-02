@@ -43,11 +43,52 @@ export function israelYmd(d: Date): string {
   }).format(d);
 }
 
-function daysUntilIsoDate(isoDate: string, asOf: Date): number {
+export function daysUntilIsoDate(isoDate: string, asOf: Date): number {
   const today = israelYmd(asOf);
   const dueMs = Date.parse(`${isoDate}T12:00:00Z`);
   const todayMs = Date.parse(`${today}T12:00:00Z`);
   return Math.round((dueMs - todayMs) / MS_PER_DAY);
+}
+
+/** Normalize lastVerified (`YYYY-MM` or `YYYY-MM-DD`) to a calendar day. */
+export function verifiedIsoDate(lastVerified: string): string | null {
+  if (/^\d{4}-\d{2}$/.test(lastVerified)) return `${lastVerified}-01`;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(lastVerified)) return lastVerified;
+  return null;
+}
+
+export function daysSinceVerified(lastVerified: string, asOf: Date = new Date()): number | null {
+  const iso = verifiedIsoDate(lastVerified);
+  if (!iso) return null;
+  return -daysUntilIsoDate(iso, asOf);
+}
+
+export const RECORD_STALE_DAYS = 90;
+export const STALE_VERIFICATION_LABEL_HE = "לא אומת לאחרונה";
+
+export function isVerificationStale(
+  lastVerified: string,
+  asOf: Date = new Date(),
+  days = RECORD_STALE_DAYS,
+): boolean {
+  const age = daysSinceVerified(lastVerified, asOf);
+  return age != null && age > days;
+}
+
+/**
+ * Public deadline chip. Stale records must not be labeled «פתוח להגשה».
+ * Closing-soon / closed / rolling labels are unchanged.
+ */
+export function publicDeadlineLabelHe(
+  deadline: Deadline,
+  lastVerified: string,
+  asOf: Date = new Date(),
+): string {
+  const status = deadlineStatus(deadline, asOf);
+  if (isVerificationStale(lastVerified, asOf) && status.kind === "open") {
+    return deadline.date ? `מועד מפורסם: ${deadline.date}` : formatDeadline(deadline);
+  }
+  return status.labelHe;
 }
 
 export function deadlineStatus(deadline: Deadline, asOf: Date = new Date()): DeadlineStatus {
