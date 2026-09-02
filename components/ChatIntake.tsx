@@ -204,7 +204,6 @@ export function ChatIntake() {
     <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col px-3 pb-4 pt-6 sm:px-4">
       <header className="mb-4">
         <h1 className="font-display text-3xl text-forest-deep">{HE.chat.title}</h1>
-        <p className="mt-2 text-sm text-ink-soft leading-relaxed">{HE.legal.localOnly}</p>
       </header>
 
       <div className="flex flex-1 flex-col gap-3" aria-live="polite">

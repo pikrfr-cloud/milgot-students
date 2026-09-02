@@ -104,7 +104,7 @@ export default async function ScholarshipPage({
 
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <Link
-          href="/profile/fast/"
+          href="/chat/"
           className="inline-flex min-h-11 items-center rounded-full bg-clay px-6 text-white"
         >
           {HE.actions.checkFit}
@@ -124,7 +124,7 @@ export default async function ScholarshipPage({
       </section>
 
       <section className="mt-8">
-        <h2 className="font-display text-2xl">תנאים שבקטלוג</h2>
+        <h2 className="font-display text-2xl">התנאים</h2>
         <ul className="mt-3 list-disc space-y-1 pr-5">
           {conditions.map((c) => (
             <li key={c}>{c}</li>
@@ -164,7 +164,7 @@ export default async function ScholarshipPage({
       <p className="mt-4 text-sm">
         {studentCountsLine(COUNTS)}.{" "}
         <Link href="/catalog/" className="underline underline-offset-4">
-          לכל הקטלוג
+          {HE.nav.catalog}
         </Link>
       </p>
     </div>

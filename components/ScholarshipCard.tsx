@@ -310,8 +310,8 @@ export function EmptyBucket() {
   return (
     <p className="rounded-2xl border border-dashed border-line p-6 text-ink-soft">
       אין מלגות בקטגוריה זו לפי הסינון הנוכחי.{" "}
-      <Link href="/profile" className="underline underline-offset-4">
-        לעדכון הפרופיל
+      <Link href="/chat" className="underline underline-offset-4">
+        {HE.actions.chatIntake}
       </Link>
     </p>
   );

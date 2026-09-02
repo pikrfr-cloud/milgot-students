@@ -66,7 +66,7 @@ export function FastReport() {
       </p>
       <h1 className="mt-1 font-display text-3xl text-forest-deep">{current.title}</h1>
       <p className="mt-2 text-sm text-ink-soft leading-relaxed">
-        חמש שאלות ואז דוח חלקי מיד. אפשר להשלים את שאר הפרופיל אחר כך — ההתקדמות נשמרת במכשיר.
+        חמש שאלות — ואז תוצאות. אפשר להוסיף עוד אחר כך.
       </p>
       <ol className="mt-4 flex flex-wrap gap-2" aria-label="התקדמות בדוח המהיר">
         {STEPS.map((s, i) => (

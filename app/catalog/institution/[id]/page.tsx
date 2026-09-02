@@ -50,7 +50,7 @@ export default async function InstitutionCollectionPage({
         </Link>
       </p>
       <h1 className="mt-2 font-display text-4xl text-forest-deep">מלגות — {inst.nameHe}</h1>
-      <p className="mt-2 text-ink-soft">{list.length} רשומות בקטלוג שקשורות למוסד זה.</p>
+      <p className="mt-2 text-ink-soft">{list.length} מלגות במוסד הזה.</p>
       <Link
         href="/profile/fast/"
         className="mt-4 inline-flex min-h-11 items-center rounded-full bg-clay px-5 text-white"

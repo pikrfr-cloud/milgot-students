@@ -63,8 +63,8 @@ export function CatalogExplorer({
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <input
           className="min-h-11 w-full rounded-xl border border-line bg-card px-3 py-2"
-          placeholder="חיפוש בקטלוג"
-          aria-label="חיפוש בקטלוג המלגות"
+          placeholder="חיפוש מלגה"
+          aria-label="חיפוש מלגה"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -219,10 +219,8 @@ export function CatalogExplorer({
         </>
       ) : null}
 
-      <h2 className="mt-14 font-display text-3xl text-forest-deep">טיפים והפניות (לא מלגות)</h2>
-      <p className="mt-2 text-sm text-ink-soft">
-        רשומות אלה אינן נספרות בקטלוג המלגות: מעטפת, הפניה לדיקן או קריטריון ניקוד בתוך מלגה אחרת.
-      </p>
+      <h2 className="mt-14 font-display text-3xl text-forest-deep">{HE.buckets.tips}</h2>
+      <p className="mt-2 text-sm text-ink-soft">הפניות — לא מלגות.</p>
       <ul className="mt-6 grid gap-4">
         {tipList.map((s) => (
           <li key={s.id} id={s.id} className="scroll-mt-24 rounded-2xl border border-dashed border-line bg-card p-5">

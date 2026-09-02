@@ -18,8 +18,7 @@ export default function TermsPage() {
         השימוש באתר הוא באחריות המשתמש. {HE.legal.notOfficial}
       </p>
       <p className="mt-3">
-        הקטלוג מבוסס על מקורות פומביים שאומתו במועד המצוין בכל רשומה. סכומים ומועדים עלולים להשתנות,
-        וחלקם מסומנים כלא ודאיים במכוון.
+        הסכומים והתאריכים עלולים להשתנות. תמיד בודקים באתר המלגה.
       </p>
       <p className="mt-3">{HE.legal.localOnly}</p>
       <p className="mt-3">{HE.legal.deletionRight}</p>
@@ -27,7 +26,7 @@ export default function TermsPage() {
       <p className="mt-3">
         {HE.legal.contactIssues}{" "}
         <a className="underline underline-offset-4 ltr-isolate" href={HE.legal.githubIssuesUrl}>
-          GitHub
+          כתבו לנו
         </a>
       </p>
       <p className="mt-6">

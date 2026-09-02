@@ -20,9 +20,7 @@ describe("counts.json is the student-facing source of truth", () => {
     expect(COUNTS.guide).toBe(CATALOG_STATS.guide);
     expect(COUNTS.tips).toBe(CATALOG_STATS.tips);
     expect(COUNTS.lastVerifiedMonth).toBe(CATALOG_STATS.lastVerifiedMonth);
-    expect(studentCountsLine(COUNTS)).toBe(
-      `${COUNTS.matchable} מלגות להתאמה · ${COUNTS.guide} במדריך`,
-    );
+    expect(studentCountsLine(COUNTS)).toBe(`${COUNTS.matchable} מלגות`);
     expect(studentCountsLine(COUNTS)).not.toMatch(/רשומות בקטלוג/);
   });
 

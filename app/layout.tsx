@@ -14,8 +14,7 @@ export const metadata: Metadata = {
     default: `${HE.siteName} — ${HE.tagline}`,
     template: `%s · ${HE.siteName}`,
   },
-  description:
-    "ממלאים פרופיל פעם אחת ומקבלים דוח מול הקטלוג: מי עומד בתנאי הסף, מה חסר לאישור, ומה כמעט מתאים. בלי התחברות, הנתונים נשארים במכשיר.",
+  description: "ממלאים פעם אחת ומקבלים את המלגות שמתאימות — עם הסבר על כל אחת.",
   applicationName: HE.siteName,
   icons: { icon: "/milgot-students/favicon.svg" },
   openGraph: {
@@ -23,8 +22,7 @@ export const metadata: Metadata = {
     locale: "he_IL",
     siteName: HE.siteName,
     title: `${HE.siteName} — ${HE.tagline}`,
-    description:
-      "דוח מול הקטלוג שלנו. הנתונים נשארים במכשיר.",
+    description: "ממלאים פעם אחת ומקבלים את המלגות שמתאימות.",
     url: SITE,
     images: [{ url: "/og.png", width: 1200, height: 630, alt: HE.siteName }],
   },

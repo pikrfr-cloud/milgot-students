@@ -180,7 +180,7 @@ export function catalogAgeBanner(lastVerified: string, asOf: Date = new Date()):
   const daysOld = -daysUntilIsoDate(iso, asOf);
   if (daysOld <= CATALOG_STALE_DAYS) return null;
   const months = Math.max(1, Math.round(daysOld / 30));
-  return `הקטלוג אומת לפני ${months} חודשים`;
+  return `המלגות עודכנו לפני ${months} חודשים`;
 }
 
 /** ICS is for a dated window that is currently open (or closing soon), not closed/not-yet-open. */
@@ -281,26 +281,26 @@ export function scopeLabelHe(scope: ScholarshipScope): string {
 
 export function matchHeadline(match: ScholarshipMatch): string {
   if (match.bucket === "closedCycle") {
-    return "נסגר למחזור זה — מתאים למחזור הבא";
+    return "נסגר השנה — אפשר למחזור הבא";
   }
   if (match.bucket === "checkAtInstitution") {
     return "יש לבדוק במוסד/ברשות";
   }
   const treatment = match.scholarship.treatment;
   if (treatment === "scoreBased" && (match.bucket === "needInfo" || match.bucket === "eligible")) {
-    return "סיכוי לפי ניקוד — לא זכאות אוטומטית";
+    return "תלוי בניקוד — לא מובטח";
   }
   if (treatment === "selective" && (match.bucket === "eligible" || match.bucket === "needInfo")) {
-    return "עומד/ת בתנאי הסף — מיון תחרותי, לא זכייה אוטומטית";
+    return "מתאים לסף — יש מיון תחרותי";
   }
   switch (match.bucket) {
     case "eligible":
-      return "עומד/ת בתנאי הסף שבקטלוג";
+      return "מתאים לפי מה שמילאתם";
     case "needInfo":
-      return "חסר פרט לאישור";
+      return "חסר פרט";
     case "nearMiss":
-      return `כמעט זכאי/ת — פער ב־${match.eval.failCount} קריטריונים`;
+      return `כמעט מתאים — פער ב־${match.eval.failCount} דברים`;
     default:
-      return "לא עומד/ת בתנאים שבקטלוג";
+      return "לא מתאים לפי מה שמילאתם";
   }
 }

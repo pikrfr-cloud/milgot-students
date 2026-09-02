@@ -978,8 +978,8 @@ describe("catalog age banner", () => {
   });
 
   it("shows months when lastVerified is older than 60 days", () => {
-    expect(catalogAgeBanner("2026-06", asOf)).toBe("הקטלוג אומת לפני 3 חודשים");
-    expect(catalogAgeBanner("2026-01-15", asOf)).toMatch(/^הקטלוג אומת לפני \d+ חודשים$/);
+    expect(catalogAgeBanner("2026-06", asOf)).toBe("המלגות עודכנו לפני 3 חודשים");
+    expect(catalogAgeBanner("2026-01-15", asOf)).toMatch(/^המלגות עודכנו לפני \d+ חודשים$/);
   });
 });
 

@@ -4,16 +4,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HE } from "@/lib/i18n/he";
 
+/** Short student nav — one path, not a portal. */
 const links = [
-  { href: "/", label: HE.nav.home },
   { href: "/chat", label: HE.nav.chat },
-  { href: "/profile/fast", label: HE.nav.fastReport },
-  { href: "/profile", label: HE.nav.profile },
-  { href: "/results", label: HE.nav.results },
-  { href: "/my-list", label: HE.nav.myList },
   { href: "/catalog", label: HE.nav.catalog },
-  { href: "/about", label: HE.nav.about },
-  { href: "/accessibility", label: HE.nav.accessibility },
+  { href: "/results", label: HE.nav.results },
 ];
 
 export function SiteHeader() {
@@ -40,7 +35,6 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <Link href="/" className="flex min-h-11 items-center gap-2">
           <span className="font-display text-xl text-forest-deep tracking-tight">{HE.siteName}</span>
-          <span className="hidden sm:inline text-xs text-ink-soft">{HE.tagline}</span>
         </Link>
         <button
           type="button"

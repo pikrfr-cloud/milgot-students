@@ -13,7 +13,7 @@ export function IssuesLink({
       className={`underline underline-offset-4 ltr-isolate ${className}`}
       href={HE.legal.githubIssuesUrl}
     >
-      {children ?? "GitHub"}
+      {children ?? "כתבו לנו"}
     </ExternalLink>
   );
 }

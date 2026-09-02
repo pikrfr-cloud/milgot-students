@@ -23,5 +23,9 @@ export function computeCatalogCounts(list: Scholarship[], tips: Scholarship[]): 
 }
 
 export function studentCountsLine(c: Pick<CatalogCounts, "matchable" | "guide">): string {
-  return `${c.matchable} מלגות להתאמה · ${c.guide} במדריך`;
+  return `${c.matchable} מלגות`;
+}
+
+export function studentCountsLineFull(c: Pick<CatalogCounts, "matchable" | "guide">): string {
+  return `${c.matchable} מלגות · ${c.guide} לבדיקה במוסד`;
 }

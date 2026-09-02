@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { COUNTS } from "@/data/counts";
 import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
 import { ProfileLoadingFallback } from "@/components/ProfileLoadingFallback";
 import { loadProfileHydratingShare } from "@/lib/profile-share";
@@ -122,18 +121,12 @@ export function ResultsView() {
       <div className="mx-auto max-w-xl px-4 py-16 text-center">
         <h1 className="font-display text-3xl text-forest-deep">{HE.profile.emptyTitle}</h1>
         <p className="mt-3 text-ink-soft">{HE.profile.emptyBody}</p>
-        <div className="mt-6 flex flex-col items-center gap-3">
+        <div className="mt-6">
           <Link
             href="/chat"
             className="inline-flex min-h-11 items-center rounded-full bg-clay px-6 py-3 text-white"
           >
             {HE.actions.chatIntake}
-          </Link>
-          <Link
-            href="/profile"
-            className="inline-flex min-h-11 items-center rounded-full bg-forest px-6 py-3 text-white"
-          >
-            {HE.profile.fillProfile}
           </Link>
         </div>
       </div>
@@ -453,10 +446,7 @@ export function ResultsView() {
         <h2 className="font-display text-2xl">
           {HE.buckets.nearMiss} ({nearMiss.length})
         </h2>
-        <p className="mt-1 text-sm text-ink-soft">
-          {HE.results.nearMissFeatured} כישלון בזהות — מוסד, קהילה, מגדר, עיר, תחום לימוד, שנת לימוד,
-          מכינה, נתוני קבלה, עולה, סוג שירות, ימי מילואים — מופיע תחת לא זכאים.
-        </p>
+        <p className="mt-1 text-sm text-ink-soft">{HE.results.nearMissFeatured}</p>
         <div className="mt-4 grid gap-4">
           {nearMiss.length ? nearMiss.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} defaultOpen />) : <EmptyBucket />}
         </div>
@@ -478,9 +468,7 @@ export function ResultsView() {
         <h2 className="font-display text-2xl">
           {HE.buckets.needInfo} ({needInfo.length})
         </h2>
-        <p className="mt-1 text-sm text-ink-soft">
-          אף קריטריון לא נכשל, אבל שדה שדולג נדרש. מלאו אותו בפרופיל כדי לאשר.
-        </p>
+        <p className="mt-1 text-sm text-ink-soft">חסר תשובה אחת כדי לדעת אם מתאים.</p>
         <div className="mt-4 grid gap-4">
           {needInfo.length ? needInfo.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
         </div>
@@ -491,7 +479,7 @@ export function ResultsView() {
           {HE.buckets.guideLong} ({checkAtInstitution.length})
         </h2>
         <p className="mt-1 text-sm text-ink-soft">
-          {HE.catalog.guideHint} לא נספרות ב־{COUNTS.matchable} המלגות להתאמה.
+          {HE.catalog.guideHint}
         </p>
         <div className="mt-4 grid gap-4 opacity-90">
           {checkAtInstitution.length ? checkAtInstitution.map((m) => (
@@ -504,9 +492,7 @@ export function ResultsView() {
         <h2 className="font-display text-2xl">
           {HE.buckets.closedCycleLong} ({closedCycle.length})
         </h2>
-        <p className="mt-1 text-sm text-ink-soft">
-          התנאים שבקטלוג מתקיימים או חסר רק פרט / פער שניתן לשנות, אבל המועד שפורסם כבר עבר. לא מוסתר תחת «לא זכאים».
-        </p>
+        <p className="mt-1 text-sm text-ink-soft">התאריך עבר. אפשר לנסות במחזור הבא.</p>
         <div className="mt-4 grid gap-4">
           {closedCycle.length ? closedCycle.map((m) => (
             <ScholarshipCard key={m.scholarship.id} match={m} />
@@ -533,12 +519,7 @@ export function ResultsView() {
             </button>
           ) : null}
         </div>
-        <p className="mt-1 text-sm text-ink-soft">
-          מלגות שסימנתם במעקב בכרטיס.{" "}
-          <Link href="/my-list/" className="underline underline-offset-4">
-            לעמוד העבודה המלא
-          </Link>
-        </p>
+        <p className="mt-1 text-sm text-ink-soft">מלגות ששמרתם.</p>
         <div className="mt-4 grid gap-4">
           {myList.length ? myList.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
         </div>
@@ -557,9 +538,7 @@ export function ResultsView() {
             {showIneligible ? HE.actions.hide : HE.actions.showIneligible}
           </button>
         </div>
-        <p className="mt-1 text-sm text-ink-soft">
-          מוסתר כברירת מחדל במסך. בהדפסה מופיע בשורה אחת לכל מלגה.
-        </p>
+        <p className="mt-1 text-sm text-ink-soft">מוסתר כדי שלא יבלבל. אפשר לפתוח.</p>
         {showIneligible ? (
           <div className="mt-4 grid gap-4 no-print">
             {ineligible.length ? ineligible.map((m) => <ScholarshipCard key={m.scholarship.id} match={m} />) : <EmptyBucket />}
@@ -579,9 +558,7 @@ export function ResultsView() {
           <h2 className="font-display text-2xl">
             {HE.buckets.tips} ({tipMatches.length})
           </h2>
-          <p className="mt-1 text-sm text-ink-soft">
-            אלה אינן מלגות בקטלוג — הפניות לדיקן, לזכויות או למעטפת. לא נספרות כמלגות.
-          </p>
+          <p className="mt-1 text-sm text-ink-soft">הפניות — לא מלגות.</p>
           <div className="mt-4 grid gap-4">
             {tipMatches.map((m) => (
               <ScholarshipCard key={m.scholarship.id} match={m} />

@@ -175,7 +175,7 @@ describe("webhook TwiML + matcher on the built profile", () => {
     await xmlOf("1");
     await xmlOf("שדרות");
     const early = handleInbound({ from: FROM, body: "דוח" }, { asOf: AS_OF });
-    expect(early.xml).toContain("סיכום מול הקטלוג");
+    expect(early.xml).toContain("סיכום לפי התשובות שלכם");
     expect(early.xml).toContain(WHATSAPP_CHAT_URL);
 
     const expected: StudentProfile = {
@@ -192,7 +192,7 @@ describe("webhook TwiML + matcher on the built profile", () => {
     expect(report.counts.eligible + report.counts.needInfo + report.counts.nearMiss + report.counts.guide).toBeGreaterThan(
       0,
     );
-    expect(report.text).toContain("עומדים בתנאי הסף");
+    expect(report.text).toContain("מתאים:");
     expect(report.text).toContain(String(report.counts.eligible));
     expect(report.text).not.toContain("זכאים לזכייה");
     expect(MIN_CHAT_ANSWERS_FOR_REPORT).toBe(3);

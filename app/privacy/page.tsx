@@ -7,7 +7,7 @@ import { IssuesLink } from "@/components/IssuesLink";
 
 export const metadata: Metadata = {
   title: "פרטיות",
-  description: "הפרופיל נשמר במכשיר בלבד. אפשר למחוק אותו בכל עת.",
+  description: "התשובות נשארות במכשיר. אפשר למחוק בכל עת.",
   alternates: { canonical: "/privacy/" },
 };
 
@@ -17,12 +17,10 @@ export default function PrivacyPage() {
       <h1 className="font-display text-4xl text-forest-deep">מדיניות פרטיות</h1>
       <p className="mt-2 text-sm text-ink-soft">עודכן: {LEGAL_UPDATED_HE}</p>
       <p className="mt-6">
-        «{HE.siteName}» הוא {HE.serviceNotPublicTool} להתאמת מלגות לסטודנטים בישראל. אין חשבון משתמש ואין
-        שרת פרופילים.
+        אין חשבון. התשובות נשארות במכשיר שלכם.
       </p>
       <h2 className="mt-8 font-display text-2xl">מה נשמר</h2>
-      <p className="mt-3">{HE.legal.localOnly} אין ניתוח שימוש, אין גופנים מצד שלישי, ואין שליחת הפרופיל לרשת.</p>
-      <p className="mt-3">אין איסוף כתובות דוא״ל ואין שרת דיוור.</p>
+      <p className="mt-3">{HE.legal.localOnly} לא שולחים אותן לשום מקום.</p>
       <h2 className="mt-8 font-display text-2xl">זכות מחיקה</h2>
       <p className="mt-3">{HE.legal.deletionRight}</p>
       <div className="mt-4">

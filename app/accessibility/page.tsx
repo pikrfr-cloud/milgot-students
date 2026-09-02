@@ -63,9 +63,9 @@ export default function AccessibilityPage() {
       <p className="mt-3">
         {HE.legal.contactIssuesA11y}{" "}
         <ExternalLink className="underline underline-offset-4 ltr-isolate" href={HE.legal.githubIssuesUrl}>
-          GitHub
+          כתבו לנו
         </ExternalLink>
-        . נשתדל לתקן במסגרת עדכוני הקטלוג והקוד.
+        .
       </p>
       <p className="mt-3 text-sm text-ink-soft">
         הצהרה זו מתארת את מצב האתר במועד העדכון. היא אינה מחליפה ייעוץ משפטי ואינה מהווה אישור
