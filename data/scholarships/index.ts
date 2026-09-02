@@ -11,6 +11,7 @@ import { UNIVERSITIES } from "./universities";
 import { COLLEGES } from "./colleges";
 import { MUNICIPAL } from "./municipal";
 import { FOUNDATIONS } from "./foundations";
+import { VERIFIED_EXTRA_2 } from "./verified-extra-2";
 
 export const SCHOLARSHIPS: Scholarship[] = [
   ...NATIONAL,
@@ -18,7 +19,10 @@ export const SCHOLARSHIPS: Scholarship[] = [
   ...COLLEGES,
   ...MUNICIPAL,
   ...FOUNDATIONS,
+  ...VERIFIED_EXTRA_2,
 ];
+
+export { VERIFIED_EXTRA_2 };
 
 export { TIPS };
 

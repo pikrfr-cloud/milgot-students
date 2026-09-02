@@ -92,6 +92,14 @@ const OFFICIAL_HOSTS = new Set([
   "www.hof-hasharon.co.il",
   "leviathanproject.co.il",
   "www.leviathanproject.co.il",
+  "zvulun.org.il",
+  "www.zvulun.org.il",
+  "shomron.org.il",
+  "www.shomron.org.il",
+  "hevel-yavne.org.il",
+  "www.hevel-yavne.org.il",
+  "irgun-jeckes.org",
+  "www.irgun-jeckes.org",
 ]);
 
 const HOMEPAGE_PATHS = new Set(["", "/", "/he", "/en", "/he/", "/en/", "/home", "/home/", "/index.html"]);
