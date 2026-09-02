@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { SCHOLARSHIPS, getScholarshipById } from "@/data/scholarships";
+import { SCHOLARSHIPS, CATALOG_STATS, getScholarshipById } from "@/data/scholarships";
 import { ExternalLink } from "@/components/ExternalLink";
 import { HeWithEn } from "@/components/HeWithEn";
 import { CoverageNote } from "@/components/CoverageNote";
@@ -20,6 +20,7 @@ import { absoluteUrl } from "@/lib/site";
 import { sourceLevelLabelHe, bestSourceLevel } from "@/lib/sources";
 import { HE } from "@/lib/i18n/he";
 import { INSTITUTIONS } from "@/lib/institutions";
+import { duplicateNoteHe, duplicatePeers, isGuideRecord } from "@/lib/catalog";
 
 export const dynamicParams = false;
 
@@ -106,6 +107,17 @@ export default async function ScholarshipPage({
         <h2 className="font-display text-2xl">למי זה מיועד</h2>
         <p className="mt-3 leading-relaxed">{s.whoItsForHe}</p>
         {inst ? <p className="mt-2 text-sm text-ink-soft">מוסדות: {inst}</p> : null}
+        {isGuideRecord(s) ? (
+          <p className="mt-3 rounded-xl border border-line bg-paper-deep px-3 py-2 text-sm text-ink-soft">
+            {HE.catalog.guideHint}
+          </p>
+        ) : null}
+        {(() => {
+          const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
+          return note ? (
+            <p className="mt-3 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">{note}</p>
+          ) : null;
+        })()}
       </section>
 
       <section className="mt-8">
@@ -161,7 +173,8 @@ export default async function ScholarshipPage({
 
       <CoverageNote className="mt-8" />
       <p className="mt-4 text-sm">
-        {SCHOLARSHIPS.length} מלגות בקטלוג.{" "}
+        {CATALOG_STATS.total} מלגות להתאמה בקטלוג
+        {CATALOG_STATS.guide ? ` · ${CATALOG_STATS.guide} במדריך` : ""}.{" "}
         <Link href="/catalog/" className="underline underline-offset-4">
           לכל הקטלוג
         </Link>

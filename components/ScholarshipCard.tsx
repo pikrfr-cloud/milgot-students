@@ -16,6 +16,8 @@ import { HeWithEn } from "@/components/HeWithEn";
 import { useTracking } from "@/components/TrackingProvider";
 import { scholarshipPagePath } from "@/lib/catalog-routes";
 import { HE } from "@/lib/i18n/he";
+import { SCHOLARSHIPS } from "@/data/scholarships";
+import { duplicateNoteHe, duplicatePeers } from "@/lib/catalog";
 
 const bucketStyle: Record<string, string> = {
   eligible: "border-ok/30 bg-ok/5",
@@ -226,6 +228,12 @@ export function ScholarshipCard({
             </section>
           ) : null}
           {s.notesHe ? <p className="text-ink-soft">{s.notesHe}</p> : null}
+          {(() => {
+            const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
+            return note ? (
+              <p className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">{note}</p>
+            ) : null;
+          })()}
           {s.amounts.uncertain || s.deadline.uncertain ? (
             <p className="text-ink-soft">חלק מהפרטים מסומנים כלא ודאיים — יש לאמת במקור.</p>
           ) : null}

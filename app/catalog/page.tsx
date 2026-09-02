@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { CoverageNote } from "@/components/CoverageNote";
 import { CatalogAgeBanner } from "@/components/CatalogAgeBanner";
-import { CATALOG_STATS } from "@/data/scholarships";
 import { CatalogExplorer } from "@/components/CatalogExplorer";
-import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
+import { CATALOG_STATS, GUIDE_SCHOLARSHIPS, MATCHABLE_SCHOLARSHIPS, TIPS } from "@/data/scholarships";
 import Link from "next/link";
 import {
   catalogCities,
@@ -20,7 +19,7 @@ import { HE } from "@/lib/i18n/he";
 
 export const metadata: Metadata = {
   title: "קטלוג המלגות",
-  description: `עיון ב־${CATALOG_STATS.total} מלגות מאומתות ככל האפשר, בלי המצאת סכומים.`,
+  description: `עיון ב־${CATALOG_STATS.total} מלגות להתאמה מול הקטלוג, בלי המצאת סכומים.`,
   alternates: { canonical: "/catalog/" },
 };
 
@@ -29,8 +28,8 @@ export default function CatalogPage() {
     <div className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="font-display text-4xl text-forest-deep">קטלוג המלגות</h1>
       <p className="mt-2 text-ink-soft">
-        {SCHOLARSHIPS.length} מלגות מאומתות ככל האפשר, ועוד {TIPS.length} טיפים שאינם מלגות. לא
-        הומצאו מלגות.
+        {CATALOG_STATS.total} מלגות להתאמה מול הקטלוג, {CATALOG_STATS.guide} במדריך (דיקן / רשות),
+        ועוד {TIPS.length} טיפים שאינם מלגות. לא הומצאו מלגות.
       </p>
       <p className="mt-3">
         <Link href="/catalog/updates/" className="underline underline-offset-4">
@@ -76,7 +75,7 @@ export default function CatalogPage() {
           ))}
         </ul>
       </section>
-      <CatalogExplorer scholarships={SCHOLARSHIPS} tips={TIPS} />
+      <CatalogExplorer scholarships={MATCHABLE_SCHOLARSHIPS} guide={GUIDE_SCHOLARSHIPS} tips={TIPS} />
     </div>
   );
 }

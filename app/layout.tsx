@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     siteName: HE.siteName,
     title: `${HE.siteName} — ${HE.tagline}`,
     description:
-      "דוח זכאות מלא מול קטלוג מלגות. הנתונים נשארים במכשיר.",
+      "דוח מול הקטלוג שלנו. הנתונים נשארים במכשיר.",
     url: SITE,
     images: [{ url: "/og.svg", width: 1200, height: 630, alt: HE.siteName }],
   },

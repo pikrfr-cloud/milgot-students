@@ -58,7 +58,8 @@ export const MUNICIPAL: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, "ספח תעודת זהות המוכיח כתובת", "אישור היקף לימודים"],
     howToApplyHe: "אתר עיריית תל אביב־יפו, אגף השכלה גבוהה ומלגות.",
     applyUrl: "https://www.tel-aviv.gov.il/Residents/Education/Pages/HigherEducation.aspx",
-    notesHe: "ניתן להגיש רק לאחת משתי המלגות העירוניות.",
+    notesHe: "ניתן להגיש רק לאחת משתי המלגות העירוניות. כפילות: אותו דף הגשה כמו מלגת קרן תל אביב־יפו לפיתוח.",
+    excludes: ["telaviv-development-fund"],
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.tel-aviv.gov.il/Residents/Education/Pages/HigherEducation.aspx"],
     eligibility: allOf(
@@ -84,6 +85,8 @@ export const MUNICIPAL: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, ...DOCS_INCOME, "אישור לימודים בתיכון בעיר"],
     howToApplyHe: "אתר העירייה.",
     applyUrl: "https://www.tel-aviv.gov.il/Residents/Education/Pages/HigherEducation.aspx",
+    notesHe: "ניתן להגיש רק לאחת משתי המלגות העירוניות. כפילות: אותו דף הגשה כמו מלגות לשכונות דרום ויפו.",
+    excludes: ["telaviv-south-neighborhoods"],
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.tel-aviv.gov.il/Residents/Education/Pages/HigherEducation.aspx"],
     eligibility: allOf(
@@ -307,6 +310,7 @@ export const MUNICIPAL: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, "התחייבות לקהילה"],
     howToApplyHe: "רכז קהילות בתל־חי.",
     applyUrl: "https://www.telhai.ac.il/",
+    notesHe: "כפילות: אותו אתר מוסד כמו מלגות דיקן תל־חי. זו קהילת סטודנטים, לא מלגת דיקן.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.telhai.ac.il/"],
     institutionIds: ["telhai"],
@@ -346,6 +350,8 @@ export const MUNICIPAL: Scholarship[] = [
     applyUrl: "https://www.raanana.muni.il/young-complex/young-students/cityscholarship/",
     notesHe:
       "חלון הגשת תשפ״ז נסגר ב־31.8.2026. ההתנדבות אוקטובר 2026–יולי 2027. לא הומצא מספר זוכים — בדף נכתב הגרלה.",
+    archivedReasonHe:
+      "חלון הגשת תשפ״ז נסגר ב־31.8.2026. לא הומצא סכום או מועד חדש — המחזור הבא יפורסם באתר העירייה.",
     lastVerified: VERIFIED_TODAY,
     sourceUrls: ["https://www.raanana.muni.il/young-complex/young-students/cityscholarship/"],
     treatment: "selective",

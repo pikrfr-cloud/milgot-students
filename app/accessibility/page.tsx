@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HE } from "@/lib/i18n/he";
+import { LEGAL_UPDATED_HE } from "@/data/scholarships";
 import { ExternalLink } from "@/components/ExternalLink";
 
 export const metadata: Metadata = {
@@ -12,7 +13,7 @@ export default function AccessibilityPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 leading-relaxed">
       <h1 className="font-display text-4xl text-forest-deep">הצהרת נגישות</h1>
-      <p className="mt-2 text-sm text-ink-soft">עודכן לאחרונה: 1 בספטמבר 2026</p>
+      <p className="mt-2 text-sm text-ink-soft">עודכן לאחרונה: {LEGAL_UPDATED_HE}</p>
 
       <p className="mt-6">
         אתר «מלגות לסטודנטים» הוא שירות להתאמת מלגות. אנו שואפים לאפשר שימוש גם לאנשים עם מוגבלות,

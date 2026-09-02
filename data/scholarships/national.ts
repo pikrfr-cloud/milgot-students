@@ -831,7 +831,7 @@ export const NATIONAL: Scholarship[] = [
     howToApplyHe: "דרך דיקן / מדור מלגות במוסד ההכשרה, לפי חוזר משרד החינוך לאותה שנה.",
     applyUrl: "https://www.smkb.ac.il/students/students-dean/scholarship/assistive/",
     notesHe:
-      "אין כפל מלגות בתוך המערך המסייע. סטודנטים שכבר יש להם תעודת הוראה או שעובדים כמורים בפועל עשויים שלא להיות זכאים — יש לאמת בחוזר.",
+      "אין כפל מלגות בתוך המערך המסייע. סטודנטים שכבר יש להם תעודת הוראה או שעובדים כמורים בפועל עשויים שלא להיות זכאים — יש לאמת בחוזר. כפילות: קישור ההגשה הוא דף דיקן סמינר הקיבוצים (kibbutzim-dean) — זו הלוואת משרד החינוך, לא מלגת הדיקן.",
     lastVerified: VERIFIED,
     sourceUrls: [
       "https://www.smkb.ac.il/students/students-dean/scholarship/assistive/",

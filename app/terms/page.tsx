@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { HE } from "@/lib/i18n/he";
+import { LEGAL_UPDATED_HE } from "@/data/scholarships";
 
 export const metadata: Metadata = {
   title: "תנאי שימוש",
@@ -12,7 +13,7 @@ export default function TermsPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 leading-relaxed">
       <h1 className="font-display text-4xl text-forest-deep">תנאי שימוש</h1>
-      <p className="mt-2 text-sm text-ink-soft">עודכן: 1 בספטמבר 2026</p>
+      <p className="mt-2 text-sm text-ink-soft">עודכן: {LEGAL_UPDATED_HE}</p>
       <p className="mt-6">
         השימוש באתר הוא באחריות המשתמש. {HE.legal.notOfficial}
       </p>
