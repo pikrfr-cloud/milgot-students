@@ -79,6 +79,19 @@ const OFFICIAL_HOSTS = new Set([
   "mushlam-frontend.wiz.digital.idf.il",
   "rashi.org.il",
   "www.rashi.org.il",
+  "eyz.org.il",
+  "www.eyz.org.il",
+  "rng.org.il",
+  "www.rng.org.il",
+  "matnasbinyamin.co.il",
+  "www.matnasbinyamin.co.il",
+  "e4e.org.il",
+  "www.e4e.org.il",
+  "digitaler.cld.bz",
+  "hof-hasharon.co.il",
+  "www.hof-hasharon.co.il",
+  "leviathanproject.co.il",
+  "www.leviathanproject.co.il",
 ]);
 
 const HOMEPAGE_PATHS = new Set(["", "/", "/he", "/en", "/he/", "/en/", "/home", "/home/", "/index.html"]);

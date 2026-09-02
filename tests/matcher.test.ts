@@ -340,7 +340,15 @@ describe("ordinary Colman BA year-2 profile near-miss cap", () => {
     const matches = matchAll(SCHOLARSHIPS, ordinaryColmanProfile);
     const near = matches.filter((m) => m.bucket === "nearMiss");
     const ids = near.map((m) => m.scholarship.id).sort();
-    expect(ids).toEqual(["eilim", "nuis-community", "perach", "rothschild-ambassadors", "sahlav"]);
+    expect(ids).toEqual([
+      "eilim",
+      "nuis-community",
+      "perach",
+      "poalim-lehatzlacha",
+      "rishon-muni",
+      "rothschild-ambassadors",
+      "sahlav",
+    ]);
     for (const m of near) {
       expect(m.failed.some((c) => c.field === "fieldOfStudy")).toBe(false);
       expect(m.eval.immutableFailCount).toBe(0);
@@ -356,9 +364,12 @@ describe("ordinary Colman BA year-2 profile near-miss cap", () => {
     }
   });
 
-  it("does not treat colman dean skeleton or rishon city-hall as eligible now", () => {
+  it("does not treat colman dean skeleton as eligible now; Rishon Payis needs volunteering", () => {
     expect(bucketOf(ordinaryColmanProfile, "colman-aid")).toBe("checkAtInstitution");
-    expect(bucketOf(ordinaryColmanProfile, "rishon-muni")).toBe("checkAtInstitution");
+    expect(bucketOf(ordinaryColmanProfile, "rishon-muni")).toBe("nearMiss");
+    expect(bucketOf({ ...ordinaryColmanProfile, willingToVolunteer: true }, "rishon-muni")).toBe(
+      "eligible",
+    );
   });
 
   it("sends wrong-institution and wrong-community failures to ineligible", () => {
@@ -1013,11 +1024,11 @@ describe("flagship תשפ״ז catalog honesty", () => {
     expect(ids).toContain("katzir-rashi");
   });
 
-  it("gives each flagship a numeric amount or an explicit unpublished/תשפ״ז tag, verified 2026-09-01", () => {
+  it("gives each flagship a numeric amount or an explicit unpublished/תשפ״ז tag, verified 2026-09-01+", () => {
     const tag = /תשפ״ז|טרם פורסם|לא פורסם/;
     for (const id of FLAGSHIP_IDS) {
       const rec = byId(id);
-      expect(rec.lastVerified, id).toBe("2026-09-01");
+      expect(["2026-09-01", "2026-09-02"], id).toContain(rec.lastVerified);
       const hasNumber = rec.amounts.minIls != null || rec.amounts.maxIls != null;
       expect(hasNumber || tag.test(rec.amounts.textHe), `${id} amount: ${rec.amounts.textHe}`).toBe(true);
     }
