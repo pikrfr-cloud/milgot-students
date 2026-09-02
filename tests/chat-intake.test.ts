@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyChatAction,
   applyChatChoice,
   applyCityAnswer,
   applyInstitutionAnswer,
@@ -54,6 +55,27 @@ describe("chat intake field glue", () => {
     expect(asked).toContain("miluimDays");
     expect(nextChatQuestion(skipped, asked)?.id).not.toBe("miluim");
     expect(nextChatQuestion(skipped, asked)?.id).not.toBe("miluimDays");
+  });
+
+  it("applyChatAction is the single mutation used by web and WhatsApp", () => {
+    const degree = chatQuestionById("degreeLevel");
+    const ba = degree?.choices?.find((c) => c.id === "ba");
+    if (!degree || !ba) throw new Error("missing degree");
+    const afterChoice = applyChatAction({ profile: {}, askedIds: [] }, {
+      type: "choice",
+      question: degree,
+      choice: ba,
+    });
+    expect(afterChoice.profile.degreeLevel).toBe("ba");
+    expect(afterChoice.askedIds).toContain("degreeLevel");
+
+    const afterSkip = applyChatAction({ profile: {}, askedIds: [] }, { type: "skip", question: degree });
+    expect(afterSkip.profile.degreeLevel).toBeNull();
+    expect(afterSkip.askedIds).toContain("degreeLevel");
+
+    const reset = applyChatAction(afterChoice, { type: "reset" });
+    expect(reset.profile).toEqual({});
+    expect(reset.askedIds).toEqual([]);
   });
 });
 

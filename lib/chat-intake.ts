@@ -239,6 +239,64 @@ export function canOfferChatReport(profile: StudentProfile): boolean {
   return filledWizardFieldCount(profile) >= MIN_CHAT_ANSWERS_FOR_REPORT;
 }
 
+/** Shared session state for the web chat and the WhatsApp webhook. */
+export type ChatSessionState = {
+  profile: StudentProfile;
+  askedIds: string[];
+};
+
+export type ChatAction =
+  | { type: "choice"; question: ChatQuestion; choice: ChatChoice }
+  | { type: "skip"; question: ChatQuestion }
+  | { type: "institution"; question: ChatQuestion; institutionId: string }
+  | { type: "city"; question: ChatQuestion; city: string | null }
+  | { type: "multi"; question: ChatQuestion; values: string[] }
+  | { type: "reset" };
+
+export function emptyChatState(): ChatSessionState {
+  return { profile: {}, askedIds: [] };
+}
+
+/**
+ * One mutation of the intake machine. ChatIntake and the WhatsApp webhook
+ * must both go through this so question order and field mapping cannot drift.
+ */
+export function applyChatAction(state: ChatSessionState, action: ChatAction): ChatSessionState {
+  switch (action.type) {
+    case "reset":
+      return emptyChatState();
+    case "choice":
+      return {
+        profile: applyChatChoice(state.profile, action.choice),
+        askedIds: askedIdsAfterAnswer(state.askedIds, action.question),
+      };
+    case "skip":
+      return {
+        profile: skipChatQuestion(state.profile, action.question),
+        askedIds: askedIdsAfterSkip(state.askedIds, action.question),
+      };
+    case "institution":
+      return {
+        profile: applyInstitutionAnswer(state.profile, action.institutionId),
+        askedIds: askedIdsAfterAnswer(state.askedIds, action.question),
+      };
+    case "city":
+      return {
+        profile: applyCityAnswer(state.profile, action.city),
+        askedIds: askedIdsAfterAnswer(state.askedIds, action.question),
+      };
+    case "multi":
+      return {
+        profile: applyMultiAnswer(state.profile, action.question, action.values),
+        askedIds: askedIdsAfterAnswer(state.askedIds, action.question),
+      };
+    default: {
+      const _exhaustive: never = action;
+      return _exhaustive;
+    }
+  }
+}
+
 export function filterInstitutions(query: string) {
   const q = query.trim();
   if (!q) {

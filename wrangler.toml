@@ -1,0 +1,19 @@
+# Cloudflare Worker for the Twilio WhatsApp webhook.
+# Catalog + matcher are imported from the same lib/ and data/ as the static site.
+# Source is ~140KB of scholarship TS — well under Worker size limits, so this
+# runs the real matcher (not a reduced copy).
+#
+# Deploy:  npx wrangler deploy
+# Local:   npm run whatsapp
+# Secret:  npx wrangler secret put TWILIO_AUTH_TOKEN
+#
+# Multi-isolate note: sessions are in-memory. After deploy, add KV or a
+# Durable Object if more than one Worker isolate will handle the same phone.
+
+name = "milgot-students-whatsapp"
+main = "whatsapp/src/worker.ts"
+compatibility_date = "2026-09-02"
+
+# Resolve the same @/ aliases as the Next app (lib/, data/).
+[alias]
+"@" = "."
