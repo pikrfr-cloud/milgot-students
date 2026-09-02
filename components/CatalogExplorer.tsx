@@ -128,7 +128,6 @@ export function CatalogExplorer({
                 const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
                 return note ? (
                   <p className="mt-2 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">
-                    <span className="font-medium">{HE.catalog.duplicate}. </span>
                     {note}
                   </p>
                 ) : null;
@@ -218,7 +217,6 @@ export function CatalogExplorer({
                     <p className="mt-2 text-sm">{s.whoItsForHe}</p>
                     {note ? (
                       <p className="mt-2 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">
-                        <span className="font-medium">{HE.catalog.duplicate}. </span>
                         {note}
                       </p>
                     ) : null}

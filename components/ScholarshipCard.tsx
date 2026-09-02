@@ -228,12 +228,12 @@ export function ScholarshipCard({
             </section>
           ) : null}
           {s.notesHe ? <p className="text-ink-soft">{s.notesHe}</p> : null}
-          {duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS)) ? (
-            <p className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">
-              <span className="font-medium">{HE.catalog.duplicate}. </span>
-              {duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS))}
-            </p>
-          ) : null}
+          {(() => {
+            const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
+            return note ? (
+              <p className="rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">{note}</p>
+            ) : null;
+          })()}
           {s.amounts.uncertain || s.deadline.uncertain ? (
             <p className="text-ink-soft">חלק מהפרטים מסומנים כלא ודאיים — יש לאמת במקור.</p>
           ) : null}

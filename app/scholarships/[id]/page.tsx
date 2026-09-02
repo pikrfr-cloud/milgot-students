@@ -112,12 +112,12 @@ export default async function ScholarshipPage({
             {HE.catalog.guideHint}
           </p>
         ) : null}
-        {duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS)) ? (
-          <p className="mt-3 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">
-            <span className="font-medium">{HE.catalog.duplicate}. </span>
-            {duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS))}
-          </p>
-        ) : null}
+        {(() => {
+          const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
+          return note ? (
+            <p className="mt-3 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">{note}</p>
+          ) : null;
+        })()}
       </section>
 
       <section className="mt-8">
