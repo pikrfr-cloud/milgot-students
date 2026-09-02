@@ -10,7 +10,7 @@ import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
 import { HE } from "@/lib/i18n/he";
 import { scholarshipPagePath } from "@/lib/catalog-routes";
 import { SCHOLARSHIPS } from "@/data/scholarships";
-import { duplicateNoteHe, duplicatePeers } from "@/lib/catalog";
+import { duplicateNoteHe, duplicatePeers, hasSecondaryDeadlineSource } from "@/lib/catalog";
 import Link from "next/link";
 
 export function CatalogExplorer({
@@ -150,7 +150,7 @@ export function CatalogExplorer({
                   {scopeLabelHe(s.scope)}
                 </span>
               </p>
-              <p className="mt-2 text-xs">
+              <p className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                 <span
                   className={`rounded-full px-2 py-0.5 ${
                     grade === "official_page"
@@ -162,6 +162,11 @@ export function CatalogExplorer({
                 >
                   {sourceLevelLabelHe(grade)}
                 </span>
+                {hasSecondaryDeadlineSource(s) ? (
+                  <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">
+                    {HE.catalog.secondaryDeadline}
+                  </span>
+                ) : null}
               </p>
               {s.sourceUrls.length > 0 ? (
                 <p className="mt-2 text-xs text-ink-soft">

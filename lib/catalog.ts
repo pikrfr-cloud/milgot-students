@@ -12,6 +12,54 @@ export function isMatchableScholarship(s: Scholarship): boolean {
   return !isGuideRecord(s);
 }
 
+/**
+ * Headline «מלגות להתאמה»: unique by applyUrl among matchable rows.
+ * Duplicate records stay in the catalog list; only the count collapses.
+ * Rows without applyUrl each count as themselves.
+ */
+/** Same apply link even when one record uses `www.` or a trailing slash. */
+export function canonicalApplyUrl(url: string): string {
+  const trimmed = url.trim();
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+    const path = parsed.pathname.replace(/\/+$/, "") || "/";
+    return `${parsed.protocol}//${host}${path}${parsed.search}`;
+  } catch {
+    return trimmed;
+  }
+}
+
+export function uniqueMatchableByApplyUrl(list: Scholarship[]): Scholarship[] {
+  const seen = new Set<string>();
+  const out: Scholarship[] = [];
+  for (const s of list) {
+    if (!isMatchableScholarship(s)) continue;
+    const url = s.applyUrl?.trim();
+    if (url) {
+      const key = canonicalApplyUrl(url);
+      if (seen.has(key)) continue;
+      seen.add(key);
+    }
+    out.push(s);
+  }
+  return out;
+}
+
+export function uniqueMatchableCount(list: Scholarship[]): number {
+  return uniqueMatchableByApplyUrl(list).length;
+}
+
+/** Secondary line when the list has more rows than unique applyUrl. */
+export function uniqueApplyUrlNoteHe(rows: number, unique: number): string | null {
+  if (rows <= unique) return null;
+  return `${rows} רשומות בקטלוג, ${unique} ייחודיות לפי קישור הגשה`;
+}
+
+export function hasSecondaryDeadlineSource(s: Scholarship): boolean {
+  return s.deadlineSource === "secondary";
+}
+
 /** Lexicographic max of `lastVerified` (`YYYY-MM` or `YYYY-MM-DD`). */
 export function maxLastVerified(records: { lastVerified: string }[]): string {
   return records.reduce((max, s) => (s.lastVerified > max ? s.lastVerified : max), "");
@@ -22,9 +70,10 @@ export function applyUrlDuplicateGroups(list: Scholarship[]): Map<string, Schola
   for (const s of list) {
     const url = s.applyUrl?.trim();
     if (!url) continue;
-    const arr = byUrl.get(url) ?? [];
+    const key = canonicalApplyUrl(url);
+    const arr = byUrl.get(key) ?? [];
     arr.push(s);
-    byUrl.set(url, arr);
+    byUrl.set(key, arr);
   }
   for (const [url, arr] of byUrl) {
     if (arr.length < 2) byUrl.delete(url);
@@ -34,7 +83,8 @@ export function applyUrlDuplicateGroups(list: Scholarship[]): Map<string, Schola
 
 export function duplicatePeers(s: Scholarship, list: Scholarship[] = []): Scholarship[] {
   if (!s.applyUrl) return [];
-  return list.filter((o) => o.id !== s.id && o.applyUrl === s.applyUrl);
+  const key = canonicalApplyUrl(s.applyUrl);
+  return list.filter((o) => o.id !== s.id && o.applyUrl && canonicalApplyUrl(o.applyUrl) === key);
 }
 
 export function duplicateNoteHe(s: Scholarship, peers: Scholarship[]): string | null {

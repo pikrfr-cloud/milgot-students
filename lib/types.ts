@@ -318,7 +318,16 @@ export type Scholarship = {
   excludes?: string[];
   /** Best source URL level; computed at catalog load. Green UI tag only for `official_page`. */
   sourceLevel?: SourceLevel;
+  /**
+   * Where a dated deadline (or amount) was taken from.
+   * `secondary` = institutional aggregator (e.g. scholarships.ono.ac.il) rather than the issuer's own page.
+   * Omit or `official` when the date/amount is from the program's official page.
+   */
+  deadlineSource?: DeadlineSource;
 };
+
+export const DEADLINE_SOURCES = ["official", "secondary"] as const;
+export type DeadlineSource = (typeof DEADLINE_SOURCES)[number];
 
 export type EvalStatus = "pass" | "fail" | "unknown";
 
