@@ -5,6 +5,7 @@ import {
   LEGAL_UPDATED_HE,
   MATCHABLE_SCHOLARSHIPS,
   SCHOLARSHIPS,
+  VERIFIED_EXTRA,
   VERIFIED_EXTRA_2,
 } from "@/data/scholarships";
 import {
@@ -59,6 +60,35 @@ describe("applyUrl כפילות groups stay visible", () => {
     expect(idsIn("https://www.smkb.ac.il/students/students-dean/scholarship/assistive/")).toEqual(
       ["kibbutzim-dean", "moe-teaching-conditional-loan"].sort(),
     );
+  });
+});
+
+describe("verified-extra תשפ״ז additions", () => {
+  it("adds only matchable records with a numeric ₪ amount and a dated deadline", () => {
+    expect(VERIFIED_EXTRA.length).toBeGreaterThanOrEqual(8);
+    const catalogIds = new Set(SCHOLARSHIPS.map((s) => s.id));
+    const existingApply = new Set(
+      SCHOLARSHIPS.filter((s) => !VERIFIED_EXTRA.some((e) => e.id === s.id)).map((s) => s.applyUrl),
+    );
+    /** Same official pages already on main as *-community / #15 tau-liber-phd. */
+    const knownApplyUrlPeers = new Set([
+      "ramat-hasharon-students",
+      "hof-hasharon-pais",
+      "hevel-modiin-pais",
+      "tau-liber-phd",
+    ]);
+    for (const rec of VERIFIED_EXTRA) {
+      expect(catalogIds.has(rec.id), rec.id).toBe(true);
+      expect(isGuideRecord(rec), rec.id).toBe(false);
+      expect(rec.lastVerified, rec.id).toBe("2026-09-02");
+      expect(rec.amounts.minIls != null || rec.amounts.maxIls != null, rec.id).toBe(true);
+      expect(rec.deadline.date, rec.id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(rec.applyUrl, rec.id).toBeTruthy();
+      if (!knownApplyUrlPeers.has(rec.id)) {
+        expect(existingApply.has(rec.applyUrl), `${rec.id} duplicates applyUrl`).toBe(false);
+      }
+      expect(rec.sourceUrls.some((u) => u.startsWith("http")), rec.id).toBe(true);
+    }
   });
 });
 
