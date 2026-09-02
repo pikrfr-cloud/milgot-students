@@ -87,8 +87,13 @@ describe("WhatsApp report URL", () => {
     expect(report.text).toContain(url);
     expect(report.text).toContain(HE.whatsapp.fullReportLink);
     expect(HE.whatsapp.fullReportLink).toBe("הדוח המלא באתר:");
+    expect(HE.whatsapp.fullReportHint).toBe(
+      "לחצו כדי לראות את הדוח עם התשובות שנתתם — בלי שם ובלי טלפון.",
+    );
     expect(report.text).toContain(HE.whatsapp.fullReportHint);
-    expect(HE.whatsapp.fullReportHint).not.toMatch(/hash|localStorage|webhook|#p=/i);
+    expect(`${HE.whatsapp.fullReportLink} ${HE.whatsapp.fullReportHint}`).not.toMatch(
+      /hash|localStorage|webhook|#p=|קידוד|שרת/i,
+    );
     expect(decodeSharedProfileFromUrl(url)).toEqual(COMPACT);
     expect(report.text.length).toBeLessThan(3500);
   });
