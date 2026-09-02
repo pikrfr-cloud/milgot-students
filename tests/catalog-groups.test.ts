@@ -41,6 +41,7 @@ describe("student search groups", () => {
     expect(miluim.length).toBeGreaterThan(0);
     expect(miluim.every(isMiluimScholarship)).toBe(true);
     expect(miluim.some((s) => s.id === "mil-go")).toBe(false);
+    expect(miluim.some((s) => s.id === "yeud-44")).toBe(false);
   });
 
   it("keeps periphery to type or eligibility, not the HUJI campus list", () => {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AmountLegend } from "@/components/AmountLegend";
 import { CatalogListCard } from "@/components/CatalogListCard";
 import { CoverageNote } from "@/components/CoverageNote";
 import { uniqueMatchableByApplyUrl } from "@/lib/catalog";
@@ -64,6 +65,7 @@ export default async function GroupCollectionPage({
       >
         {HE.actions.chatIntake}
       </Link>
+      <AmountLegend className="mt-4" />
       <ul className="mt-8 space-y-4">
         {[...list]
           .sort((a, b) => deadlineSortValue(a.deadline) - deadlineSortValue(b.deadline))

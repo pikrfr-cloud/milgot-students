@@ -21,15 +21,14 @@ export function isSearchGroupId(id: string): id is SearchGroupId {
   return (SEARCH_GROUP_IDS as readonly string[]).includes(id);
 }
 
-/** Reserved-duty funds — name or a reservist-days rule, not every service scholarship. */
+/** Reserved-duty funds — name or a reservist-days rule, not every service mention. */
 export function isMiluimScholarship(s: Scholarship): boolean {
   let reservist = false;
   walkPredicates(s.eligibility, (pred) => {
     if (pred.type === "reservistDaysMin") reservist = true;
   });
   if (reservist) return true;
-  if (/מילוא/.test(s.nameHe)) return true;
-  return s.types.includes("service") && /מילוא/.test(s.whoItsForHe);
+  return /מילוא/.test(s.nameHe);
 }
 
 /** Periphery / national-priority by type or eligibility — not campus lists that swallow HUJI. */

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { MATCHABLE_SCHOLARSHIPS } from "@/data/scholarships";
 import { scholarshipPagePath } from "@/lib/catalog-routes";
+import { volunteeringChipHe } from "@/lib/card-chips";
 import { amountHeadlineHe, deadlineSortValue, deadlineStatus } from "@/lib/format";
 import { HE } from "@/lib/i18n/he";
 
@@ -38,7 +39,7 @@ export function UrgentNowStrip() {
               >
                 <span className="font-medium text-forest-deep">{s.nameHe}</span>
                 <span className="text-sm text-ink-soft">
-                  {amountHeadlineHe(s.amounts)} · {status.labelHe}
+                  {amountHeadlineHe(s.amounts)} · {status.labelHe} · {volunteeringChipHe(s)}
                 </span>
               </Link>
             </li>
