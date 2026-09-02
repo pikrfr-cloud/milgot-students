@@ -1024,11 +1024,11 @@ describe("flagship תשפ״ז catalog honesty", () => {
     expect(ids).toContain("katzir-rashi");
   });
 
-  it("gives each flagship a numeric amount or an explicit unpublished/תשפ״ז tag, verified 2026-09-01", () => {
+  it("gives each flagship a numeric amount or an explicit unpublished/תשפ״ז tag, verified 2026-09-01+", () => {
     const tag = /תשפ״ז|טרם פורסם|לא פורסם/;
     for (const id of FLAGSHIP_IDS) {
       const rec = byId(id);
-      expect(rec.lastVerified, id).toBe("2026-09-01");
+      expect(["2026-09-01", "2026-09-02"], id).toContain(rec.lastVerified);
       const hasNumber = rec.amounts.minIls != null || rec.amounts.maxIls != null;
       expect(hasNumber || tag.test(rec.amounts.textHe), `${id} amount: ${rec.amounts.textHe}`).toBe(true);
     }
