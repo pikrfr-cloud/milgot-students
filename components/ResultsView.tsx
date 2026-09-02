@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
+import { SCHOLARSHIPS, TIPS, CATALOG_STATS } from "@/data/scholarships";
 import { groupMatches, matchAll } from "@/lib/matcher";
 import { missingFieldUnlocks, mostUrgentOpen } from "@/lib/match-insights";
 import {
@@ -151,7 +151,7 @@ export function ResultsView() {
     ].filter((m) => myListIds.has(m.scholarship.id)),
   );
 
-  const visibleActionable = [...eligible, ...needInfo, ...nearMiss, ...checkAtInstitution];
+  const visibleActionable = [...eligible, ...needInfo, ...nearMiss];
   const urgent = mostUrgentOpen(visibleActionable, asOf, 3);
   const unlocks = missingFieldUnlocks(allMatches);
   const topUnlock = unlocks[0];
@@ -241,7 +241,7 @@ export function ResultsView() {
           <h1 className="font-display text-4xl text-forest-deep">{HE.results.title}</h1>
           <p className="mt-2 text-ink-soft" aria-live="polite">
             {eligible.length} {HE.buckets.eligible} · {needInfo.length} חסר פרט · {nearMiss.length}{" "}
-            {HE.buckets.nearMiss} · {checkAtInstitution.length} {HE.buckets.checkAtInstitution} ·{" "}
+            {HE.buckets.nearMiss} · {checkAtInstitution.length} {HE.buckets.guide} ·{" "}
             {closedCycle.length} {HE.buckets.closedCycle} · {ineligible.length} {HE.buckets.ineligible}
             {filtersOn ? HE.results.afterFilter : ""}
           </p>
@@ -391,7 +391,7 @@ export function ResultsView() {
             [HE.buckets.eligible, eligible.length],
             [HE.buckets.needInfo, needInfo.length],
             [HE.buckets.nearMiss, nearMiss.length],
-            [HE.buckets.checkAtInstitutionLong, checkAtInstitution.length],
+            [HE.buckets.guideLong, checkAtInstitution.length],
             [HE.buckets.closedCycleLong, closedCycle.length],
             [HE.buckets.ineligible, ineligible.length],
           ].map(([label, n]) => (
@@ -417,7 +417,7 @@ export function ResultsView() {
           חסר פרט ({needInfo.length})
         </a>
         <a href="#check-at-institution" className="inline-flex min-h-11 items-center rounded-full bg-paper-deep px-3 text-sm text-ink-soft">
-          {HE.buckets.checkAtInstitution} ({checkAtInstitution.length})
+          {HE.buckets.guide} ({checkAtInstitution.length})
         </a>
         <a href="#closed-cycle" className="inline-flex min-h-11 items-center rounded-full bg-gold/20 px-3 text-sm">
           {HE.buckets.closedCycle} ({closedCycle.length})
@@ -477,11 +477,10 @@ export function ResultsView() {
 
       <section id="check-at-institution" className="mt-10 scroll-mt-28">
         <h2 className="font-display text-2xl text-ink-soft">
-          {HE.buckets.checkAtInstitutionLong} ({checkAtInstitution.length})
+          {HE.buckets.guideLong} ({checkAtInstitution.length})
         </h2>
         <p className="mt-1 text-sm text-ink-soft">
-          רשומות דיקן, עירייה או רשות בלי תנאי סף מאומתים בקטלוג. זו אינה זכאות ואין כאן שדה חסר למילוי —
-          יש לבדוק במקור.
+          {HE.catalog.guideHint} לא נספרות ב־{CATALOG_STATS.total} המלגות להתאמה.
         </p>
         <div className="mt-4 grid gap-4 opacity-90">
           {checkAtInstitution.length ? checkAtInstitution.map((m) => (

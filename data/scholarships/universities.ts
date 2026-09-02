@@ -32,6 +32,8 @@ export const UNIVERSITIES: Scholarship[] = [
     documentsHe: DEAN_DOCS,
     howToApplyHe: "טופס בקשה לסיוע כלכלי במערכת המידע האישי לתלמיד.",
     applyUrl: "https://deanstudents.tau.ac.il/financial-aid/special-scholarships",
+    notesHe:
+      "כפילות: אותו דף דיקן כמו מלגות מיוחדות / קרנות פנימיות ומלגת שנה א׳ ללא מימון חיצוני. הרשומות נשארו נפרדות.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://deanstudents.tau.ac.il/financial-aid/special-scholarships"],
     institutionIds: ["tau"],
@@ -54,7 +56,8 @@ export const UNIVERSITIES: Scholarship[] = [
     documentsHe: DEAN_DOCS,
     howToApplyHe: "בטופס הסיוע הכלכלי במערכת האישית, עם סימון הקרנות הרלוונטיות.",
     applyUrl: "https://deanstudents.tau.ac.il/financial-aid/special-scholarships",
-    notesHe: "קיימות קרנות לסטודנטים ממוצא תימני, צרפתי, קנדי, גרמני, בוקובינה ועוד. הקריטריון המדויק בקרן.",
+    notesHe:
+      "קיימות קרנות לסטודנטים ממוצא תימני, צרפתי, קנדי, גרמני, בוקובינה ועוד. הקריטריון המדויק בקרן. כפילות: אותו דף דיקן כמו סיוע כלכלי ומלגת שנה א׳.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://deanstudents.tau.ac.il/financial-aid/special-scholarships"],
     institutionIds: ["tau"],
@@ -319,6 +322,7 @@ export const UNIVERSITIES: Scholarship[] = [
     documentsHe: DEAN_DOCS,
     howToApplyHe: "פורטל הסטודנטים / מדור מלגות.",
     applyUrl: "https://dekanat.haifa.ac.il/",
+    notesHe: "כפילות: אותו פורטל דיקן כמו מלגות הצטיינות ומעורבות חברתית. הרשומות נשארו נפרדות.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://dekanat.haifa.ac.il/"],
     institutionIds: ["haifa"],
@@ -340,6 +344,7 @@ export const UNIVERSITIES: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, "גיליון ציונים / אישור התנדבות"],
     howToApplyHe: "מדור מלגות בפורטל.",
     applyUrl: "https://dekanat.haifa.ac.il/",
+    notesHe: "כפילות: אותו פורטל דיקן כמו מלגות סיוע כלכלי. הרשומות נשארו נפרדות.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://dekanat.haifa.ac.il/"],
     institutionIds: ["haifa"],
@@ -571,6 +576,8 @@ export const UNIVERSITIES: Scholarship[] = [
     documentsHe: [...DOCS_BASIC, ...DOCS_INCOME],
     howToApplyHe: "מדור סיוע כלכלי, פרטי קשר שפורסמו באתר הדיקן.",
     applyUrl: "https://deanstudents.tau.ac.il/financial-aid/special-scholarships",
+    notesHe:
+      "כפילות: אותו דף דיקן כמו סיוע כלכלי ומלגות מיוחדות / קרנות פנימיות. הרשומות נשארו נפרדות.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://deanstudents.tau.ac.il/financial-aid/special-scholarships"],
     institutionIds: ["tau"],

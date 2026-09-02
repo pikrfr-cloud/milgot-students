@@ -3,7 +3,7 @@ import { matchAll, matchScholarship } from "@/lib/matcher";
 import { SCHOLARSHIPS } from "@/data/scholarships";
 import { TIPS, TIP_IDS } from "@/data/tips";
 import { citiesMatch, isPeripheryCity, neighborhoodMatches } from "@/lib/cities";
-import { catalogAgeBanner, deadlineSortValue, deadlineStatus, isDeadlineClosed, matchHeadline, shouldHideIcs } from "@/lib/format";
+import { catalogAgeBanner, daysSinceVerified, daysUntilIsoDate, deadlineSortValue, deadlineStatus, isDeadlineClosed, matchHeadline, shouldHideIcs } from "@/lib/format";
 import { allOf, anyOf, collectInstitutionIn, deadline, FLAGSHIP_IDS, not } from "@/data/scholarships/helpers";
 import { mostUrgentOpen, partialKnownAmountSum } from "@/lib/match-insights";
 import { bestSourceGrade, gradeSourceUrl, hasOfficialSource, isValidHttpUrl } from "@/lib/sources";
@@ -340,7 +340,7 @@ describe("ordinary Colman BA year-2 profile near-miss cap", () => {
     const matches = matchAll(SCHOLARSHIPS, ordinaryColmanProfile);
     const near = matches.filter((m) => m.bucket === "nearMiss");
     const ids = near.map((m) => m.scholarship.id).sort();
-    expect(ids).toEqual(["eilim", "nuis-community", "perach", "sahlav"]);
+    expect(ids).toEqual(["eilim", "nuis-community", "perach", "rothschild-ambassadors", "sahlav"]);
     for (const m of near) {
       expect(m.failed.some((c) => c.field === "fieldOfStudy")).toBe(false);
       expect(m.eval.immutableFailCount).toBe(0);
@@ -718,31 +718,48 @@ describe("incomeAtMost missing-field reporting", () => {
     expect(match.bucket).toBe("needInfo");
     expect(match.unknown.some((c) => c.field === "householdIncomeBand")).toBe(true);
   });
+
+  it("does not mark a high estimated income as ineligible", () => {
+    const match = matchScholarship(byId("mechina-worthy-of-aid"), {
+      degreeLevel: "prep",
+      householdIncomeBand: "over_40k",
+      householdSize: 1,
+    });
+    expect(match.bucket).toBe("needInfo");
+    expect(match.bucket).not.toBe("ineligible");
+    expect(match.unknown.some((c) => c.detailHe.includes("הערכה פנימית"))).toBe(true);
+  });
 });
 
 describe("catalog freshness", () => {
-  const asOf = new Date("2026-09-01T12:00:00+03:00");
-
   it("requires archivedReasonHe when a dated deadline is more than 30 days past", () => {
+    const asOf = new Date();
     for (const s of SCHOLARSHIPS) {
       if (!s.deadline.date) continue;
-      const days = Math.round(
-        (Date.parse(`${s.deadline.date}T12:00:00Z`) - Date.parse("2026-09-01T12:00:00Z")) / 86_400_000,
-      );
+      const days = daysUntilIsoDate(s.deadline.date, asOf);
       if (days < -30) {
         expect(s.archivedReasonHe && s.archivedReasonHe.length > 5, s.id).toBeTruthy();
       }
     }
   });
 
-  it("fails if lastVerified is older than 6 months before 2026-09-01", () => {
-    const cutoff = "2026-03";
+  it("fails if lastVerified is older than 6 months", () => {
+    const asOf = new Date();
     for (const s of SCHOLARSHIPS) {
-      expect(s.lastVerified >= cutoff, `${s.id} lastVerified ${s.lastVerified}`).toBe(true);
+      const age = daysSinceVerified(s.lastVerified, asOf);
+      expect(age == null || age <= 183, `${s.id} lastVerified ${s.lastVerified}`).toBe(true);
     }
   });
 
+  it("records a closed-cycle reason for רעננה תשפ״ז rather than inventing a new amount", () => {
+    const rec = byId("raanana-community");
+    expect(rec.deadline.date).toBe("2026-08-31");
+    expect(rec.archivedReasonHe).toMatch(/נסגר/);
+    expect(rec.amounts.minIls).toBe(10000);
+  });
+
   it("treats Perach as notYetOpen on 2026-09-01 with an unconfirmed November close", () => {
+    const asOf = new Date("2026-09-01T12:00:00+03:00");
     const rec = byId("perach");
     expect(rec.deadline.kind).toBe("annual_window");
     expect(rec.deadline.opensAt).toBe("2026-09-02");

@@ -53,6 +53,7 @@ export const COLLEGES: Scholarship[] = [
     documentsHe: DEAN,
     howToApplyHe: "דיקן הסטודנטים תל־חי.",
     applyUrl: "https://www.telhai.ac.il/",
+    notesHe: "כפילות: אותו אתר מוסד כמו קהילת סטודנטים קריית שמונה / תל־חי. הרשומות נשארו נפרדות.",
     lastVerified: VERIFIED,
     sourceUrls: ["https://www.telhai.ac.il/"],
     institutionIds: ["telhai"],

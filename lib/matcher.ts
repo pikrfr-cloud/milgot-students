@@ -73,7 +73,6 @@ const IMMUTABLE_TYPES = new Set<Predicate["type"]>([
   "combatRole",
   "loneSoldier",
   "firstGeneration",
-  "incomeAtMost",
   "ageMin",
   "ageMax",
   "yearsSinceDischargeMax",
@@ -193,6 +192,9 @@ function detailFor(
 ): string {
   const value = field ? profileValueHe(profile, field) : "";
   if (status === "unknown") {
+    if (pred.type === "incomeAtMost" && profile && !isUnknown(profileIncomeBand(profile))) {
+      return "ההכנסה שבפרופיל היא הערכה פנימית לפי סדר גודל, לא נוסחת הקרן. לא נפסלה המלגה — יש לאמת מול הקרן.";
+    }
     return `חסר במפורט: ${field ? fieldLabelHe(field) : "פרט נדרש"}. לא נפסלה המלגה — נדרש אימות.`;
   }
   if (status === "pass") {
@@ -338,7 +340,8 @@ function evalPredicate(pred: Predicate, profile: StudentProfile): EvalStatus {
     case "incomeAtMost": {
       const band = profileIncomeBand(profile);
       if (isUnknown(band)) return "unknown";
-      return incomeRank(band as IncomeBand) <= incomeRank(pred.value) ? "pass" : "fail";
+      // Estimate only — a band miss is needInfo, not a hard ineligible fail.
+      return incomeRank(band as IncomeBand) <= incomeRank(pred.value) ? "pass" : "unknown";
     }
     case "minBagrut":
       return numPred(profile.bagrutAverage, (n) => n >= pred.value);

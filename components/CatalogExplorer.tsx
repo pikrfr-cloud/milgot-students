@@ -9,14 +9,18 @@ import { scholarshipTypeLabel } from "@/lib/labels";
 import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
 import { HE } from "@/lib/i18n/he";
 import { scholarshipPagePath } from "@/lib/catalog-routes";
+import { SCHOLARSHIPS } from "@/data/scholarships";
+import { duplicateNoteHe, duplicatePeers } from "@/lib/catalog";
 import Link from "next/link";
 
 export function CatalogExplorer({
   scholarships,
   tips,
+  guide = [],
 }: {
   scholarships: Scholarship[];
   tips: Scholarship[];
+  guide?: Scholarship[];
 }) {
   const [q, setQ] = useState("");
   const [scope, setScope] = useState<"all" | ScholarshipScope>("all");
@@ -120,6 +124,15 @@ export function CatalogExplorer({
                 <HeWithEn text={s.funderHe} />
               </p>
               <p className="mt-2 text-sm">{s.whoItsForHe}</p>
+              {(() => {
+                const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
+                return note ? (
+                  <p className="mt-2 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">
+                    <span className="font-medium">{HE.catalog.duplicate}. </span>
+                    {note}
+                  </p>
+                ) : null;
+              })()}
               <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
                 {isVerificationStale(s.lastVerified) ? (
                   <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{STALE_VERIFICATION_LABEL_HE}</span>
@@ -173,6 +186,53 @@ export function CatalogExplorer({
           );
         })}
       </ul>
+
+      {guide.length ? (
+        <>
+          <h2 className="mt-14 font-display text-3xl text-forest-deep">{HE.catalog.guideSection}</h2>
+          <p className="mt-2 text-sm text-ink-soft">{HE.catalog.guideHint}</p>
+          <ul className="mt-6 grid gap-4">
+            {guide
+              .filter((s) => {
+                const t = q.trim();
+                if (!t) return true;
+                return s.nameHe.includes(t) || s.funderHe.includes(t) || s.whoItsForHe.includes(t);
+              })
+              .map((s) => {
+                const note = duplicateNoteHe(s, duplicatePeers(s, SCHOLARSHIPS));
+                return (
+                  <li key={s.id} id={s.id} className="scroll-mt-24 rounded-2xl border border-dashed border-line bg-paper-deep/40 p-5">
+                    <div className="flex flex-wrap justify-between gap-2">
+                      <h3 className="font-display text-xl text-forest-deep">
+                        <Link href={scholarshipPagePath(s.id)} className="underline-offset-4 hover:underline">
+                          <HeWithEn text={s.nameHe} />
+                        </Link>
+                      </h3>
+                      <span className="rounded-full bg-paper-deep px-2 py-0.5 text-sm text-ink-soft">
+                        {HE.buckets.guide}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-ink-soft">
+                      <HeWithEn text={s.funderHe} />
+                    </p>
+                    <p className="mt-2 text-sm">{s.whoItsForHe}</p>
+                    {note ? (
+                      <p className="mt-2 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2 text-sm">
+                        <span className="font-medium">{HE.catalog.duplicate}. </span>
+                        {note}
+                      </p>
+                    ) : null}
+                    {s.applyUrl ? (
+                      <ExternalLink className="mt-2 inline-block text-sm underline ltr-isolate" href={s.applyUrl}>
+                        הגשה / מידע
+                      </ExternalLink>
+                    ) : null}
+                  </li>
+                );
+              })}
+          </ul>
+        </>
+      ) : null}
 
       <h2 className="mt-14 font-display text-3xl text-forest-deep">טיפים והפניות (לא מלגות)</h2>
       <p className="mt-2 text-sm text-ink-soft">

@@ -1,5 +1,11 @@
 import { TIPS } from "@/data/tips";
 import type { Scholarship } from "@/lib/types";
+import {
+  isGuideRecord,
+  isMatchableScholarship,
+  maxLastVerified,
+} from "@/lib/catalog";
+import { formatHebrewLongDate } from "@/lib/format";
 import { NATIONAL } from "./national";
 import { UNIVERSITIES } from "./universities";
 import { COLLEGES } from "./colleges";
@@ -16,13 +22,21 @@ export const SCHOLARSHIPS: Scholarship[] = [
 
 export { TIPS };
 
+export const MATCHABLE_SCHOLARSHIPS = SCHOLARSHIPS.filter(isMatchableScholarship);
+export const GUIDE_SCHOLARSHIPS = SCHOLARSHIPS.filter(isGuideRecord);
+
 export function getScholarshipById(id: string): Scholarship | undefined {
   return SCHOLARSHIPS.find((s) => s.id === id);
 }
 
 export const CATALOG_STATS = {
-  total: SCHOLARSHIPS.length,
+  /** Real matchable scholarships only — not dean/authority מדריך shells. */
+  total: MATCHABLE_SCHOLARSHIPS.length,
+  guide: GUIDE_SCHOLARSHIPS.length,
+  records: SCHOLARSHIPS.length,
   tips: TIPS.length,
-  lastVerifiedMonth: "2026-09",
+  lastVerifiedMonth: maxLastVerified(SCHOLARSHIPS),
 };
 
+/** Shared legal-page date — derived from catalog max lastVerified, not a hardcoded string. */
+export const LEGAL_UPDATED_HE = formatHebrewLongDate(CATALOG_STATS.lastVerifiedMonth);

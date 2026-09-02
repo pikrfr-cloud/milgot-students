@@ -183,6 +183,34 @@ export function deadlineSortValue(deadline: Deadline, asOf: Date = new Date()): 
   return SORT_UNPUBLISHED;
 }
 
+const HEBREW_MONTHS = [
+  "בינואר",
+  "בפברואר",
+  "במרץ",
+  "באפריל",
+  "במאי",
+  "ביוני",
+  "ביולי",
+  "באוגוסט",
+  "בספטמבר",
+  "באוקטובר",
+  "בנובמבר",
+  "בדצמבר",
+] as const;
+
+/** `2026-09-01` or `2026-09` → `1 בספטמבר 2026`. */
+export function formatHebrewLongDate(iso: string): string {
+  const dayIso = /^\d{4}-\d{2}$/.test(iso) ? `${iso}-01` : iso;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dayIso);
+  if (!m) return iso;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  const monthHe = HEBREW_MONTHS[month - 1];
+  if (!monthHe) return iso;
+  return `${day} ${monthHe} ${year}`;
+}
+
 export function countLabel(n: number, singular: string, plural: string): string {
   return `${n} ${n === 1 ? singular : plural}`;
 }
