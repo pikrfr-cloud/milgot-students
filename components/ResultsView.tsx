@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
 import { uniqueMatchableByApplyUrl } from "@/lib/catalog";
 import { ProfileLoadingFallback } from "@/components/ProfileLoadingFallback";
@@ -18,6 +19,7 @@ import {
 } from "@/lib/report-conversion";
 import { FAST_REPORT_FIELDS, WIZARD_FIELDS, profileFocusHref } from "@/lib/profile-fields";
 import { profileIsEmpty } from "@/lib/profile-storage";
+import { wipeStudentSession } from "@/lib/student-session";
 import { trackEvent } from "@/lib/analytics";
 import type { ScholarshipMatch, ScholarshipScope, StudentProfile } from "@/lib/types";
 import { amountSortValue, deadlineSortValue, deadlineStatus, formatDeadline, shouldHideIcs } from "@/lib/format";
@@ -44,6 +46,7 @@ function passesAmountFilter(match: ScholarshipMatch, minAmount: number): boolean
 }
 
 export function ResultsView() {
+  const router = useRouter();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [query, setQuery] = useState("");
   const [minAmount, setMinAmount] = useState(0);
@@ -261,6 +264,16 @@ export function ResultsView() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2 no-print">
+          <button
+            type="button"
+            className="inline-flex min-h-12 items-center rounded-full border border-line px-4 text-sm"
+            onClick={() => {
+              wipeStudentSession();
+              router.push("/chat/");
+            }}
+          >
+            {HE.chat.startOver}
+          </button>
           <Link href="/profile" className="inline-flex min-h-11 items-center rounded-full border border-line px-4 text-sm">
             {HE.results.editProfile}
           </Link>

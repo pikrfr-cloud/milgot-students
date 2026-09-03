@@ -172,6 +172,7 @@ export const HE = {
     offerAfterAnswers: "יש כבר כמה תשובות. אפשר לראות מלגות עכשיו, או להמשיך.",
     extrasIntro: "עוד כמה שאלות — אפשר לדלג או לראות מלגות.",
     needInfoHuman: "עוד שאלה אחת תפתח עוד מלגות",
+    startOver: "התחילו מאפס",
   },
 
   whatsapp: {

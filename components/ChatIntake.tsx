@@ -9,6 +9,7 @@ import {
   applyChatAction,
   canOfferChatReport,
   chatReportCounts,
+  emptyChatState,
   filterInstitutions,
   mergeSessionAndStoredProfile,
   nextChatQuestion,
@@ -25,6 +26,7 @@ import { fieldLabelHe, formatProfileValueHe } from "@/lib/labels";
 import { filledWizardFieldCount } from "@/lib/profile-fields";
 import { loadProfileHydratingShare } from "@/lib/profile-share";
 import { profileIsEmpty, saveProfile } from "@/lib/profile-storage";
+import { showChatStartOver, wipeStudentSession } from "@/lib/student-session";
 import type { StudentProfile } from "@/lib/types";
 
 export type ChatMessage = {
@@ -75,6 +77,41 @@ export function openingChatMessages(profile: StudentProfile): {
 }
 
 const EMPTY_OPENING = openingChatMessages({});
+
+/** Wipe stored answers and return a first-visit opening (degree chips, no resume). */
+export function startOverChatIntake(): {
+  profile: StudentProfile;
+  askedIds: string[];
+  messages: ChatMessage[];
+  reportOpen: boolean;
+  offerShown: boolean;
+} {
+  wipeStudentSession();
+  const session = applyChatAction(emptyChatState(), { type: "reset" });
+  const opening = openingChatMessages(session.profile);
+  return {
+    profile: session.profile,
+    askedIds: session.askedIds,
+    messages: opening.messages,
+    reportOpen: opening.reportOpen,
+    offerShown: opening.offerShown,
+  };
+}
+
+export function ChatStartOverButton({
+  profile,
+  onStartOver,
+}: {
+  profile: StudentProfile;
+  onStartOver: () => void;
+}) {
+  if (!showChatStartOver(profile)) return null;
+  return (
+    <button type="button" className={`${tapBtn} border border-line text-ink`} onClick={onStartOver}>
+      {HE.chat.startOver}
+    </button>
+  );
+}
 
 export function ChatIntake() {
   const [profile, setProfile] = useState<StudentProfile>({});
@@ -240,6 +277,22 @@ export function ChatIntake() {
     });
   }
 
+  function onStartOver() {
+    interactedRef.current = true;
+    const next = startOverChatIntake();
+    setProfile(next.profile);
+    setAskedIds(next.askedIds);
+    setMessages(next.messages);
+    setReportOpen(next.reportOpen);
+    setOfferShown(next.offerShown);
+    reportOpenRef.current = next.reportOpen;
+    setInstitutionQuery("");
+    setCityDraft("");
+    setSectorDraft([]);
+    setExtrasIntroShown(false);
+    completeTracked.current = false;
+  }
+
   const counts = useMemo(
     () => (reportOpen ? chatReportCounts(profile) : null),
     [reportOpen, profile],
@@ -302,6 +355,7 @@ export function ChatIntake() {
               {HE.chat.continueQuestions}
             </button>
           ) : null}
+          <ChatStartOverButton profile={profile} onStartOver={onStartOver} />
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           {reportOpen ? (
