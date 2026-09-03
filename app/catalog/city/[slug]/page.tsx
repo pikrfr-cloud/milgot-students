@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CatalogLandingPage } from "@/components/CatalogLandingPage";
 import { cityFromSlug, cityStaticParams } from "@/lib/catalog-routes";
 import { cityLanding, landingMetadata } from "@/lib/landing-pages";
+import { decodeRouteParam } from "@/lib/route-params";
 
 export const dynamicParams = false;
 
@@ -16,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const city = cityFromSlug(slug);
+  const city = cityFromSlug(decodeRouteParam(slug));
   if (!city) return { title: "עיר" };
   return landingMetadata(cityLanding(city));
 }
@@ -27,7 +28,7 @@ export default async function CityCollectionPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const city = cityFromSlug(slug);
+  const city = cityFromSlug(decodeRouteParam(slug));
   if (!city) notFound();
   const landing = cityLanding(city);
   if (!landing.scholarships.length) notFound();

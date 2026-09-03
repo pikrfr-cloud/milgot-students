@@ -38,3 +38,9 @@ Work order on `main` (live GitHub Pages, `output: "export"`, `basePath: "/milgot
 - `jewish_general` has no sector landing (empty in `catalogSectors()`).
 - Chat does not apply `applyChatAction` for URL seeds; filled profile fields already skip those questions in `nextChatQuestion`. Overlay merge is enough and avoids wiping stored answers.
 - No operator identity, payments, or new catalog rows.
+
+## WO2-1-fix City slug 404
+
+- Next static export passes `params.slug` percent-encoded (`%D7...`). `cityFromSlug` compared that to the raw Hebrew slug, so every `/catalog/city/<slug>/` page called `notFound()` («העמוד לא נמצא») in `out/` and on GitHub Pages.
+- Decode `decodeURIComponent` (including a double-encoded pass) before city lookup. Same decode on institution / sector / group dynamic params so they cannot 404 the same way.
+- Vitest: encoded `תל-אביב-יפו` resolves and the landing has ItemList JSON-LD. `postbuild` / export test assert **`<title>` and `<h1>` only** (good page: «מלגות לסטודנטים ב… תשפ״ז»; 404: «העמוד לא נמצא»). Never search the raw HTML — Next puts the layout notFound string in every RSC payload.
