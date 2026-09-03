@@ -48,6 +48,9 @@ Never commit real SID, tokens, or phone numbers. Placeholders only
 | `TWILIO_AUTH_TOKEN` | yes | `wrangler secret put` | Inbound signature check + outbound send |
 | `TWILIO_WHATSAPP_FROM` | yes | `wrangler secret put` | From, `whatsapp:+…` as shown in Twilio |
 | `TWILIO_WEBHOOK_URL` | if the public URL differs from what the Worker sees | `wrangler secret put` or `[vars]` | Exact public `https://…/whatsapp` Twilio calls |
+| `WHATSAPP_LLM_API_KEY` | yes | `wrangler secret put` | Optional cheap NLU (Groq / OpenAI). Empty → numbers + synonyms only |
+| `WHATSAPP_LLM_BASE_URL` | no | `[vars]` or env | OpenAI-compatible base. Default `https://api.groq.com/openai/v1` |
+| `WHATSAPP_LLM_MODEL` | no | `[vars]` or env | Default `llama-3.1-8b-instant` (cheap/fast). Or `gpt-4o-mini` on OpenAI |
 
 ```bash
 npx wrangler secret put TWILIO_ACCOUNT_SID
@@ -55,7 +58,17 @@ npx wrangler secret put TWILIO_AUTH_TOKEN
 npx wrangler secret put TWILIO_WHATSAPP_FROM
 # optional:
 npx wrangler secret put TWILIO_WEBHOOK_URL
+# optional free-text understanding (Groq is cheapest for this bot):
+npx wrangler secret put WHATSAPP_LLM_API_KEY
 ```
+
+Without `WHATSAPP_LLM_API_KEY` the bot still works: numbered choices, Hebrew
+synonyms («תואר ראשון», «הפתוחה», «שנה שלישית», «לראות מלגות»), and skip/reset.
+The LLM is a fallback only after the deterministic parser returns unparsed.
+
+The counselor report is several sequential TwiML `<Message>` bodies (each under
+1500 characters). One concatenated WhatsApp body over 1600 is rejected by
+Twilio (error 21617) and the student never sees the report.
 
 `[vars]` in `wrangler.toml` is only for non-secrets. Do not put tokens there.
 Local Node: the same names as environment variables. If outbound secrets are
@@ -146,9 +159,11 @@ in-progress list on the bot.
 ## What students get
 
 Hebrew replies as TwiML `<Response><Message>`. Choice questions list numbered
-options plus `דלג`. After the same completion rule as the site (`3` filled
-wizard fields, or the short question list is done), a compact catalog summary:
-bucket counts, a few top matches with ₪ / deadline **when the catalog has
-them**, and a link to the full report on the site. No fund decision is claimed.
+options plus `דלג`. Students can answer in ordinary Hebrew or send a number.
+«לראות מלגות» / «דוח» asks for the catalog summary. After the same completion
+rule as the site (`3` filled wizard fields, or the short question list is done),
+the report is several short WhatsApp messages: ✅ eligible, 🟡 need-info,
+🟠 near-miss, 🏫 institution, 📅 closed, then the full-report URL. Amounts and
+dates appear **only when the catalog has them**. No fund decision is claimed.
 
 There is no payment flow and no operator identity on this endpoint.

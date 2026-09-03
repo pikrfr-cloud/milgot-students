@@ -126,6 +126,9 @@ Next.js (App Router) static export + TypeScript + Tailwind CSS v4. ממשק עב
 
 The static GitHub Pages export cannot receive Twilio POSTs. A separate Hono
 server (Cloudflare Worker or `npm run whatsapp`) implements `POST /whatsapp`
-with the same intake + matcher as `/chat/`. Deadline reminders use Worker
-cron + KV after deploy — not GitHub Pages and not `npm run whatsapp`.
+with the same intake + matcher as `/chat/`. Students can answer in ordinary
+Hebrew (numbers, synonyms, or an optional cheap Groq/OpenAI model). The
+catalog report is split into several WhatsApp messages so Twilio does not
+reject bodies over 1600 characters. Deadline reminders use Worker cron + KV
+after deploy — not GitHub Pages and not `npm run whatsapp`.
 See [`whatsapp/README.md`](whatsapp/README.md).

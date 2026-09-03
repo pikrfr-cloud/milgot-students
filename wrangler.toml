@@ -26,6 +26,11 @@ compatibility_date = "2026-09-02"
 [triggers]
 crons = ["0 4 * * *"]
 
+# Non-secrets only. Put WHATSAPP_LLM_API_KEY via `wrangler secret put`.
+[vars]
+WHATSAPP_LLM_BASE_URL = "https://api.groq.com/openai/v1"
+WHATSAPP_LLM_MODEL = "llama-3.1-8b-instant"
+
 # PLACEHOLDER id — not a live namespace. Create one and paste the id:
 #   npx wrangler kv namespace create REMINDERS
 # Then replace the id below. Do not invent a production-looking id.

@@ -16,6 +16,7 @@ import type {
 import {
   ELIGIBLE_EXAMPLE_LIMIT,
   MUTABLE_NEAR_MISS_FIELDS,
+  WHATSAPP_MESSAGE_MAX_CHARS,
   WHATSAPP_REPORT_MAX_CHARS,
   WHATSAPP_RESULTS_URL,
   buildWhatsAppReport,
@@ -400,7 +401,7 @@ describe("empty sections are omitted", () => {
 });
 
 describe("max WhatsApp length on a worst-case catalog", () => {
-  it("stays at or under 3500 characters without cutting a name or URL", () => {
+  it("splits into chunks under 1500 characters without cutting a name or URL", () => {
     const long = (n: number, label: string) =>
       `${label}-${n}-` + "מלגהארוכהמאודלבדיקתחיתוךשמות".repeat(8);
 
@@ -489,10 +490,15 @@ describe("max WhatsApp length on a worst-case catalog", () => {
       matchAllFn: (_c, p, opts) => matchAll(catalog, p, opts),
     });
 
-    expect(report.text.length).toBeLessThanOrEqual(WHATSAPP_REPORT_MAX_CHARS);
-    expect(WHATSAPP_REPORT_MAX_CHARS).toBe(3500);
+    expect(report.messages.length).toBeGreaterThan(1);
+    for (const chunk of report.messages) {
+      expect(chunk.length).toBeLessThan(WHATSAPP_MESSAGE_MAX_CHARS);
+    }
+    expect(WHATSAPP_REPORT_MAX_CHARS).toBe(1500);
+    expect(WHATSAPP_MESSAGE_MAX_CHARS).toBe(1500);
     expect(report.resultsUrl).toContain("#p=");
     expect(report.text).toContain(report.resultsUrl);
+    expect(report.messages.some((m) => m.includes(report.resultsUrl))).toBe(true);
 
     const names = catalog.map((row) => row.nameHe);
     for (const name of names) {
@@ -532,7 +538,37 @@ describe("real catalog fixture sample (not a student)", () => {
     if (grouped.closedCycle.length === 0) expect(report.text).not.toContain(HE.buckets.closedCycle);
 
     expect(report.text).toContain(sharedResultsUrl(WHATSAPP_REPORT_FIXTURE_PROFILE));
-    expect(report.text.length).toBeLessThanOrEqual(WHATSAPP_REPORT_MAX_CHARS);
+    for (const chunk of report.messages) {
+      expect(chunk.length).toBeLessThan(WHATSAPP_MESSAGE_MAX_CHARS);
+    }
     expect(report.counts.eligible + report.counts.needInfo + report.counts.nearMiss).toBeGreaterThan(0);
+  });
+});
+
+/** Typical Open University year-3 profile — not a real student. */
+export const OPENU_YEAR3_FIXTURE: StudentProfile = {
+  institution: "openu",
+  degreeLevel: "ba",
+  yearOfStudy: 3,
+  cityOfResidence: "רעננה",
+  reservistDaysLastYear: 0,
+  willingToVolunteer: true,
+};
+
+describe("Twilio 1600-character split (error 21617)", () => {
+  it("every chunk is under 1500 and the Open University year-3 report keeps the full-report URL", () => {
+    const report = buildWhatsAppReport(OPENU_YEAR3_FIXTURE, { asOf: AS_OF });
+    expect(report.messages.length).toBeGreaterThan(1);
+    for (const chunk of report.messages) {
+      expect(chunk.length).toBeLessThan(1500);
+      expect(chunk.length).toBeLessThan(WHATSAPP_MESSAGE_MAX_CHARS);
+    }
+    const joined = report.messages.join("\n\n");
+    expect(joined).toBe(report.text);
+    expect(report.resultsUrl).toContain("#p=");
+    expect(report.messages.some((m) => m.includes(report.resultsUrl))).toBe(true);
+    expect(report.text).toContain(sharedResultsUrl(OPENU_YEAR3_FIXTURE));
+    expect(report.text).toMatch(/✅|🟡|🟠|🏫|📅|🔗/);
+    expect(report.messages.at(-1)).toContain("🔗");
   });
 });

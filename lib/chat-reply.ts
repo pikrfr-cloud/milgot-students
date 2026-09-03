@@ -11,6 +11,15 @@ import {
   type ChatSessionState,
 } from "./chat-intake";
 import { CITY_SUGGESTIONS, citiesMatch, compactCityKey, normalizeCityName } from "./cities";
+import {
+  DEGREE_ALIASES,
+  YEAR_ALIASES,
+  institutionIdFromAlias,
+  matchMappedAliases,
+  matchYesNoAlias,
+  normalizeForMatch,
+  uniquePartialLabelMatch,
+} from "./chat-synonyms";
 import { HE } from "./i18n/he";
 import { INSTITUTIONS } from "./institutions";
 import { fieldLabelHe } from "./labels";
@@ -24,15 +33,45 @@ import type { StudentProfile } from "./types";
  */
 const SANDBOX_IGNORE = /^(join(\s+\S+)?|unstop)$/i;
 
-const RESET_COMMANDS = new Set(["התחלה", "התחל", "התחל מחדש", "start", "reset"]);
+const RESET_COMMANDS = new Set([
+  "התחלה",
+  "התחל",
+  "התחל מחדש",
+  "התחלה מחדש",
+  "התחילו מחדש",
+  "start",
+  "reset",
+]);
 const REPORT_COMMANDS = new Set([
   "דוח",
   "להראות דוח עכשיו",
   "להראות תוצאות",
   "הציגו לי מלגות",
+  "הציגו מלגות",
+  "לראות מלגות",
+  "תראה לי",
+  "תראי לי",
+  "תראו לי",
+  "תראה לי מלגות",
+  "תראו לי מלגות",
+  "תראי לי מלגות",
+  "מה מגיע לי",
+  "מה מתאים לי",
   "report",
 ]);
-const SKIP_COMMANDS = new Set(["דלג", "דילוג", "skip", "0"]);
+
+/** Multi-word report phrases also match when the student adds «בבקשה» etc. */
+const REPORT_PHRASES = [
+  "לראות מלגות",
+  "תראו לי מלגות",
+  "תראה לי מלגות",
+  "תראי לי מלגות",
+  "הציגו מלגות",
+  "הציגו לי מלגות",
+  "מה מגיע לי",
+  "מה מתאים לי",
+];
+const SKIP_COMMANDS = new Set(["דלג", "דילוג", "תדלג", "תדלגי", "תדלגו", "לדלג", "skip", "0"]);
 
 export type NumberedOption = {
   n: number;
@@ -62,19 +101,34 @@ export function isSandboxKeyword(raw: string): boolean {
   return SANDBOX_IGNORE.test(normalizeCommand(raw));
 }
 
+function commandMatches(raw: string, commands: Set<string>): boolean {
+  const trimmed = normalizeCommand(raw);
+  const folded = normalizeForMatch(raw);
+  return commands.has(trimmed) || commands.has(trimmed.toLowerCase()) || commands.has(folded);
+}
+
 export function isResetCommand(raw: string): boolean {
-  const t = normalizeCommand(raw).toLowerCase();
-  return RESET_COMMANDS.has(t) || RESET_COMMANDS.has(normalizeCommand(raw));
+  return commandMatches(raw, RESET_COMMANDS);
 }
 
 export function isReportCommand(raw: string): boolean {
-  const t = normalizeCommand(raw);
-  return REPORT_COMMANDS.has(t) || REPORT_COMMANDS.has(t.toLowerCase());
+  if (commandMatches(raw, REPORT_COMMANDS)) return true;
+  const t = normalizeForMatch(raw);
+  return REPORT_PHRASES.some((p) => {
+    const phrase = normalizeForMatch(p);
+    return t === phrase || (phrase.length >= 6 && t.includes(phrase));
+  });
+}
+
+/** «???» / «מה?» — restate the question; do not treat as a dead parse. */
+export function isClarifyNudge(raw: string): boolean {
+  const t = normalizeForMatch(raw);
+  if (!t) return false;
+  return /^(?:\?+|؟+|מה|מה\?)$/.test(t);
 }
 
 export function isSkipCommand(raw: string): boolean {
-  const t = normalizeCommand(raw);
-  return SKIP_COMMANDS.has(t) || SKIP_COMMANDS.has(t.toLowerCase());
+  return commandMatches(raw, SKIP_COMMANDS);
 }
 
 export function questionOptions(question: ChatQuestion, searchQuery = ""): NumberedOption[] {
@@ -170,22 +224,50 @@ function optionByNumber(options: NumberedOption[], n: number): NumberedOption | 
 }
 
 function matchChoiceByText(question: ChatQuestion, raw: string): ChatChoice | undefined {
-  const t = normalizeCommand(raw).toLowerCase();
-  return question.choices?.find(
+  const t = normalizeForMatch(raw);
+  const exact = question.choices?.find(
     (c) =>
-      c.id.toLowerCase() === t ||
-      c.labelHe === normalizeCommand(raw) ||
-      c.labelHe.toLowerCase() === t,
+      normalizeForMatch(c.id) === t ||
+      normalizeForMatch(c.labelHe) === t ||
+      c.labelHe === normalizeCommand(raw),
   );
+  if (exact) return exact;
+
+  if (question.choices?.some((c) => c.id === "yes") && question.choices.some((c) => c.id === "no")) {
+    const yn = matchYesNoAlias(raw);
+    if (yn) return question.choices.find((c) => c.id === yn);
+  }
+
+  if (question.id === "degreeLevel" || question.field === "degreeLevel") {
+    const id = matchMappedAliases(raw, DEGREE_ALIASES);
+    const choice = id ? question.choices?.find((c) => c.id === id) : undefined;
+    if (choice) return choice;
+  }
+
+  if (question.id === "yearOfStudy" || question.field === "yearOfStudy") {
+    const id = matchMappedAliases(raw, YEAR_ALIASES);
+    const choice = id ? question.choices?.find((c) => c.id === id) : undefined;
+    if (choice) return choice;
+  }
+
+  if (question.choices?.length) {
+    return uniquePartialLabelMatch(question.choices, raw);
+  }
+  return undefined;
 }
 
 function institutionFromPayloadOrText(raw: string): { id: string; nameHe: string } | undefined {
   const payload = raw.startsWith("institution:") ? raw.slice("institution:".length) : raw;
   const byId = INSTITUTIONS.find((i) => i.id.toLowerCase() === payload.trim().toLowerCase());
   if (byId) return { id: byId.id, nameHe: byId.nameHe };
+  const aliasId = institutionIdFromAlias(payload);
+  const byAlias = aliasId ? INSTITUTIONS.find((i) => i.id === aliasId) : undefined;
+  if (byAlias) return { id: byAlias.id, nameHe: byAlias.nameHe };
   const list = filterInstitutions(payload);
   if (list.length === 1) return { id: list[0].id, nameHe: list[0].nameHe };
-  const exactName = INSTITUTIONS.find((i) => i.nameHe === normalizeCommand(payload));
+  const exactName = INSTITUTIONS.find(
+    (i) => i.nameHe === normalizeCommand(payload) || normalizeForMatch(i.nameHe) === normalizeForMatch(payload),
+  );
   if (exactName) return { id: exactName.id, nameHe: exactName.nameHe };
   return undefined;
 }
@@ -268,8 +350,13 @@ export function parseInbound(
       .split(/[,،]/)
       .map((s) => s.trim())
       .filter(Boolean);
+    const items = (question.multiValues ?? []).map((v) => ({ id: v, labelHe: fieldLabelHe(v) }));
     const mapped = labels
-      .map((label) => question.multiValues?.find((v) => v === label || fieldLabelHe(v) === label))
+      .map(
+        (label) =>
+          question.multiValues?.find((v) => v === label || fieldLabelHe(v) === label) ??
+          uniquePartialLabelMatch(items, label)?.id,
+      )
       .filter((v): v is string => Boolean(v));
     if (mapped.length === labels.length && mapped.length > 0) {
       return { kind: "action", action: { type: "multi", question, values: mapped } };
@@ -357,6 +444,26 @@ export type TurnResult = {
   appliedProfile?: StudentProfile;
 };
 
+export type ApplyTurnOptions = {
+  /** Pre-resolved parse (e.g. after an LLM fallback). Site chat can omit this. */
+  parsed?: ParsedInbound;
+};
+
+/** Short, friendly line when the answer did not uniquely match an option. */
+export function unparsedClarifyMessage(
+  question?: ChatQuestion,
+  options: NumberedOption[] = [],
+): string {
+  const labels = (options.length ? options : question ? questionOptions(question) : [])
+    .map((o) => o.labelHe)
+    .filter(Boolean);
+  if (!question) return HE.whatsapp.unparsedDone;
+  if (labels.length >= 2 && labels.length <= 6 && labels.every((l) => l.length <= 28)) {
+    return `לא בטוח שהבנתי. אפשר לכתוב במלים — ${labels.join(", ")} — או לשלוח מספר מהרשימה / דלג.`;
+  }
+  return HE.whatsapp.unparsed;
+}
+
 function currentQuestion(session: WhatsAppSession): ChatQuestion | undefined {
   return nextChatQuestion(session.profile, session.askedIds);
 }
@@ -426,7 +533,11 @@ export function startSessionMessages(): { session: WhatsAppSession; messages: st
  * One inbound WhatsApp turn against the shared chat-intake machine.
  * Report text is left to the caller so the webhook can run the real matcher.
  */
-export function applyWhatsAppTurn(session: WhatsAppSession | undefined, inbound: InboundText): TurnResult {
+export function applyWhatsAppTurn(
+  session: WhatsAppSession | undefined,
+  inbound: InboundText,
+  options: ApplyTurnOptions = {},
+): TurnResult {
   const raw = inbound.buttonPayload?.trim() || inbound.body;
   if (raw && isSandboxKeyword(raw)) {
     return {
@@ -448,7 +559,7 @@ export function applyWhatsAppTurn(session: WhatsAppSession | undefined, inbound:
   }
 
   const question = currentQuestion(session);
-  const parsed = parseInbound(inbound, question, session.listed);
+  const parsed = options.parsed ?? parseInbound(inbound, question, session.listed);
 
   if (parsed.kind === "ignore") {
     return { session, messages: [], ignore: true, reportRequested: false };
@@ -501,7 +612,8 @@ export function applyWhatsAppTurn(session: WhatsAppSession | undefined, inbound:
   }
 
   if (parsed.kind === "unparsed") {
-    const messages: string[] = [HE.whatsapp.unparsed];
+    const listed = question ? session.listed.length ? session.listed : questionOptions(question) : [];
+    const messages: string[] = [unparsedClarifyMessage(question, listed)];
     if (question) {
       const block = promptBlock(session, question);
       messages.push(block.text);
