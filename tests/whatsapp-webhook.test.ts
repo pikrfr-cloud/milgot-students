@@ -116,14 +116,14 @@ describe("skip, numbered choice, button payload", () => {
     const started = applyWhatsAppTurn(undefined, { body: "התחלה" });
     let session = started.session;
     session = applyWhatsAppTurn(session, { body: "1" }).session;
-    expect(nextChatQuestion(session.profile, session.askedIds)?.id).toBe("institution");
-    session = applyWhatsAppTurn(session, { body: "דלג" }).session;
-    expect(session.askedIds).toContain("institution");
     expect(nextChatQuestion(session.profile, session.askedIds)?.id).toBe("miluim");
     const skipped = applyWhatsAppTurn(session, { body: "דלג" });
     expect(skipped.session.profile.reservistDaysLastYear).toBeNull();
     expect(skipped.session.askedIds).toContain("miluim");
     expect(skipped.session.askedIds).toContain("miluimDays");
+    expect(nextChatQuestion(skipped.session.profile, skipped.session.askedIds)?.id).toBe(
+      "cityOfResidence",
+    );
     expect(nextChatQuestion(skipped.session.profile, skipped.session.askedIds)?.id).not.toBe("miluim");
     expect(nextChatQuestion(skipped.session.profile, skipped.session.askedIds)?.id).not.toBe(
       "miluimDays",
@@ -151,8 +151,8 @@ describe("session reset and sandbox keywords", () => {
     expect(join.xml).toBe(twimlEmpty());
     const stop = await xmlOf("stop");
     expect(stop.xml).toBe(twimlEmpty());
-    const next = await xmlOf("1");
-    expect(next.xml).toContain("עשיתם ימי מילואים");
+    const next = await xmlOf("2");
+    expect(next.xml).toContain("באיזו עיר");
   });
 });
 
@@ -173,8 +173,9 @@ describe("webhook TwiML + matcher on the built profile", () => {
     const matchAllFn = vi.fn(matchAll);
     await xmlOf("התחלה");
     await xmlOf("1");
-    await xmlOf("1");
     await xmlOf("2");
+    await xmlOf("שדרות");
+    await xmlOf("1");
     const early = handleInbound({ from: FROM, body: "דוח" }, { asOf: AS_OF });
     expect(early.xml).toContain("סיכום לפי התשובות שלכם");
     expect(early.xml).toContain(WHATSAPP_CHAT_URL);
@@ -182,6 +183,7 @@ describe("webhook TwiML + matcher on the built profile", () => {
     const expected: StudentProfile = {
       institution: "tau",
       degreeLevel: "ba",
+      reservistDaysLastYear: 0,
       cityOfResidence: "שדרות",
       neighborhood: null,
     };

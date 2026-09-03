@@ -97,14 +97,6 @@ export const CHAT_QUESTIONS: ChatQuestion[] = [
     choices: DEGREE_LEVELS.map((d) => choice(d, fieldLabelHe(d), { degreeLevel: d as DegreeLevel })),
   },
   {
-    id: "institution",
-    field: "institution",
-    promptHe: "באיזה מוסד אתם לומדים?",
-    hintHe: "בחרו מוסד, או חפשו בשם.",
-    kind: "search-institution",
-    core: true,
-  },
-  {
     id: "miluim",
     field: "reservistDaysLastYear",
     promptHe: "עשיתם ימי מילואים בשנה האחרונה?",
@@ -142,6 +134,14 @@ export const CHAT_QUESTIONS: ChatQuestion[] = [
     core: true,
   },
   {
+    id: "institution",
+    field: "institution",
+    promptHe: "באיזה מוסד אתם לומדים?",
+    hintHe: "בחרו מוסד, או חפשו בשם.",
+    kind: "search-institution",
+    core: true,
+  },
+  {
     id: "householdSize",
     field: "householdSize",
     promptHe: "כמה נפשות במשק הבית?",
@@ -156,7 +156,7 @@ export const CHAT_QUESTIONS: ChatQuestion[] = [
     id: "householdIncomeBand",
     field: "householdIncomeBand",
     promptHe: "מה סדר הגודל של הכנסת משק הבית לחודש?",
-    hintHe: "לא סכום מדויק. אם תדלגו — מלגות סיוע יופיעו תחת «חסר פרט».",
+    hintHe: "לא סכום מדויק. אם תדלגו — מלגות סיוע יופיעו כמשהו שאפשר לפתוח בעוד שאלה.",
     kind: "choices",
     core: true,
     choices: HOUSEHOLD_INCOME_BANDS.map((b) =>
@@ -268,8 +268,12 @@ export function applyMultiAnswer(
   return { ...profile, [question.field]: next };
 }
 
-export function canOfferChatReport(profile: StudentProfile): boolean {
-  return filledWizardFieldCount(profile) >= MIN_CHAT_ANSWERS_FOR_REPORT;
+export function canOfferChatReport(
+  profile: StudentProfile,
+  askedIds: readonly string[] = [],
+): boolean {
+  if (filledWizardFieldCount(profile) < MIN_CHAT_ANSWERS_FOR_REPORT) return false;
+  return askedIds.includes("institution") || isProfileFieldFilled(profile, "institution");
 }
 
 /** Shared session state for the web chat and the WhatsApp webhook. */

@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import type { ScholarshipMatch, SourceLevel, TrackingStatus } from "@/lib/types";
+import type { ScholarshipMatch, TrackingStatus } from "@/lib/types";
 import { ScholarshipFaceChips } from "@/components/ScholarshipFaceChips";
 import { formatDeadline, isVerificationStale, matchHeadline, publicDeadlineLabelHe, scopeLabelHe, shouldHideIcs, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { INSTITUTIONS } from "@/lib/institutions";
-import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
 import { profileFocusHref } from "@/lib/profile-fields";
 import { downloadIcs } from "@/lib/ics";
 import { trackingLabelHe } from "@/lib/tracking";
@@ -29,12 +28,6 @@ const bucketStyle: Record<string, string> = {
   ineligible: "border-line bg-card",
 };
 
-const levelStyle: Record<SourceLevel, string> = {
-  official_page: "bg-ok/10 text-ok",
-  institution_site: "bg-info/10 text-info",
-  indirect: "bg-warn/10 text-warn",
-};
-
 export function ScholarshipCard({
   match,
   defaultOpen = false,
@@ -49,7 +42,6 @@ export function ScholarshipCard({
     ?.map((id) => INSTITUTIONS.find((i) => i.id === id)?.nameHe)
     .filter(Boolean)
     .join(", ");
-  const level = s.sourceLevel ?? bestSourceLevel(s.sourceUrls);
   const { tracking, setStatus } = useTracking();
   const [expanded, setExpanded] = useState(defaultOpen);
   const tracked = tracking[s.id]?.status ?? null;
@@ -240,9 +232,6 @@ export function ScholarshipCard({
         {s.treatment === "selective" ? (
           <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{HE.buckets.selective}</span>
         ) : null}
-        <span className={`rounded-full px-2 py-0.5 ${level === "official_page" ? levelStyle.official_page : level === "institution_site" ? levelStyle.institution_site : levelStyle.indirect}`}>
-          {sourceLevelLabelHe(level)}
-        </span>
         {isVerificationStale(s.lastVerified) ? (
           <span className="rounded-full bg-warn/10 px-2 py-0.5 text-warn">{STALE_VERIFICATION_LABEL_HE}</span>
         ) : null}

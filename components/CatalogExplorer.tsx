@@ -9,7 +9,6 @@ import { GroupChipRow } from "@/components/GroupChipRow";
 import { ScholarshipFaceChips } from "@/components/ScholarshipFaceChips";
 import { deadlineSortValue, deadlineStatus, isVerificationStale, scopeLabelHe, STALE_VERIFICATION_LABEL_HE } from "@/lib/format";
 import { scholarshipTypeLabel } from "@/lib/labels";
-import { bestSourceLevel, sourceLevelLabelHe } from "@/lib/sources";
 import { HE } from "@/lib/i18n/he";
 import { scholarshipPagePath } from "@/lib/catalog-routes";
 import { VerificationNotes } from "@/components/VerificationNotes";
@@ -116,7 +115,6 @@ export function CatalogExplorer({
       </div>
       <ul className="mt-8 grid gap-4">
         {list.map((s) => {
-          const grade = s.sourceLevel ?? bestSourceLevel(s.sourceUrls);
           const status = deadlineStatus(s.deadline);
           return (
             <li key={s.id} id={s.id} className="scroll-mt-24 rounded-2xl border border-line bg-card p-5">
@@ -144,19 +142,6 @@ export function CatalogExplorer({
                 ) : null}
                 <span>
                   {s.types.map(scholarshipTypeLabel).join(", ")} · {scopeLabelHe(s.scope)}
-                </span>
-              </p>
-              <p className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                <span
-                  className={`rounded-full px-2 py-0.5 ${
-                    grade === "official_page"
-                      ? "bg-ok/10 text-ok"
-                      : grade === "institution_site"
-                        ? "bg-info/10 text-info"
-                        : "bg-warn/10 text-warn"
-                  }`}
-                >
-                  {sourceLevelLabelHe(grade)}
                 </span>
               </p>
               {s.applyUrl ? (

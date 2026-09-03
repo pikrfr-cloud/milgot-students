@@ -50,7 +50,13 @@ export function uniqueMatchableCount(list: Scholarship[]): number {
   return uniqueMatchableByApplyUrl(list).length;
 }
 
-/** Secondary line when the list has more rows than unique applyUrl. */
+/** Catalog-editor prose — never show these sentences to a student. */
+export function isKitchenNoteHe(text: string): boolean {
+  return /כפילות|applyUrl|הרשומות נשארו|לא הומצא|לא נספר|קישור ההגשה|אותו דף דיקן|אותו פורטל|מקור משני|רשומות בקטלוג|ייחודיות לפי/.test(
+    text,
+  );
+}
+
 export function uniqueApplyUrlNoteHe(rows: number, unique: number): string | null {
   if (rows <= unique) return null;
   return `${rows} רשומות בקטלוג, ${unique} ייחודיות לפי קישור הגשה`;
