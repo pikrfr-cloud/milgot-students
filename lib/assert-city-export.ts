@@ -41,8 +41,30 @@ export function isTelAvivCityHtml(file: CityHtmlFile): boolean {
 }
 
 export function hasItemListJsonLd(html: string): boolean {
-  if (!html.includes("application/ld+json")) return false;
-  return html.includes('"@type":"ItemList"') || html.includes('"@type": "ItemList"');
+  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/gi)];
+  return blocks.some((m) => {
+    try {
+      const parsed = JSON.parse(m[1]!) as { "@type"?: string };
+      return parsed["@type"] === "ItemList";
+    } catch {
+      return m[1]!.includes("ItemList");
+    }
+  });
+}
+
+/** Next embeds the not-found fallback inside RSC `<script>` payloads even on real pages. */
+export function visibleHtml(html: string): string {
+  return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ");
+}
+
+export function documentTitle(html: string): string {
+  return html.match(/<title>([^<]*)<\/title>/i)?.[1]?.trim() ?? "";
+}
+
+export function cityHtmlLooksLikeNotFound(html: string): boolean {
+  const title = documentTitle(html);
+  if (CITY_NOT_FOUND_MARKERS.some((m) => title.includes(m))) return true;
+  return CITY_NOT_FOUND_MARKERS.some((m) => visibleHtml(html).includes(m));
 }
 
 export function assertCityExport(cwd = process.cwd()): void {
@@ -55,10 +77,16 @@ export function assertCityExport(cwd = process.cwd()): void {
     throw new Error(`No HTML files under ${root}`);
   }
 
-  const notFound = files.filter((f) => CITY_NOT_FOUND_MARKERS.some((m) => f.html.includes(m)));
+  const notFound = files.filter((f) => cityHtmlLooksLikeNotFound(f.html));
   if (notFound.length > 0) {
     const list = notFound.map((f) => f.path).join("\n  ");
     throw new Error(`City 404 slipped through (${notFound.length} page(s)):\n  ${list}`);
+  }
+
+  const missingJsonLd = files.filter((f) => !hasItemListJsonLd(f.html));
+  if (missingJsonLd.length > 0) {
+    const list = missingJsonLd.map((f) => f.path).join("\n  ");
+    throw new Error(`City page missing ItemList JSON-LD (${missingJsonLd.length}):\n  ${list}`);
   }
 
   const telAviv = files.find(isTelAvivCityHtml);
