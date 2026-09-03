@@ -66,7 +66,7 @@ export function FastReport() {
       </p>
       <h1 className="mt-1 font-display text-3xl text-forest-deep">{current.title}</h1>
       <p className="mt-2 text-sm text-ink-soft leading-relaxed">
-        חמש שאלות ואז דוח חלקי מיד. אפשר להשלים את שאר הפרופיל אחר כך — ההתקדמות נשמרת במכשיר.
+        חמש שאלות — ואז תוצאות. אפשר להוסיף עוד אחר כך.
       </p>
       <ol className="mt-4 flex flex-wrap gap-2" aria-label="התקדמות בדוח המהיר">
         {STEPS.map((s, i) => (
@@ -193,21 +193,26 @@ export function FastReport() {
         >
           {HE.actions.back}
         </button>
-        <button type="button" onClick={next} className={`${tapBtn} bg-forest text-white hover:bg-forest-deep`}>
-          {step < STEPS.length - 1 ? HE.actions.continue : "הצגת דוח חלקי"}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {step >= 1 ? (
+            <button
+              type="button"
+              onClick={() => router.push("/results/")}
+              className="min-h-11 text-sm text-ink-soft underline underline-offset-4"
+            >
+              {HE.actions.skipRestShowReport}
+            </button>
+          ) : null}
+          <button type="button" onClick={next} className={`${tapBtn} bg-forest text-white hover:bg-forest-deep`}>
+            {step < STEPS.length - 1 ? HE.actions.continue : "הצגת דוח חלקי"}
+          </button>
+        </div>
       </div>
 
       <p className="mt-8 text-sm text-ink-soft">
         <Link href="/chat/" className="underline underline-offset-4">
           {HE.actions.chatIntake}
         </Link>
-        {" · "}
-        <Link href="/profile/" className="underline underline-offset-4">
-          {HE.actions.completeProfile}
-        </Link>
-        {" — "}
-        האשף המלא נשאר ההמשך, לא מבוי סתום.
       </p>
       <p className="sr-only" id={fieldDomId(FAST_REPORT_FIELDS[step] ?? "institution")}>
         {current.title}

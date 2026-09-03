@@ -1,4 +1,5 @@
 import type { Amount, Deadline, FieldGroup, Rule, Scholarship } from "@/lib/types";
+import { shouldAutoClassifyAsGuide } from "@/lib/catalog";
 import { bestSourceLevel, hasOfficialSource } from "@/lib/sources";
 
 export const STEM: FieldGroup[] = [
@@ -151,11 +152,12 @@ export function s(entry: Scholarship): Scholarship {
     isSinglePredicateRule(entry.eligibility) &&
     !!entry.amounts.uncertain &&
     (!!entry.deadline.uncertain || entry.deadline.kind === "varies");
+  const deanRootShell = shouldAutoClassifyAsGuide(entry);
   return {
     ...entry,
     officialSource: entry.officialSource ?? hasOfficialSource(entry.sourceUrls),
     sourceLevel,
-    treatment: thin ? "checkAtInstitution" : entry.treatment,
+    treatment: thin || deanRootShell ? "checkAtInstitution" : entry.treatment,
   };
 }
 

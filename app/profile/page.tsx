@@ -4,8 +4,8 @@ import { ProfileWizard } from "@/components/ProfileWizard";
 import { HE } from "@/lib/i18n/he";
 
 export const metadata: Metadata = {
-  title: "פרופיל",
-  description: "מילוי פרופיל זכאות. הנתונים נשמרים במכשיר בלבד.",
+  title: HE.nav.profile,
+  description: "מילוי הפרטים. נשמר במכשיר בלבד.",
   robots: { index: false, follow: false },
   alternates: { canonical: "/profile/" },
 };

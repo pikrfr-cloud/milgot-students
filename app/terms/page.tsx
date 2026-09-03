@@ -18,13 +18,17 @@ export default function TermsPage() {
         השימוש באתר הוא באחריות המשתמש. {HE.legal.notOfficial}
       </p>
       <p className="mt-3">
-        הקטלוג מבוסס על מקורות פומביים שאומתו במועד המצוין בכל רשומה. סכומים ומועדים עלולים להשתנות,
-        וחלקם מסומנים כלא ודאיים במכוון.
+        הסכומים והתאריכים עלולים להשתנות. תמיד בודקים באתר המלגה.
       </p>
       <p className="mt-3">{HE.legal.localOnly}</p>
       <p className="mt-3">{HE.legal.deletionRight}</p>
-      <h2 className="mt-8 font-display text-2xl">זהות המפעיל</h2>
-      <p className="mt-3">{HE.legal.identityUnpublished}</p>
+      <h2 className="mt-8 font-display text-2xl">פניות</h2>
+      <p className="mt-3">
+        {HE.legal.contactIssues}{" "}
+        <a className="underline underline-offset-4 ltr-isolate" href={HE.legal.githubIssuesUrl}>
+          כתבו לנו
+        </a>
+      </p>
       <p className="mt-6">
         <Link href="/privacy" className="underline underline-offset-4">
           מדיניות פרטיות

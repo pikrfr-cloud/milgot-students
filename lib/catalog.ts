@@ -1,4 +1,4 @@
-import type { Scholarship } from "./types";
+import type { Amount, Deadline, Scholarship } from "./types";
 
 /** Prior-year ILS kept because תשפ״ז was unpublished — does not count toward the amount+date gate. */
 export const TASHPAV_UNPUBLISHED_HE = "סכום תשפ״ו; טרם פורסם לתשפ״ז";
@@ -163,6 +163,60 @@ export function countsTowardAmountDateGate(
   countedApplyUrls?: Set<string>,
 ): boolean {
   return amountDateGateReason(s, list, countedApplyUrls) === "yes";
+}
+
+const DEAN_HOST = /^(dean|dekanat|studean|deanstudents)\./i;
+const DEAN_SEGMENT = /^(dean|dean-of-students|dean-students|deanstudents|dekanat|studean|feinberg|graduate|welcome)$/i;
+
+/**
+ * Institution / dean homepage used as the apply link — not a specific scholarship page.
+ * Deep paths like `/financial-aid/special-scholarships` are not roots.
+ */
+export function isDeanRootApplyUrl(url: string | undefined): boolean {
+  if (!url?.trim()) return false;
+  try {
+    const parsed = new URL(url.trim());
+    const host = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+    const path = parsed.pathname.replace(/\/+$/, "") || "/";
+    const segments = path === "/" ? [] : path.split("/").filter(Boolean);
+    const deanHost = DEAN_HOST.test(host);
+    const institutionHome = /\.(ac|muni)\.il$/i.test(host);
+    if (segments.length === 0) return deanHost || institutionHome;
+    if (segments.length === 1 && DEAN_SEGMENT.test(decodeURIComponent(segments[0]))) {
+      return deanHost || institutionHome;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/** Published rolling windows are not «unpublished». */
+export function isUnpublishedDeadline(deadline: Deadline): boolean {
+  if (deadline.kind === "rolling") return false;
+  if (deadline.kind === "varies") return true;
+  if (deadline.date) return false;
+  return true;
+}
+
+/** No number, or a range / «משתנה» — not a single published ₪ figure. */
+export function isVariableAmount(amount: Amount): boolean {
+  const min = amount.minIls;
+  const max = amount.maxIls;
+  const hasMin = typeof min === "number" && min > 0;
+  const hasMax = typeof max === "number" && max > 0;
+  if (!hasMin && !hasMax) return true;
+  if (hasMin && hasMax && min === max) return false;
+  return !!amount.uncertain || (hasMin && hasMax && min !== max);
+}
+
+/**
+ * Dean-homepage applyUrl + unpublished date + variable amount → מדריך.
+ * Does not override an explicit treatment.
+ */
+export function shouldAutoClassifyAsGuide(s: Pick<Scholarship, "applyUrl" | "deadline" | "amounts" | "treatment">): boolean {
+  if (s.treatment) return false;
+  return isDeanRootApplyUrl(s.applyUrl) && isUnpublishedDeadline(s.deadline) && isVariableAmount(s.amounts);
 }
 
 export function matchableWithAmountAndDate(list: Scholarship[]): Scholarship[] {
