@@ -18,7 +18,6 @@ import { scholarshipTypeLabel } from "@/lib/labels";
 import { collectEligibilityLabels } from "@/lib/rule-walk";
 import { scholarshipPagePath, scholarshipStaticParams } from "@/lib/catalog-routes";
 import { absoluteUrl } from "@/lib/site";
-import { sourceLevelLabelHe, bestSourceLevel } from "@/lib/sources";
 import { HE } from "@/lib/i18n/he";
 import { INSTITUTIONS } from "@/lib/institutions";
 import { isGuideRecord } from "@/lib/catalog";
@@ -93,9 +92,6 @@ export default async function ScholarshipPage({
         <span className="rounded-full bg-paper-deep px-2 py-0.5">{amountDisplay(s.amounts).headlineHe}</span>
         <span className="rounded-full bg-paper-deep px-2 py-0.5">
           {s.types.map(scholarshipTypeLabel).join(" · ")} · {scopeLabelHe(s.scope)}
-        </span>
-        <span className="rounded-full bg-paper-deep px-2 py-0.5">
-          {sourceLevelLabelHe(s.sourceLevel ?? bestSourceLevel(s.sourceUrls))}
         </span>
         {amountDisplay(s.amounts).noteHe ? (
           <span className="rounded-full bg-paper-deep px-2 py-0.5 text-ink-soft">{amountDisplay(s.amounts).noteHe}</span>

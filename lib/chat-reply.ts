@@ -359,12 +359,15 @@ function nextPromptMessages(
   next: WhatsAppSession,
 ): { messages: string[]; session: WhatsAppSession } {
   const messages: string[] = [];
-  const prevFilled = filledWizardFieldCount(prev.profile);
   const nextFilled = filledWizardFieldCount(next.profile);
   let extrasIntroShown = next.extrasIntroShown;
   let offerShown = next.offerShown;
 
-  if (!offerShown && nextFilled >= 3 && prevFilled < 3) {
+  if (
+    !offerShown &&
+    canOfferChatReport(next.profile, next.askedIds) &&
+    !canOfferChatReport(prev.profile, prev.askedIds)
+  ) {
     messages.push(HE.whatsapp.offer);
     offerShown = true;
   }
@@ -450,7 +453,7 @@ export function applyWhatsAppTurn(session: WhatsAppSession | undefined, inbound:
   }
 
   if (parsed.kind === "report") {
-    if (!canOfferChatReport(session.profile)) {
+    if (!canOfferChatReport(session.profile, session.askedIds)) {
       const messages: string[] = [HE.whatsapp.tooEarlyReport];
       if (question) {
         const block = promptBlock(session, question);
@@ -501,7 +504,7 @@ export function applyWhatsAppTurn(session: WhatsAppSession | undefined, inbound:
   }
 
   if (!question) {
-    if (canOfferChatReport(session.profile)) {
+    if (canOfferChatReport(session.profile, session.askedIds)) {
       return {
         session: { ...session, reportSent: true },
         messages: [],
@@ -530,7 +533,8 @@ export function applyWhatsAppTurn(session: WhatsAppSession | undefined, inbound:
 
   const follow = nextPromptMessages(session, next);
   const moreQuestions = Boolean(nextChatQuestion(follow.session.profile, follow.session.askedIds));
-  const shouldAutoReport = !moreQuestions && canOfferChatReport(follow.session.profile);
+  const shouldAutoReport =
+    !moreQuestions && canOfferChatReport(follow.session.profile, follow.session.askedIds);
 
   return {
     session: { ...follow.session, reportSent: shouldAutoReport || follow.session.reportSent },

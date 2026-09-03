@@ -52,12 +52,12 @@ describe("chat intake field glue", () => {
     expect(CHAT_QUESTIONS[0]?.kind).toBe("choices");
     expect(CHAT_QUESTIONS.find((q) => q.id === "institution")?.kind).toBe("search-institution");
     const ids = CHAT_QUESTIONS.map((q) => q.id);
-    expect(ids.indexOf("degreeLevel")).toBeLessThan(ids.indexOf("institution"));
-    expect(ids.indexOf("institution")).toBeLessThan(ids.indexOf("miluim"));
+    expect(ids.indexOf("degreeLevel")).toBeLessThan(ids.indexOf("miluim"));
     expect(ids.indexOf("miluim")).toBeLessThan(ids.indexOf("cityOfResidence"));
+    expect(ids.indexOf("cityOfResidence")).toBeLessThan(ids.indexOf("institution"));
   });
 
-  it("walks degree → institution chips → miluim → city", () => {
+  it("walks degree → miluim → city → institution chips", () => {
     const degree = nextChatQuestion({}, []);
     const ba = degree?.choices?.find((c) => c.id === "ba");
     if (!degree || !ba) throw new Error("missing degree");
@@ -66,22 +66,29 @@ describe("chat intake field glue", () => {
       question: degree,
       choice: ba,
     });
-    const institution = nextChatQuestion(afterDegree.profile, afterDegree.askedIds);
+    const miluim = nextChatQuestion(afterDegree.profile, afterDegree.askedIds);
+    expect(miluim?.id).toBe("miluim");
+    const no = miluim?.choices?.find((c) => c.id === "no");
+    if (!miluim || !no) throw new Error("missing miluim");
+    const afterMiluim = applyChatAction(afterDegree, { type: "choice", question: miluim, choice: no });
+    const city = nextChatQuestion(afterMiluim.profile, afterMiluim.askedIds);
+    expect(city?.id).toBe("cityOfResidence");
+    expect(canOfferChatReport(afterMiluim.profile, afterMiluim.askedIds)).toBe(false);
+    const afterCity = applyChatAction(afterMiluim, {
+      type: "city",
+      question: city!,
+      city: "תל אביב-יפו",
+    });
+    const institution = nextChatQuestion(afterCity.profile, afterCity.askedIds);
     expect(institution?.id).toBe("institution");
     expect(institution?.kind).toBe("search-institution");
-    const afterInst = applyChatAction(afterDegree, {
+    expect(canOfferChatReport(afterCity.profile, afterCity.askedIds)).toBe(false);
+    const afterInst = applyChatAction(afterCity, {
       type: "institution",
       question: institution!,
       institutionId: "tau",
     });
-    const miluim = nextChatQuestion(afterInst.profile, afterInst.askedIds);
-    expect(miluim?.id).toBe("miluim");
-    const no = miluim?.choices?.find((c) => c.id === "no");
-    if (!miluim || !no) throw new Error("missing miluim");
-    const afterMiluim = applyChatAction(afterInst, { type: "choice", question: miluim, choice: no });
-    const city = nextChatQuestion(afterMiluim.profile, afterMiluim.askedIds);
-    expect(city?.id).toBe("cityOfResidence");
-    expect(canOfferChatReport(afterMiluim.profile)).toBe(true);
+    expect(canOfferChatReport(afterInst.profile, afterInst.askedIds)).toBe(true);
   });
 
   it("popular institution chips render with an empty query", () => {
@@ -213,6 +220,17 @@ describe("chat partial profile still produces a report", () => {
 
     expect(filledWizardFieldCount(profile)).toBe(3);
     expect(canOfferChatReport(profile)).toBe(true);
+    expect(canOfferChatReport({ degreeLevel: "ba", reservistDaysLastYear: 0, cityOfResidence: "שדרות" }, [
+      "degreeLevel",
+      "miluim",
+      "cityOfResidence",
+    ])).toBe(false);
+    expect(canOfferChatReport({ degreeLevel: "ba", reservistDaysLastYear: 0, cityOfResidence: "שדרות" }, [
+      "degreeLevel",
+      "miluim",
+      "cityOfResidence",
+      "institution",
+    ])).toBe(true);
 
     const asOf = new Date("2026-09-01T12:00:00+03:00");
     const matches = matchAll(SCHOLARSHIPS, profile, { asOf });

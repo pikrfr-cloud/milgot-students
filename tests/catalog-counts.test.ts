@@ -22,6 +22,10 @@ describe("counts.json is the student-facing source of truth", () => {
     expect(COUNTS.lastVerifiedMonth).toBe(CATALOG_STATS.lastVerifiedMonth);
     expect(studentCountsLine(COUNTS)).toBe(`${COUNTS.matchable} מלגות`);
     expect(studentCountsLine(COUNTS)).not.toMatch(/רשומות בקטלוג/);
+    expect(studentCountsLine(COUNTS)).not.toMatch(/לבדיקה במוסד/);
+    const catalogPage = readFileSync(join(process.cwd(), "app/catalog/page.tsx"), "utf8");
+    expect(catalogPage).toContain("studentCountsLine");
+    expect(catalogPage).not.toContain("studentCountsLineFull");
   });
 
   it("keeps the committed JSON identical to the computed object", () => {

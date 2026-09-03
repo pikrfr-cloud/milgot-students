@@ -14,6 +14,7 @@ import {
   canonicalApplyUrl,
   hasSecondaryDeadlineSource,
   isGuideRecord,
+  isKitchenNoteHe,
   isMatchableScholarship,
   maxLastVerified,
   uniqueApplyUrlNoteHe,
@@ -246,6 +247,16 @@ describe("guide shells vs matchable programs", () => {
       expect(rec, id).toBeTruthy();
       expect(isMatchableScholarship(rec!), id).toBe(true);
     }
+  });
+});
+
+describe("kitchen notes stay off the student card", () => {
+  it("flags catalog-editor prose and keeps a student-facing note", () => {
+    expect(isKitchenNoteHe("כפילות: אותו דף דיקן כמו מלגות מיוחדות. הרשומות נשארו נפרדות.")).toBe(
+      true,
+    );
+    expect(isKitchenNoteHe("לא כפילות applyUrl עם מלגת אייסף לתואר ראשון/שני.")).toBe(true);
+    expect(isKitchenNoteHe("מיון: ראיון אישי. מכסה כ־150 בשנה.")).toBe(false);
   });
 });
 

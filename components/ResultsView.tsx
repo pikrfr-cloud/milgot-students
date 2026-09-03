@@ -169,10 +169,6 @@ export function ResultsView() {
   const timeline = upcomingCloseDates(allMatches, asOf);
   const docs = unifiedDocuments(allMatches);
   const remainingUnlocks = unlocks.filter(({ field }) => !FAST_REPORT_FIELDS.includes(field));
-  const fastFieldsFilled = FAST_REPORT_FIELDS.some((f) => {
-    const v = profile[f];
-    return !(v === null || v === undefined || (Array.isArray(v) && v.length === 0));
-  });
   const remainingWizard = WIZARD_FIELDS.filter((f) => {
     const v = profile[f];
     return v === null || v === undefined || (Array.isArray(v) && v.length === 0);
@@ -250,9 +246,8 @@ export function ResultsView() {
         <div>
           <h1 className="font-display text-4xl text-forest-deep">{HE.results.title}</h1>
           <p className="mt-2 text-ink-soft" aria-live="polite">
-            {eligible.length} {HE.buckets.eligible} · {needInfo.length} {HE.chat.needInfoHuman} · {nearMiss.length}{" "}
-            {HE.buckets.nearMiss} · {checkAtInstitution.length} {HE.buckets.guide} ·{" "}
-            {closedCycle.length} {HE.buckets.closedCycle} · {ineligible.length} {HE.buckets.ineligible}
+            {matchingNowHeadlineHe(eligible.length)}
+            {needInfo.length ? ` · ${needInfo.length} ${HE.chat.needInfoHuman}` : ""}
             {filtersOn ? HE.results.afterFilter : ""}
           </p>
         </div>
@@ -288,7 +283,7 @@ export function ResultsView() {
         <section className="no-print mt-6 rounded-2xl border border-info/30 bg-info/5 p-5">
           <h2 className="font-display text-xl text-forest-deep">{HE.results.completeToUnlock}</h2>
           <p className="mt-2 text-sm text-ink-soft">
-            {fastFieldsFilled ? HE.results.fastPartial : "אפשר להמשיך באשף המלא כדי לפתוח עוד התאמות."}
+            {HE.results.completeToUnlock}
           </p>
           <ul className="mt-3 space-y-1 text-sm">
             {(remainingUnlocks.length ? remainingUnlocks : unlocks).slice(0, 8).map(({ field, count }) => (
@@ -427,7 +422,7 @@ export function ResultsView() {
           {HE.buckets.eligible} ({eligible.length})
         </a>
         <a href="#need-info" className="inline-flex min-h-11 items-center rounded-full bg-info/10 px-3 text-sm text-info">
-          חסר פרט ({needInfo.length})
+          {HE.chat.needInfoHuman} ({needInfo.length})
         </a>
         <a href="#check-at-institution" className="inline-flex min-h-11 items-center rounded-full bg-paper-deep px-3 text-sm text-ink-soft">
           {HE.buckets.guide} ({checkAtInstitution.length})
@@ -475,7 +470,7 @@ export function ResultsView() {
 
       <section id="need-info" className="mt-10 scroll-mt-28">
         <h2 className="font-display text-2xl">
-          {HE.buckets.needInfo} ({needInfo.length})
+          {HE.chat.needInfoHuman} ({needInfo.length})
         </h2>
         <p className="mt-1 text-sm text-ink-soft">חסר תשובה אחת כדי לדעת אם מתאים.</p>
         <div className="mt-4 grid gap-4">

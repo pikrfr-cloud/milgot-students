@@ -58,7 +58,7 @@ export function openingChatMessages(profile: StudentProfile): {
       text: first.promptHe,
       questionId: first.id,
     });
-    if (canOfferChatReport(profile)) {
+    if (canOfferChatReport(profile, [])) {
       messages.push({ id: "offer-resume", role: "bot", text: HE.chat.offerAfterAnswers, offer: true });
       return { messages, reportOpen: false, offerShown: true };
     }
@@ -91,7 +91,7 @@ export function ChatIntake() {
 
   const question = useMemo(() => nextChatQuestion(profile, askedIds), [profile, askedIds]);
   const filled = filledWizardFieldCount(profile);
-  const showReportAction = canOfferChatReport(profile) || (reportOpen && filled >= 1);
+  const showReportAction = canOfferChatReport(profile, askedIds) || (reportOpen && filled >= 1);
 
   useEffect(() => {
     try {
@@ -136,7 +136,6 @@ export function ChatIntake() {
 
   function afterProfileChange(nextProfile: StudentProfile, nextAsked: string[], userText: string) {
     interactedRef.current = true;
-    const prevFilled = filled;
     setProfile(nextProfile);
     setAskedIds(nextAsked);
     setInstitutionQuery("");
@@ -148,7 +147,10 @@ export function ChatIntake() {
 
     const nextQ = nextChatQuestion(nextProfile, nextAsked);
     const nextFilled = filledWizardFieldCount(nextProfile);
-    const justCrossed = !offerShown && nextFilled >= 3 && prevFilled < 3;
+    const justCrossed =
+      !offerShown &&
+      canOfferChatReport(nextProfile, nextAsked) &&
+      !canOfferChatReport(profile, askedIds);
 
     if (justCrossed && nextQ) {
       follow.push({ id: newId("offer"), role: "bot", text: HE.chat.offerAfterAnswers, offer: true });

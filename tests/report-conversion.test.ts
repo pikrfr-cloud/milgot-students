@@ -110,7 +110,8 @@ describe("₪ header — potentialOpenAmount", () => {
     expect(result.sumIls).toBeNull();
     expect(result.openCount).toBe(1);
     expect(potentialHeadlineHe(result)).not.toContain("0 ₪");
-    expect(potentialHeadlineHe(result)).toContain("לא הומצא");
+    expect(potentialHeadlineHe(result)).toContain("אין סה״כ");
+    expect(potentialHeadlineHe(result)).not.toContain("לא הומצא");
   });
 });
 

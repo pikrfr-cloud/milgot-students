@@ -85,13 +85,13 @@ export function potentialHeadlineHe(result: PotentialOpenAmount): string {
     if (result.openCount === 0) {
       return "אין סכום ידוע במלגות הפתוחות שרלוונטיות.";
     }
-    return `${result.openCount} מלגות פתוחות בלי סכום מספרי — לא הומצא סה״כ.`;
+    return `${result.openCount} מלגות פתוחות בלי סכום ידוע — אין סה״כ.`;
   }
   return `סכום משוער עד ${formatIls(result.sumIls)} במלגות פתוחות עם סכום ידוע`;
 }
 
 export const NO_DOUBLE_COUNT_CAVEAT_HE =
-  "אין כפל: לא ניתן לקבל את כל המלגות במקביל. תוכניות חופפות שסומנו בקטלוג לא נסכמות פעמיים; מלגות בלי סכום מספרי לא נכללו בסה״כ ולא הומצא להן 0.";
+  "אי אפשר לקבל את כולן ביחד. הסכום הוא הערכה בלבד."
 
 export const TIMELINE_WINDOW_DAYS = 60;
 
