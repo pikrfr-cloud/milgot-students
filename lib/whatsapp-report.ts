@@ -380,7 +380,7 @@ function renderFooterChunks(args: {
   includeIneligibleNote: boolean;
 }): string[] {
   const link = joinReportLines([`🔗 ${boldHe(HE.whatsapp.fullReportHeading)}`, args.resultsUrl]);
-  const afterLines = [HE.whatsapp.disclaimer];
+  const afterLines: string[] = [HE.whatsapp.disclaimer];
   if (args.ineligibleCount > 0 && args.includeIneligibleNote) {
     afterLines.push(ineligibleClosingHe(args.ineligibleCount));
   }
