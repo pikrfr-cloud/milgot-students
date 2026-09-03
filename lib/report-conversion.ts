@@ -1,5 +1,5 @@
 import type { Scholarship, ScholarshipMatch } from "./types";
-import { deadlineStatus, daysUntilIsoDate, formatIls } from "./format";
+import { deadlineStatus, daysUntilIsoDate } from "./format";
 
 const OPEN_KINDS = new Set(["open", "closingSoon", "rolling"]);
 
@@ -80,18 +80,8 @@ export function matchingNowHeadlineHe(eligibleCount: number): string {
   return `${eligibleCount} מלגות שמתאימות עכשיו`;
 }
 
-export function potentialHeadlineHe(result: PotentialOpenAmount): string {
-  if (result.sumIls == null) {
-    if (result.openCount === 0) {
-      return "אין סכום ידוע במלגות הפתוחות שרלוונטיות.";
-    }
-    return `${result.openCount} מלגות פתוחות בלי סכום ידוע — אין סה״כ.`;
-  }
-  return `סכום משוער עד ${formatIls(result.sumIls)} במלגות פתוחות עם סכום ידוע`;
-}
-
 export const NO_DOUBLE_COUNT_CAVEAT_HE =
-  "אי אפשר לקבל את כולן ביחד. הסכום הוא הערכה בלבד."
+  "כל מלגה מציגה את הסכום שפורסם אצלה. אי אפשר לקבל את כולן ביחד.";
 
 export const TIMELINE_WINDOW_DAYS = 60;
 

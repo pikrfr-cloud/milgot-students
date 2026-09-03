@@ -108,7 +108,6 @@ export const HE = {
     completeToUnlockHint: "אם תענו על עוד שאלות, נדע אם עוד מלגות מתאימות לכם.",
     fastPartial: "עוד כמה תשובות יפתחו עוד מלגות.",
     nearMissFeatured: "כאן אפשר לפעול: למשל התנדבות, היקף לימודים או ממוצע.",
-    missingAmounts: "{n} מלגות פתוחות בלי סכום לא נכנסו לסה״כ.",
   },
 
   legal: {

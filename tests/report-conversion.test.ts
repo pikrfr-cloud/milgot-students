@@ -4,7 +4,7 @@ import { matchScholarship } from "@/lib/matcher";
 import {
   dropMutexDuplicates,
   matchingNowHeadlineHe,
-  potentialHeadlineHe,
+  NO_DOUBLE_COUNT_CAVEAT_HE,
   potentialOpenAmount,
   unifiedDocuments,
   upcomingCloseDates,
@@ -35,7 +35,20 @@ function matchOf(s: Scholarship, bucket: ScholarshipMatch["bucket"] = "eligible"
   return { ...m, bucket };
 }
 
-describe("₪ header — potentialOpenAmount", () => {
+describe("matching count headline — no catalog-sum ₪", () => {
+  it("names how many scholarships match and never mentions a summed ₪", () => {
+    expect(matchingNowHeadlineHe(5)).toBe("5 מלגות שמתאימות עכשיו");
+    expect(matchingNowHeadlineHe(1)).toBe("מלגה אחת שמתאימה עכשיו");
+    expect(matchingNowHeadlineHe(2)).toBe("2 מלגות שמתאימות עכשיו");
+    expect(matchingNowHeadlineHe(2)).not.toMatch(/₪|סכום משוער|סה״כ|הערכה/);
+    expect(NO_DOUBLE_COUNT_CAVEAT_HE).toBe(
+      "כל מלגה מציגה את הסכום שפורסם אצלה. אי אפשר לקבל את כולן ביחד.",
+    );
+    expect(NO_DOUBLE_COUNT_CAVEAT_HE).not.toMatch(/₪|18,000|סכום משוער|הערכה|סה״כ/);
+  });
+});
+
+describe("potentialOpenAmount (internal — not student-facing)", () => {
   it("sums maxIls of open eligible+needInfo only, excludes missing amounts, and does not invent 0", () => {
     const numbered = fake({
       id: "a",
@@ -69,12 +82,6 @@ describe("₪ header — potentialOpenAmount", () => {
     expect(result.missingAmountCount).toBe(1);
     expect(result.sumIls).toBe(10000);
     expect(result.counted).toBe(1);
-    expect(potentialHeadlineHe(result)).toContain("10,000");
-    expect(potentialHeadlineHe(result)).toContain("₪");
-    expect(potentialHeadlineHe(result)).not.toMatch(/עד 0 ₪/);
-    expect(potentialHeadlineHe(result)).not.toContain("פוטנציאל");
-    expect(matchingNowHeadlineHe(5)).toBe("5 מלגות שמתאימות עכשיו");
-    expect(matchingNowHeadlineHe(1)).toBe("מלגה אחת שמתאימה עכשיו");
   });
 
   it("does not double-count mutex overlapping programs", () => {
@@ -109,9 +116,6 @@ describe("₪ header — potentialOpenAmount", () => {
     const result = potentialOpenAmount([matchOf(s, "eligible")], asOf);
     expect(result.sumIls).toBeNull();
     expect(result.openCount).toBe(1);
-    expect(potentialHeadlineHe(result)).not.toContain("0 ₪");
-    expect(potentialHeadlineHe(result)).toContain("אין סה״כ");
-    expect(potentialHeadlineHe(result)).not.toContain("לא הומצא");
   });
 });
 
