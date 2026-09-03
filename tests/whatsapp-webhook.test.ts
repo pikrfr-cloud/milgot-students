@@ -139,18 +139,16 @@ describe("session reset and sandbox keywords", () => {
     const reset = await xmlOf("התחל מחדש");
     expect(reset.xml).toContain("איזה תואר");
     expect(reset.xml).toContain("התחל מחדש");
-    const startEn = handleInbound({ from: FROM, body: "start" });
+    const startEn = await handleInbound({ from: FROM, body: "start" });
     expect(startEn.xml).toContain("איזה תואר");
   });
 
-  it("ignores Twilio sandbox join/stop without wiping the session", async () => {
+  it("ignores Twilio sandbox join without wiping the session", async () => {
     await xmlOf("התחלה");
     await xmlOf("1");
     const join = await xmlOf("join doll-product");
     expect(join.status).toBe(200);
     expect(join.xml).toBe(twimlEmpty());
-    const stop = await xmlOf("stop");
-    expect(stop.xml).toBe(twimlEmpty());
     const next = await xmlOf("2");
     expect(next.xml).toContain("באיזו עיר");
   });
@@ -176,7 +174,7 @@ describe("webhook TwiML + matcher on the built profile", () => {
     await xmlOf("2");
     await xmlOf("שדרות");
     await xmlOf("1");
-    const early = handleInbound({ from: FROM, body: "דוח" }, { asOf: AS_OF });
+    const early = await handleInbound({ from: FROM, body: "דוח" }, { asOf: AS_OF });
     expect(early.xml).toContain("סיכום לפי התשובות שלכם");
     expect(early.xml).toContain(WHATSAPP_CHAT_URL);
 

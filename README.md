@@ -126,4 +126,6 @@ Next.js (App Router) static export + TypeScript + Tailwind CSS v4. ממשק עב
 
 The static GitHub Pages export cannot receive Twilio POSTs. A separate Hono
 server (Cloudflare Worker or `npm run whatsapp`) implements `POST /whatsapp`
-with the same intake + matcher as `/chat/`. See [`whatsapp/README.md`](whatsapp/README.md).
+with the same intake + matcher as `/chat/`. Deadline reminders use Worker
+cron + KV after deploy — not GitHub Pages and not `npm run whatsapp`.
+See [`whatsapp/README.md`](whatsapp/README.md).

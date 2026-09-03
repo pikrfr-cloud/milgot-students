@@ -17,8 +17,12 @@ import { fieldLabelHe } from "./labels";
 import { filledWizardFieldCount } from "./profile-fields";
 import type { StudentProfile } from "./types";
 
-/** Twilio sandbox control words — do not reset or advance the questionnaire. */
-const SANDBOX_IGNORE = /^(join(\s+\S+)?|stop|unstop)$/i;
+/**
+ * Twilio sandbox control words — do not reset or advance the questionnaire.
+ * `stop` is handled as a reminder unsubscribe in the webhook (not ignored).
+ * Twilio-level STOP/opt-out is a separate carrier setting.
+ */
+const SANDBOX_IGNORE = /^(join(\s+\S+)?|unstop)$/i;
 
 const RESET_COMMANDS = new Set(["התחלה", "התחל", "התחל מחדש", "start", "reset"]);
 const REPORT_COMMANDS = new Set([
@@ -320,11 +324,19 @@ export function parseInbound(
   return { kind: "unparsed" };
 }
 
+export type LastReportEligible = {
+  id: string;
+  nameHe: string;
+  deadlineDate: string;
+};
+
 export type WhatsAppSession = ChatSessionState & {
   extrasIntroShown: boolean;
   offerShown: boolean;
   reportSent: boolean;
   listed: NumberedOption[];
+  /** Matcher-eligible catalog ids with `deadline.date` from the last report in this session. */
+  lastReportEligible?: LastReportEligible[];
 };
 
 export function emptyWhatsAppSession(): WhatsAppSession {

@@ -12,3 +12,4 @@ if (!process.env.TWILIO_AUTH_TOKEN) {
 serve({ fetch: app.fetch, port });
 console.log(`[whatsapp] POST http://localhost:${port}/whatsapp`);
 console.log("[whatsapp] Tunnel with cloudflared or ngrok, then set Twilio to POST https://<host>/whatsapp");
+console.log("[whatsapp] Reminders (cron + KV) only run after wrangler deploy — not in this Node process.");
