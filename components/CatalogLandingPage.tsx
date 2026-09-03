@@ -1,17 +1,20 @@
 import Link from "next/link";
 import { CatalogListCard } from "@/components/CatalogListCard";
 import { CoverageNote } from "@/components/CoverageNote";
-import { deadlineSortValue } from "@/lib/format";
 import { HE } from "@/lib/i18n/he";
-import type { CollectionLanding } from "@/lib/landing-pages";
+import {
+  landingItemListJsonLd,
+  sortedLandingScholarships,
+  type CollectionLanding,
+} from "@/lib/landing-pages";
 
 export function CatalogLandingPage({ landing }: { landing: CollectionLanding }) {
-  const list = [...landing.scholarships].sort(
-    (a, b) => deadlineSortValue(a.deadline) - deadlineSortValue(b.deadline),
-  );
+  const list = sortedLandingScholarships(landing.scholarships);
+  const jsonLd = landingItemListJsonLd(landing);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <p className="text-sm text-ink-soft">
         <Link href="/catalog/" className="underline underline-offset-4">
           {HE.nav.catalog}

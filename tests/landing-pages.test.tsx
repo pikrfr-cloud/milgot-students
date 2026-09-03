@@ -6,21 +6,26 @@ import { SCHOLARSHIPS } from "@/data/scholarships";
 import { decodeSharedProfile } from "@/lib/profile-share";
 import { HE } from "@/lib/i18n/he";
 import {
+  allCollectionLandings,
   cityLandingTitleHe,
   groupLanding,
   groupLandingTitleHe,
   institutionLanding,
   institutionLandingTitleHe,
   landingIntroHe,
+  landingItemListJsonLd,
   MIN_LANDING_SCHOLARSHIPS,
   nearestKnownDeadlineIso,
   publishedAmountRange,
   qualifyingCollectionLandings,
+  qualifyingStudentLandings,
   sectorLanding,
   sectorLandingTitleHe,
   TASHPAZ_HE,
   UNCERTAIN_HE,
 } from "@/lib/landing-pages";
+import { sitemapEntries } from "@/lib/catalog-routes";
+import { SITE_ORIGIN } from "@/lib/site";
 import type { Scholarship } from "@/lib/types";
 
 function row(partial: Partial<Scholarship> & Pick<Scholarship, "id" | "nameHe">): Scholarship {
@@ -177,3 +182,40 @@ describe("no-volunteering and miluim landings", () => {
     expect(html).toContain("#p=");
   });
 });
+
+describe("ItemList JSON-LD and sitemap", () => {
+  it("parses on every landing and lists each scholarship", () => {
+    const landings = qualifyingStudentLandings();
+    expect(landings.length).toBeGreaterThanOrEqual(15);
+    for (const landing of landings) {
+      const jsonLd = landingItemListJsonLd(landing);
+      const parsed = JSON.parse(JSON.stringify(jsonLd)) as ReturnType<typeof landingItemListJsonLd>;
+      expect(parsed["@type"]).toBe("ItemList");
+      expect(parsed.itemListElement).toHaveLength(landing.scholarships.length);
+      for (const s of landing.scholarships) {
+        const item = parsed.itemListElement.find((row) => row.url.endsWith(`/scholarships/${s.id}/`));
+        expect(item).toBeTruthy();
+        expect(item?.name).toBe(s.nameHe);
+        expect(item?.position).toBeGreaterThan(0);
+      }
+      const html = renderToStaticMarkup(<CatalogLandingPage landing={landing} />);
+      const match = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/);
+      expect(match?.[1]).toBeTruthy();
+      const fromHtml = JSON.parse(match![1]!) as ReturnType<typeof landingItemListJsonLd>;
+      expect(fromHtml.itemListElement).toHaveLength(landing.scholarships.length);
+      for (const s of landing.scholarships) {
+        expect(fromHtml.itemListElement.some((row) => row.name === s.nameHe && row.url.endsWith(`/scholarships/${s.id}/`))).toBe(
+          true,
+        );
+      }
+    }
+  });
+
+  it("puts every collection landing on the sitemap", () => {
+    const urls = sitemapEntries().map((e) => e.url);
+    for (const landing of allCollectionLandings()) {
+      expect(urls).toContain(`${SITE_ORIGIN}${landing.href}`);
+    }
+  });
+});
+

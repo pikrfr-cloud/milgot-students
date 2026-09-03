@@ -18,8 +18,9 @@ import {
   scholarshipsForCity,
   scholarshipsForInstitution,
   scholarshipsForSector,
+  scholarshipPagePath,
 } from "./catalog-routes";
-import { daysUntilIsoDate, formatHebrewLongDate, formatIls } from "./format";
+import { daysUntilIsoDate, deadlineSortValue, formatHebrewLongDate, formatIls } from "./format";
 import { INSTITUTIONS } from "./institutions";
 import {
   compactStudentProfile,
@@ -27,6 +28,7 @@ import {
   SHARED_PROFILE_PARAM,
   sharedProfileIsEmpty,
 } from "./profile-share";
+import { absoluteUrl } from "./site";
 import { SECTOR_CHIP_HE } from "./student-landings";
 import type { Scholarship, Sector, StudentProfile } from "./types";
 
@@ -151,6 +153,39 @@ export function chatSeedHref(seed: StudentProfile): string {
   return encoded ? `/chat/#${SHARED_PROFILE_PARAM}=${encoded}` : "/chat/";
 }
 
+export function sortedLandingScholarships(list: readonly Scholarship[]): Scholarship[] {
+  return [...list].sort((a, b) => deadlineSortValue(a.deadline) - deadlineSortValue(b.deadline));
+}
+
+export type LandingItemListJsonLd = {
+  "@context": "https://schema.org";
+  "@type": "ItemList";
+  name: string;
+  numberOfItems: number;
+  itemListElement: {
+    "@type": "ListItem";
+    position: number;
+    name: string;
+    url: string;
+  }[];
+};
+
+export function landingItemListJsonLd(landing: CollectionLanding): LandingItemListJsonLd {
+  const list = sortedLandingScholarships(landing.scholarships);
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: landing.titleHe,
+    numberOfItems: list.length,
+    itemListElement: list.map((s, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: s.nameHe,
+      url: absoluteUrl(scholarshipPagePath(s.id)),
+    })),
+  };
+}
+
 export function landingMetadata(landing: Pick<CollectionLanding, "titleHe" | "introHe" | "href">): Metadata {
   const description = landing.introHe.slice(0, 160);
   return {
@@ -269,4 +304,8 @@ export function qualifyingStudentLandings(list: Scholarship[] = SCHOLARSHIPS): C
     ...qualifyingCollectionLandings(list),
     ...groupLandings().filter((l) => l.scholarships.length >= MIN_LANDING_SCHOLARSHIPS),
   ];
+}
+
+export function allCollectionLandings(list: Scholarship[] = SCHOLARSHIPS): CollectionLanding[] {
+  return [...cityLandings(list), ...institutionLandings(list), ...sectorLandings(list), ...groupLandings()];
 }
