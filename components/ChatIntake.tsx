@@ -10,17 +10,19 @@ import {
   canOfferChatReport,
   chatReportCounts,
   filterInstitutions,
+  mergeSessionAndStoredProfile,
   nextChatQuestion,
   popularCities,
   popularInstitutions,
   safeLoadChatProfile,
+  shouldScrollChat,
   type ChatChoice,
   type ChatQuestion,
 } from "@/lib/chat-intake";
 import { HE } from "@/lib/i18n/he";
 import { fieldLabelHe, formatProfileValueHe } from "@/lib/labels";
 import { filledWizardFieldCount } from "@/lib/profile-fields";
-import { loadProfile, saveProfile } from "@/lib/profile-storage";
+import { loadProfile, profileIsEmpty, saveProfile } from "@/lib/profile-storage";
 import type { StudentProfile } from "@/lib/types";
 
 export type ChatMessage = {
@@ -33,7 +35,7 @@ export type ChatMessage = {
 };
 
 const tapBtn =
-  "min-h-12 min-w-12 inline-flex items-center justify-center rounded-2xl px-5 py-3 text-base font-medium";
+  "box-border min-h-12 min-w-12 inline-flex items-center justify-center rounded-2xl border px-5 py-3 text-base font-medium";
 
 function newId(prefix: string): string {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
@@ -85,6 +87,7 @@ export function ChatIntake() {
   const [extrasIntroShown, setExtrasIntroShown] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const reportOpenRef = useRef(EMPTY_OPENING.reportOpen);
+  const interactedRef = useRef(false);
 
   const question = useMemo(() => nextChatQuestion(profile, askedIds), [profile, askedIds]);
   const filled = filledWizardFieldCount(profile);
@@ -92,19 +95,27 @@ export function ChatIntake() {
 
   useEffect(() => {
     try {
-      const p = safeLoadChatProfile(loadProfile);
+      const stored = safeLoadChatProfile(loadProfile);
+      if (interactedRef.current) {
+        return;
+      }
+      const p = mergeSessionAndStoredProfile(profile, stored);
       // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
       setProfile(p);
-      const opening = openingChatMessages(p);
-      setMessages(opening.messages);
-      setReportOpen(opening.reportOpen);
-      setOfferShown(opening.offerShown);
-      reportOpenRef.current = opening.reportOpen;
+      if (profileIsEmpty(profile)) {
+        const opening = openingChatMessages(p);
+        setMessages(opening.messages);
+        setReportOpen(opening.reportOpen);
+        setOfferShown(opening.offerShown);
+        reportOpenRef.current = opening.reportOpen;
+      }
     } catch {
       // Keep the empty-profile first question already on screen.
     } finally {
       setStorageReady(true);
     }
+    // First hydrate only — session answers must win over a late storage read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -113,16 +124,18 @@ export function ChatIntake() {
   }, [profile, storageReady]);
 
   useEffect(() => {
+    if (!reportOpen || !shouldScrollChat("report-open")) return;
     const reduce =
       typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     endRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "end" });
-  }, [messages, question, reportOpen]);
+  }, [reportOpen]);
 
   function pushMessages(...next: ChatMessage[]) {
     setMessages((m) => [...m, ...next]);
   }
 
   function afterProfileChange(nextProfile: StudentProfile, nextAsked: string[], userText: string) {
+    interactedRef.current = true;
     const prevFilled = filled;
     setProfile(nextProfile);
     setAskedIds(nextAsked);
@@ -329,10 +342,8 @@ function ReportSummary({
 }) {
   const rows: { key: string; label: string; n: number }[] = [
     { key: "eligible", label: HE.buckets.eligible, n: counts.eligible },
-    { key: "needInfo", label: HE.buckets.needInfo, n: counts.needInfo },
+    { key: "needInfo", label: HE.chat.needInfoHuman, n: counts.needInfo },
     { key: "nearMiss", label: HE.buckets.nearMiss, n: counts.nearMiss },
-    { key: "guide", label: HE.buckets.guide, n: counts.guide },
-    { key: "ineligible", label: HE.buckets.ineligible, n: counts.ineligible },
   ];
   return (
     <div className="rounded-2xl border border-forest/20 bg-forest/5 p-4">
@@ -403,7 +414,7 @@ function QuestionControls({
           <button
             key={c.id}
             type="button"
-            className={`${tapBtn} border border-line bg-card text-ink shadow-sm hover:bg-paper-deep`}
+            className={`${tapBtn} border-line bg-card text-ink shadow-sm hover:bg-paper-deep`}
             onClick={() => onChoice(question, c)}
           >
             {c.labelHe}
@@ -426,7 +437,7 @@ function QuestionControls({
             <button
               key={i.id}
               type="button"
-              className={`${tapBtn} border border-line bg-card text-ink shadow-sm hover:bg-paper-deep`}
+              className={`${tapBtn} border-line bg-card text-ink shadow-sm hover:bg-paper-deep`}
               onClick={() => onInstitution(i.id, i.nameHe)}
             >
               <HeWithEn text={i.nameHe} />
@@ -461,7 +472,7 @@ function QuestionControls({
               <button
                 key={city}
                 type="button"
-                className={`${tapBtn} border border-line bg-card text-ink shadow-sm hover:bg-paper-deep`}
+                className={`${tapBtn} border-line bg-card text-ink shadow-sm hover:bg-paper-deep`}
                 onClick={() => onCity(city)}
               >
                 {city}
@@ -513,7 +524,7 @@ function QuestionControls({
                 key={v}
                 type="button"
                 aria-pressed={on}
-                className={`${tapBtn} border ${
+                className={`${tapBtn} ${
                   on ? "border-forest bg-forest text-white" : "border-line bg-card text-ink"
                 }`}
                 onClick={() =>

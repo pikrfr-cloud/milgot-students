@@ -67,9 +67,9 @@ export const HIGH_IMPACT_FIELDS: ProfileField[] = [
  */
 export const CHAT_CORE_FIELDS: ProfileField[] = [
   "degreeLevel",
+  "institution",
   "reservistDaysLastYear",
   "cityOfResidence",
-  "institution",
   "householdSize",
   "householdIncomeBand",
 ];

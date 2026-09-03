@@ -1,4 +1,5 @@
-import { SCHOLARSHIPS } from "@/data/scholarships";
+import { CATALOG_STATS, SCHOLARSHIPS } from "@/data/scholarships";
+import { uniqueMatchableByApplyUrl } from "./catalog";
 import { CITY_SUGGESTIONS, cityNeedsNeighborhood } from "./cities";
 import { INSTITUTIONS, type Institution } from "./institutions";
 import { fieldLabelHe } from "./labels";
@@ -10,6 +11,7 @@ import {
   filledWizardFieldCount,
   isProfileFieldFilled,
 } from "./profile-fields";
+import { profileIsEmpty } from "./profile-storage";
 import type { DegreeLevel, HouseholdIncomeBand, ProfileField, ServiceType, StudentProfile } from "./types";
 import {
   DEGREE_LEVELS,
@@ -95,6 +97,14 @@ export const CHAT_QUESTIONS: ChatQuestion[] = [
     choices: DEGREE_LEVELS.map((d) => choice(d, fieldLabelHe(d), { degreeLevel: d as DegreeLevel })),
   },
   {
+    id: "institution",
+    field: "institution",
+    promptHe: "באיזה מוסד אתם לומדים?",
+    hintHe: "בחרו מוסד, או חפשו בשם.",
+    kind: "search-institution",
+    core: true,
+  },
+  {
     id: "miluim",
     field: "reservistDaysLastYear",
     promptHe: "עשיתם ימי מילואים בשנה האחרונה?",
@@ -129,14 +139,6 @@ export const CHAT_QUESTIONS: ChatQuestion[] = [
     promptHe: "באיזו עיר אתם גרים עכשיו?",
     hintHe: "בחרו עיר, או חפשו בשם.",
     kind: "search-city",
-    core: true,
-  },
-  {
-    id: "institution",
-    field: "institution",
-    promptHe: "באיזה מוסד אתם לומדים?",
-    hintHe: "בחרו מוסד, או חפשו בשם.",
-    kind: "search-institution",
     core: true,
   },
   {
@@ -353,21 +355,58 @@ export type ChatReportCounts = {
   guide: number;
   ineligible: number;
   closedCycle: number;
+  catalogTotal: number;
 };
 
 export function chatReportCounts(
   profile: StudentProfile,
   asOf: Date = new Date(),
 ): ChatReportCounts {
-  const grouped = groupMatches(matchAll(SCHOLARSHIPS, profile, { asOf }));
+  const unique = uniqueMatchableByApplyUrl(SCHOLARSHIPS);
+  const catalogTotal = unique.length;
+  const grouped = groupMatches(matchAll(unique, profile, { asOf }));
+  const cap = (n: number) => Math.min(n, catalogTotal);
   return {
-    eligible: grouped.eligible.length,
-    needInfo: grouped.needInfo.length,
-    nearMiss: grouped.nearMiss.length,
-    guide: grouped.checkAtInstitution.length,
-    ineligible: grouped.ineligible.length,
-    closedCycle: grouped.closedCycle.length,
+    eligible: cap(grouped.eligible.length),
+    needInfo: cap(grouped.needInfo.length),
+    nearMiss: cap(grouped.nearMiss.length),
+    guide: 0,
+    ineligible: cap(grouped.ineligible.length),
+    closedCycle: cap(grouped.closedCycle.length),
+    catalogTotal,
   };
+}
+
+export function chatCountWithinCatalog(counts: ChatReportCounts): boolean {
+  const buckets = [
+    counts.eligible,
+    counts.needInfo,
+    counts.nearMiss,
+    counts.guide,
+    counts.ineligible,
+    counts.closedCycle,
+  ];
+  return (
+    counts.catalogTotal === CATALOG_STATS.total &&
+    buckets.every((n) => n <= counts.catalogTotal) &&
+    buckets.reduce((a, b) => a + b, 0) <= counts.catalogTotal
+  );
+}
+
+export type ChatScrollTrigger = "messages" | "multi-toggle" | "question-change" | "report-open";
+
+/** Auto-scroll shifts tap targets on mobile. Only the report panel may scroll. */
+export function shouldScrollChat(trigger: ChatScrollTrigger): boolean {
+  return trigger === "report-open";
+}
+
+/** Keep in-session answers if the student tapped before storage hydrated. */
+export function mergeSessionAndStoredProfile(
+  session: StudentProfile,
+  stored: StudentProfile,
+): StudentProfile {
+  if (!profileIsEmpty(session)) return session;
+  return stored;
 }
 
 export function chatFieldsCoverWizardKeys(): boolean {

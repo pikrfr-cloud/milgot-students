@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   PROFILE_SCHEMA_VERSION,
   migrateStoredProfile,
+  profileIsEmpty,
   serializeProfile,
+  shouldWriteStoredProfile,
 } from "@/lib/profile-storage";
 import { parseTracking } from "@/lib/tracking";
 
@@ -30,6 +32,16 @@ describe("profile schema version migration", () => {
   it("imports the previous JSON export wrapper", () => {
     const exported = { version: 1, exportedAt: "2026-08-01T00:00:00.000Z", profile: { service: "idf" } };
     expect(migrateStoredProfile(exported).service).toBe("idf");
+  });
+});
+
+describe("results still sees a saved chat profile", () => {
+  it("does not write an empty profile over a filled one", () => {
+    const saved = { degreeLevel: "ba" as const, institution: "tau", cityOfResidence: "חיפה" };
+    expect(profileIsEmpty(saved)).toBe(false);
+    expect(shouldWriteStoredProfile({}, saved)).toBe(false);
+    expect(shouldWriteStoredProfile(saved, {})).toBe(true);
+    expect(shouldWriteStoredProfile(saved, saved)).toBe(true);
   });
 });
 

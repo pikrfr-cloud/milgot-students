@@ -74,14 +74,20 @@ export function potentialOpenAmount(
   };
 }
 
+export function matchingNowHeadlineHe(eligibleCount: number): string {
+  if (eligibleCount <= 0) return "אין כרגע מלגות שמתאימות לפי מה שמילאתם";
+  if (eligibleCount === 1) return "מלגה אחת שמתאימה עכשיו";
+  return `${eligibleCount} מלגות שמתאימות עכשיו`;
+}
+
 export function potentialHeadlineHe(result: PotentialOpenAmount): string {
   if (result.sumIls == null) {
     if (result.openCount === 0) {
-      return "אין כרגע מלגות פתוחות שעומדות בתנאי הסף או שחסר בהן רק פרט.";
+      return "אין סכום ידוע במלגות הפתוחות שרלוונטיות.";
     }
-    return `יש ${result.openCount} מלגות פתוחות רלוונטיות, אבל בלי סכום מאומת במספר — לא הומצא סה״כ.`;
+    return `${result.openCount} מלגות פתוחות בלי סכום מספרי — לא הומצא סה״כ.`;
   }
-  return `פוטנציאל של עד ${formatIls(result.sumIls)} בשנה מ־${result.openCount} מלגות פתוחות`;
+  return `סכום משוער עד ${formatIls(result.sumIls)} במלגות פתוחות עם סכום ידוע`;
 }
 
 export const NO_DOUBLE_COUNT_CAVEAT_HE =

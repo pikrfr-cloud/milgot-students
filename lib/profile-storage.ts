@@ -45,9 +45,17 @@ export function loadProfile(): StudentProfile {
   }
 }
 
+/** Never overwrite a filled stored profile with an empty hydrate/reset write. */
+export function shouldWriteStoredProfile(next: StudentProfile, existing: StudentProfile): boolean {
+  if (profileIsEmpty(next) && !profileIsEmpty(existing)) return false;
+  return true;
+}
+
 export function saveProfile(profile: StudentProfile): void {
   if (typeof window === "undefined") return;
   try {
+    const existing = loadProfile();
+    if (!shouldWriteStoredProfile(profile, existing)) return;
     window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(serializeProfile(profile)));
   } catch {
     // quota / private mode
