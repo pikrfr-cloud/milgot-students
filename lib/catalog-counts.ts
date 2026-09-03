@@ -3,6 +3,7 @@ import {
   maxLastVerified,
   uniqueMatchableCount,
 } from "@/lib/catalog";
+import { hebrewMonthYear } from "@/lib/format";
 import type { Scholarship } from "@/lib/types";
 
 export type CatalogCounts = {
@@ -28,4 +29,12 @@ export function studentCountsLine(c: Pick<CatalogCounts, "matchable" | "guide">)
 
 export function studentCountsLineFull(c: Pick<CatalogCounts, "matchable" | "guide">): string {
   return `${c.matchable} מלגות · ${c.guide} לבדיקה במוסד`;
+}
+
+/** Homepage trust line. Uses real counts; missing month → «לא ודאי». */
+export function studentTrustLine(
+  c: Pick<CatalogCounts, "matchable" | "lastVerifiedMonth">,
+): string {
+  const monthHe = hebrewMonthYear(c.lastVerifiedMonth) ?? "לא ודאי";
+  return `${c.matchable} מלגות · כל אחת אומתה מול המקור הרשמי · עודכן ${monthHe} · הקוד פתוח`;
 }

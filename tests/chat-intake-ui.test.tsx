@@ -38,7 +38,11 @@ describe("chat first paint", () => {
 
   it("home CTA is the one student action and has no waitlist", () => {
     const home = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
+    expect(home).toContain("בלי מנוי. בלי חשבון. רק מלגות שבאמת מתאימות לכם, עם הסבר למה.");
     expect(home).toContain("HE.actions.chatIntake");
+    expect(home).toContain("מה מתאים");
+    expect(home).toContain("מה חסר לאישור");
+    expect(home).toContain("כמעט מתאים ומה הפער");
     expect(home).not.toMatch(/waitlist|רשימת המתנה|מייל/i);
   });
 });

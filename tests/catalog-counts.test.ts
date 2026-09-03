@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { COUNTS, studentCountsLine } from "@/data/counts";
+import { COUNTS, studentCountsLine, studentTrustLine } from "@/data/counts";
+import { hebrewMonthYear } from "@/lib/format";
 import { CATALOG_STATS, SCHOLARSHIPS, TIPS } from "@/data/scholarships";
 import { computeCatalogCounts } from "@/lib/catalog-counts";
 import {
@@ -23,6 +24,14 @@ describe("counts.json is the student-facing source of truth", () => {
     expect(studentCountsLine(COUNTS)).toBe(`${COUNTS.matchable} מלגות`);
     expect(studentCountsLine(COUNTS)).not.toMatch(/רשומות בקטלוג/);
     expect(studentCountsLine(COUNTS)).not.toMatch(/לבדיקה במוסד/);
+    expect(hebrewMonthYear("2026-09")).toBe("ספטמבר 2026");
+    expect(hebrewMonthYear("2026-09-02")).toBe("ספטמבר 2026");
+    expect(hebrewMonthYear("")).toBeNull();
+    expect(hebrewMonthYear("not-a-date")).toBeNull();
+    expect(studentTrustLine(COUNTS)).toBe(
+      `${COUNTS.matchable} מלגות · כל אחת אומתה מול המקור הרשמי · עודכן ספטמבר 2026 · הקוד פתוח`,
+    );
+    expect(studentTrustLine({ matchable: 104, lastVerifiedMonth: "" })).toContain("לא ודאי");
     const catalogPage = readFileSync(join(process.cwd(), "app/catalog/page.tsx"), "utf8");
     expect(catalogPage).toContain("studentCountsLine");
     expect(catalogPage).not.toContain("studentCountsLineFull");
