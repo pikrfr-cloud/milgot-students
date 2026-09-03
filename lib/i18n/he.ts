@@ -21,6 +21,7 @@ export const HE = {
     updates: "מה חדש",
     fastReport: "חמש שאלות",
     chat: "התחילו",
+    closing: "נסגר בקרוב",
   },
 
   buckets: {
@@ -52,6 +53,8 @@ export const HE = {
     importJson: "טעינת עותק",
     deleteAll: "מחק את כל הנתונים שלי",
     addToCalendar: "ליומן",
+    addToCalendarFull: "הוסף ליומן",
+    downloadMonthIcs: "הורד את כל החודש כיומן",
     exportMyListIcs: "ליומן",
     showDetails: "עוד פרטים",
     hideDetails: "פחות פרטים",

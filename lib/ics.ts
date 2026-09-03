@@ -120,8 +120,11 @@ export function downloadIcs(scholarship: Scholarship): void {
   triggerDownload(body, `${scholarship.id}-deadline.ics`);
 }
 
-export function downloadCombinedIcs(scholarships: Scholarship[]): void {
+export function downloadCombinedIcs(
+  scholarships: Scholarship[],
+  filename = "milgot-my-list.ics",
+): void {
   const body = scholarshipsToIcs(scholarships);
   if (!body) return;
-  triggerDownload(body, "milgot-my-list.ics");
+  triggerDownload(body, filename);
 }

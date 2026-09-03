@@ -5,20 +5,27 @@ import { ExternalLink } from "@/components/ExternalLink";
 
 export function WhatsAppShareLink({
   scholarship,
+  text,
   className = "",
 }: {
-  scholarship: Scholarship;
+  scholarship?: Scholarship;
+  text?: string;
   className?: string;
 }) {
-  const text = whatsappScholarshipShareText({
-    nameHe: scholarship.nameHe,
-    amounts: scholarship.amounts,
-    deadline: scholarship.deadline,
-  });
+  const shareText =
+    text ??
+    (scholarship
+      ? whatsappScholarshipShareText({
+          nameHe: scholarship.nameHe,
+          amounts: scholarship.amounts,
+          deadline: scholarship.deadline,
+        })
+      : "");
+  if (!shareText) return null;
   return (
     <ExternalLink
       className={`inline-flex min-h-11 items-center text-sm underline underline-offset-4 ${className}`}
-      href={whatsappShareHref(text)}
+      href={whatsappShareHref(shareText)}
     >
       {HE.actions.shareWhatsapp}
     </ExternalLink>
