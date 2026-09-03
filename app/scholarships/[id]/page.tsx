@@ -14,6 +14,7 @@ import {
   scopeLabelHe,
   STALE_VERIFICATION_LABEL_HE,
 } from "@/lib/format";
+import { scholarshipOgCopy } from "@/lib/scholarship-og";
 import { scholarshipTypeLabel } from "@/lib/labels";
 import { collectEligibilityLabels } from "@/lib/rule-walk";
 import { scholarshipPagePath, scholarshipStaticParams } from "@/lib/catalog-routes";
@@ -38,10 +39,23 @@ export async function generateMetadata({
   const { id } = await params;
   const s = getScholarshipById(id);
   if (!s) return { title: "מלגה לא נמצאה" };
+  const og = scholarshipOgCopy(s);
   return {
-    title: s.nameHe,
-    description: `${s.whoItsForHe} · ${formatDeadline(s.deadline)}`.slice(0, 160),
+    title: og.title,
+    description: og.description,
     alternates: { canonical: scholarshipPagePath(s.id) },
+    openGraph: {
+      title: og.title,
+      description: og.description,
+      url: absoluteUrl(scholarshipPagePath(s.id)),
+      locale: "he_IL",
+      type: "article",
+    },
+    twitter: {
+      card: "summary",
+      title: og.title,
+      description: og.description,
+    },
   };
 }
 
