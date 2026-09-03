@@ -19,6 +19,7 @@ import {
   type ChatChoice,
   type ChatQuestion,
 } from "@/lib/chat-intake";
+import { trackEvent } from "@/lib/analytics";
 import { HE } from "@/lib/i18n/he";
 import { fieldLabelHe, formatProfileValueHe } from "@/lib/labels";
 import { filledWizardFieldCount } from "@/lib/profile-fields";
@@ -129,6 +130,17 @@ export function ChatIntake() {
     const reduce =
       typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     endRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "end" });
+  }, [reportOpen]);
+
+  useEffect(() => {
+    trackEvent("chat_start");
+  }, []);
+
+  const completeTracked = useRef(false);
+  useEffect(() => {
+    if (!reportOpen || completeTracked.current) return;
+    completeTracked.current = true;
+    trackEvent("chat_complete");
   }, [reportOpen]);
 
   function pushMessages(...next: ChatMessage[]) {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { analyticsEnabled } from "@/lib/analytics";
 import { HE } from "@/lib/i18n/he";
 import { LEGAL_UPDATED_HE } from "@/data/scholarships";
 import { DeleteMyDataButton } from "@/components/DeleteMyDataButton";
@@ -21,6 +22,10 @@ export default function PrivacyPage() {
       </p>
       <h2 className="mt-8 font-display text-2xl">מה נשמר</h2>
       <p className="mt-3">{HE.legal.localOnly} לא שולחים אותן לשום מקום.</p>
+      <h2 className="mt-8 font-display text-2xl">{HE.legal.analyticsHeading}</h2>
+      <p className="mt-3">{HE.legal.analyticsWhat}</p>
+      <p className="mt-3">{analyticsEnabled() ? HE.legal.analyticsOn : HE.legal.analyticsOff}</p>
+      <p className="mt-3">{HE.legal.analyticsLocal}</p>
       <h2 className="mt-8 font-display text-2xl">זכות מחיקה</h2>
       <p className="mt-3">{HE.legal.deletionRight}</p>
       <div className="mt-4">

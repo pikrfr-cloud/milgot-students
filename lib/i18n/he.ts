@@ -119,6 +119,12 @@ export const HE = {
     githubIssuesUrl: "https://github.com/pikrfr-cloud/milgot-students/issues",
     contactIssues: "מצאתם טעות או מלגה חסרה?",
     contactIssuesA11y: "משהו לא נגיש? כתבו לנו וציינו את העמוד.",
+    analyticsHeading: "ספירת שימוש",
+    analyticsWhat:
+      "כשהספירה פועלת נרשמים רק אירועים כלליים: התחלת שיחה, סיום שיחה, צפייה בדוח, לחיצה על קישור להגשה. בלי עוגיות, בלי שם, בלי טלפון ובלי התשובות שלכם.",
+    analyticsOff: "כרגע הספירה כבויה — אין כתובת סקריפט בהגדרות, ולא נשלחת שום בקשת מדידה.",
+    analyticsOn: "הספירה פועלת בגרסה הזו.",
+    analyticsLocal: "התשובות נשארות במכשיר ולא נשלחות לכלי המדידה.",
   },
 
   catalog: {
