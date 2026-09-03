@@ -47,6 +47,18 @@ describe("chat first paint", () => {
   });
 });
 
+describe("results unlock copy is not duplicated", () => {
+  it("keeps the heading and uses a different sentence underneath", () => {
+    const src = readFileSync(join(process.cwd(), "components/ResultsView.tsx"), "utf8");
+    expect(src).toContain("HE.results.completeToUnlock");
+    expect(src).toContain("HE.results.completeToUnlockHint");
+    expect(HE.results.completeToUnlockHint).not.toBe(HE.results.completeToUnlock);
+    expect(src).not.toMatch(
+      /completeToUnlock\}[\s\S]{0,80}HE\.results\.completeToUnlock\}/,
+    );
+  });
+});
+
 describe("student notes hide catalog-editor kitchen", () => {
   it("does not print כפילות / applyUrl on a known duplicate-note record", () => {
     const s = SCHOLARSHIPS.find((row) => row.id === "tau-financial-aid");

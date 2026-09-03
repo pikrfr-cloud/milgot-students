@@ -101,6 +101,7 @@ export const HE = {
     timelineTitle: "נסגר ב־60 הימים הקרובים",
     timelineNone: "אין תאריך סגירה ב־60 הימים הקרובים.",
     completeToUnlock: "עוד כמה תשובות יפתחו עוד מלגות",
+    completeToUnlockHint: "אם תענו על עוד שאלות, נדע אם עוד מלגות מתאימות לכם.",
     fastPartial: "עוד כמה תשובות יפתחו עוד מלגות.",
     nearMissFeatured: "כאן אפשר לפעול: למשל התנדבות, היקף לימודים או ממוצע.",
     missingAmounts: "{n} מלגות פתוחות בלי סכום לא נכנסו לסה״כ.",
@@ -128,6 +129,9 @@ export const HE = {
     amountApproved: "סכום מאושר",
     amountEstimate: "צפי",
     amountUnpublished: "לא פורסם",
+    amountApprovedTip: "הסכום כתוב בדף הרשמי של המלגה.",
+    amountEstimateTip: "יש מספר משוער — כדאי לבדוק בדף הרשמי.",
+    amountUnpublishedTip: "בדף הרשמי אין סכום ברור.",
   },
 
   errors: {

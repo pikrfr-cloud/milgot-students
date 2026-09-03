@@ -283,7 +283,7 @@ export function ResultsView() {
         <section className="no-print mt-6 rounded-2xl border border-info/30 bg-info/5 p-5">
           <h2 className="font-display text-xl text-forest-deep">{HE.results.completeToUnlock}</h2>
           <p className="mt-2 text-sm text-ink-soft">
-            {HE.results.completeToUnlock}
+            {HE.results.completeToUnlockHint}
           </p>
           <ul className="mt-3 space-y-1 text-sm">
             {(remainingUnlocks.length ? remainingUnlocks : unlocks).slice(0, 8).map(({ field, count }) => (
