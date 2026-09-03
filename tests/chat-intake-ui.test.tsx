@@ -45,6 +45,12 @@ describe("chat first paint", () => {
     expect(home).toContain("כמעט מתאים ומה הפער");
     expect(home).not.toMatch(/waitlist|רשימת המתנה|מייל/i);
   });
+
+  it("hydrates landing ?institution= / ?city= / #p= on first load", () => {
+    const src = readFileSync(join(process.cwd(), "components/ChatIntake.tsx"), "utf8");
+    expect(src).toContain("loadProfileHydratingShare");
+    expect(src).not.toMatch(/safeLoadChatProfile\(loadProfile\)/);
+  });
 });
 
 describe("results unlock copy is not duplicated", () => {

@@ -68,4 +68,19 @@ describe("scholarshipOgCopy", () => {
       }
     }
   });
+
+  it("does not repeat funderHe when that token is already inside nameHe", () => {
+    const achva = SCHOLARSHIPS.find((s) => s.id === "achva-aid");
+    if (!achva) throw new Error("missing achva-aid");
+    const og = scholarshipOgCopy(achva);
+    expect(achva.nameHe).toContain(achva.funderHe);
+    expect(og.title).toBe(
+      `${achva.nameHe} — ${amountHeadlineHe(achva.amounts)} · לא ודאי`,
+    );
+    const funderHits = og.title.split(achva.funderHe).length - 1;
+    expect(funderHits).toBe(1);
+    expect(og.title).not.toBe(
+      `${achva.nameHe} — ${achva.funderHe} — ${amountHeadlineHe(achva.amounts)} · לא ודאי`,
+    );
+  });
 });

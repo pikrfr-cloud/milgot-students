@@ -1,3 +1,4 @@
+import { INSTITUTIONS } from "./institutions";
 import { parseStudentProfile } from "./profile-schema";
 import { isProfileFieldFilled } from "./profile-fields";
 import { loadProfile, saveProfile } from "./profile-storage";
@@ -151,6 +152,45 @@ export function readSharedProfileFromLocation(loc: LocationBits): StudentProfile
   return decodeSharedProfile(raw);
 }
 
+/**
+ * Landing / chat pre-filter: existing `#p=` plus simple `?institution=` / `?city=`.
+ * Empty or unknown values are ignored — they must not wipe a filled profile.
+ */
+export function readChatSeedFromLocation(loc: LocationBits): StudentProfile | null {
+  const shared = readSharedProfileFromLocation(loc) ?? {};
+  const search = loc.search.startsWith("?") ? loc.search.slice(1) : loc.search;
+  const params = new URLSearchParams(search);
+  const seed: StudentProfile = { ...shared };
+
+  const institution = params.get("institution")?.trim();
+  if (institution && INSTITUTIONS.some((i) => i.id === institution)) {
+    seed.institution = institution;
+  }
+
+  const cityRaw = params.get("city");
+  if (cityRaw) {
+    let city = cityRaw.trim();
+    try {
+      city = decodeURIComponent(city).trim();
+    } catch {
+      city = cityRaw.trim();
+    }
+    if (city) seed.cityOfResidence = city;
+  }
+
+  const compact = compactStudentProfile(seed);
+  return sharedProfileIsEmpty(compact) ? null : compact;
+}
+
+/** Overlay a URL seed onto stored answers. Empty seed leaves stored untouched. */
+export function mergeUrlSeedWithStored(
+  stored: StudentProfile,
+  fromUrl: StudentProfile | null,
+): StudentProfile {
+  if (!fromUrl || sharedProfileIsEmpty(fromUrl)) return stored;
+  return { ...stored, ...fromUrl };
+}
+
 export function decodeSharedProfileFromUrl(url: string): StudentProfile | null {
   try {
     const parsed = new URL(url);
@@ -174,12 +214,14 @@ function resolveWindow(win?: HistoryWindow): HistoryWindow | null {
   return window;
 }
 
-/** Drop `#p=` / `?p=` from the address bar without a navigation. */
+/** Drop `#p=` / `?p=` / landing `?institution=` / `?city=` without a navigation. */
 export function stripSharedProfileFromLocation(win?: HistoryWindow): void {
   const w = resolveWindow(win);
   if (!w) return;
   const url = new URL(w.location.href);
   url.searchParams.delete(SHARED_PROFILE_PARAM);
+  url.searchParams.delete("institution");
+  url.searchParams.delete("city");
   const hashRaw = url.hash.startsWith("#") ? url.hash.slice(1) : url.hash;
   if (hashRaw.startsWith(`${SHARED_PROFILE_PARAM}=`)) {
     url.hash = "";
@@ -191,17 +233,18 @@ export function stripSharedProfileFromLocation(win?: HistoryWindow): void {
 }
 
 /**
- * If the hash/query is a valid shared profile, persist it then strip the payload.
- * Invalid or empty payloads are ignored and do not touch localStorage.
+ * If the hash/query is a valid seed, merge it onto the stored profile then strip.
+ * Invalid or empty payloads are ignored and do not wipe a filled profile.
  */
 export function hydrateSharedProfileFromLocation(win?: HistoryWindow): StudentProfile | null {
   const w = resolveWindow(win);
   if (!w) return null;
-  const shared = readSharedProfileFromLocation(w.location);
-  if (!shared) return null;
-  saveProfile(shared);
+  const fromUrl = readChatSeedFromLocation(w.location);
+  if (!fromUrl) return null;
+  const merged = mergeUrlSeedWithStored(loadProfile(), fromUrl);
+  saveProfile(merged);
   stripSharedProfileFromLocation(w);
-  return shared;
+  return merged;
 }
 
 /** Client mount helper: hydrate a shared URL, then load as usual. */

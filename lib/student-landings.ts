@@ -7,7 +7,7 @@ import {
 } from "./catalog-routes";
 import type { Sector } from "./types";
 
-const SECTOR_CHIP_HE: Record<Sector, string> = {
+export const SECTOR_CHIP_HE: Record<Sector, string> = {
   jewish_general: "יהודים",
   arab: "ערבים",
   druze: "דרוזים",

@@ -1,42 +1,40 @@
-# WO1 worklog
+# WO2 worklog
 
-Work order on `main` (live site GitHub Pages, `output: "export"`, `basePath: "/milgot-students"`). Four section commits plus this log. `lib/matcher.ts` and the scholarship data shape were not changed.
+Work order on `main` (live GitHub Pages, `output: "export"`, `basePath: "/milgot-students"`). Four section commits plus this log. `lib/matcher.ts` and the scholarship data shape were not changed. No scholarships, amounts, or dates were invented.
 
-## WO1-1 Homepage
+## WO2-1 City / institution / sector landings + OG funder dedupe
 
-- H1 is the exact required sentence. The old two-line H1 and the intro that mixed counts into marketing copy were replaced.
-- Trust line uses real `data/counts.json` values: `matchable` is 104; `lastVerifiedMonth` is `2026-09-02` (already present from the counts pipeline / PR #21). Mapped `YYYY-MM` / `YYYY-MM-DD` → `ספטמבר 2026` via `hebrewMonthYear`. The field was not missing, so nothing was derived from catalog age.
-- «הקוד פתוח» is the same phrase as specified; it links to the public GitHub repo (already in `HE.legal.githubRepoUrl`) so the open-source claim is checkable.
-- Three bullets use the required phrases only. No new colors.
+- Reused existing `app/catalog/city`, `institution`, and `sector` routes from the overnight catalog PR. Shared copy lives in `lib/landing-pages.ts`; the pages render `CatalogLandingPage`.
+- H1/title shapes are the required תשפ״ז strings. `title.absolute` so the layout template does not append «מלגות לסטודנטים».
+- Intro is three sentences from the listed rows only: count, published ₪ range (`minIls`/`maxIls` and not `uncertain`), nearest known `deadline.date`. Missing amount or date → «לא ודאי».
+- Chat CTA: city → `?city=`, institution → `?institution=`. ChatIntake hydrates via existing `loadProfileHydratingShare` after `readChatSeedFromLocation` learned those query keys. Empty URL does not wipe a filled stored profile (`mergeUrlSeedWithStored`).
+- Sector CTA uses existing `#p=` profile-share (`sectors: [id]`). No second encoding.
+- **WO1 polish (same commit):** `scholarshipOgCopy` skips `funderHe` when that token already appears in `nameHe`. Achva is no longer «מלגות — המכללה האקדמית אחוה — המכללה האקדמית אחוה — משתנה · לא ודאי». Catalog OG titles stay unique.
+- Qualifying landings (≥2 catalog rows): 4 cities, 30 institutions, 6 sectors. One-row city/institution pages from overnight were kept and upgraded (same component) so existing URLs do not 404.
 
-## WO1-2 Results + amount legend
+## WO2-2 No-volunteering and miluim
 
-- The duplicate was `HE.results.completeToUnlock` as both `<h2>` and the paragraph under it. Heading kept; body is now `completeToUnlockHint` («אם תענו על עוד שאלות, נדע אם עוד מלגות מתאימות לכם.»).
-- `HE.chat.needInfoHuman` («עוד שאלה אחת תפתח עוד מלגות») is still the need-info bucket label, not a second sentence under the same heading.
-- Amount legend chips stay the same colors. Each is a focusable button with `aria-describedby` + `role="tooltip"`. Tooltips open on hover/focus (CSS, no extra client bundle) so they work in the static export. One sentence per label, no invented amounts.
+- Upgraded `app/catalog/group/[id]` for `without-volunteering` and `miluim` (slugs already existed). Same intro + list + chat button.
+- Titles: «מלגות ללא התנדבות תשפ״ז» / «מלגות למילואימניקים תשפ״ז».
+- Chat seeds via `#p=`: `{ willingToVolunteer: false }` and `{ service: "idf", reservistDaysLastYear: 1 }`. The day count is the smallest filled reservist flag — not a typical-service invention — so the miluim question is skipped without claiming 30 days.
+- Periphery uses the same group page, so it received the same structure and «מלגות לפריפריה תשפ״ז» rather than a leftover old H1. Not requested; kept for one component.
 
-## WO1-3 `/closing/`
+## WO2-3 ItemList JSON-LD + sitemap
 
-- Filter lives in `lib/closing.ts` (not matcher): known `deadline.date` only, `0…30` days in Asia/Jerusalem, soonest first. Undated rows are dropped, never filled in.
-- List is unique-by-`applyUrl` matchable records, same student-facing catalog as the homepage counts.
-- The page is SSG: the 30-day window is computed at build/`new Date()` so GitHub Pages HTML includes the list without JS. ICS download still needs a click handler (`downloadIcs` / `downloadCombinedIcs`). WhatsApp is a `wa.me` link via the existing `WhatsAppShareLink` + `whatsappShareHref` (no Business API).
-- SEO title uses the Hebrew month/year of build «now», not a made-up deadline: `מלגות שנסגרות ב-{month} {year} — רשימה מעודכנת` (`title.absolute` so the layout template does not rewrite it).
-- Nav label «נסגר בקרוב»; homepage `UrgentNowStrip` heading links to `/closing/`. Sitemap via `STATIC_PAGES`.
-- Combined ICS filename is optional `milgot-closing.ics` (default for my-list stays `milgot-my-list.ics`). Per-row label is the requested «הוסף ליומן».
-- Volunteering comes from existing `volunteeringChipHe` (structured flags, not free-text guessing).
+- Every collection landing emits schema.org `ItemList` with a `ListItem` per listed scholarship (`position`, `name`, `url`). Sort matches the visible list (soonest known deadline first).
+- Sitemap already listed city/institution/sector/group URLs (`sitemapEntries`). Vitest checks every collection landing href is present, and that JSON-LD parses and contains every listed item.
 
-## WO1-4 Scholarship OG
+## WO2-4 About + report-an-error
 
-- `generateMetadata` now sets unique `title` / `description` / `openGraph` / `twitter` per id. Amount is `amountHeadlineHe` (published number or existing short text). Deadline is `formatHebrewLongDate` when `deadline.date` exists, otherwise «לא ודאי».
-- Two חבל מודיעין records share name + amount + date; funderHe is included in the title so OG titles stay unique without inventing copy.
+- About explains official-source verification in student Hebrew. Last verification date is `COUNTS.lastVerifiedMonth` (same value as `CATALOG_STATS.lastVerifiedMonth`: `2026-09-02` → «2 בספטמבר 2026»).
+- Public repo link is `HE.legal.githubRepoUrl`.
+- «דווחו על טעות» is `IssuesLink` with `template` / `title` / `body` / `labels`. Template file: `.github/ISSUE_TEMPLATE/report-error.yml`. Label is existing `bug` (did not invent a `data` label). No operator name, photo, ח.פ., or payments.
 
-### Skipped: per-scholarship OG images
+## Skipped / not in scope
 
-`next/og` `ImageResponse` at build would need an embedded Hebrew font and would generate ~160 PNGs on every GitHub Pages export. That is a real complication for `output: "export"`. Layout still serves the existing default `og.png`. Unique title + description are in the HTML meta tags. Skip documented here as the work order allows.
-
-## Also skipped / not in scope
-
-- No operator name, photo, ח.פ., or payments.
-- No new scholarships, amounts, or close dates.
-- Did not push directly to `main` (no assumption of write access to default branch); PR against `main` instead.
-- `/closing/` window is as of deploy, not a live server clock, because the site is a static export. Same constraint as other SSG pages. Client ICS/share still run in the browser.
+- Did not push directly to `main` (no assumption of write access to the default branch); PR against `main`.
+- Did not add per-scholarship OG images (already skipped in WO1; static export still uses default `og.png`).
+- City index follows existing `collectCityValues` eligibility walk — only four cities currently have ≥2 rows, so institution pages carry most of the 15+ landing requirement. Municipal funds whose city is not in eligibility do not get a city landing from this work order.
+- `jewish_general` has no sector landing (empty in `catalogSectors()`).
+- Chat does not apply `applyChatAction` for URL seeds; filled profile fields already skip those questions in `nextChatQuestion`. Overlay merge is enough and avoids wiping stored answers.
+- No operator identity, payments, or new catalog rows.

@@ -22,7 +22,8 @@ import {
 import { HE } from "@/lib/i18n/he";
 import { fieldLabelHe, formatProfileValueHe } from "@/lib/labels";
 import { filledWizardFieldCount } from "@/lib/profile-fields";
-import { loadProfile, profileIsEmpty, saveProfile } from "@/lib/profile-storage";
+import { loadProfileHydratingShare } from "@/lib/profile-share";
+import { profileIsEmpty, saveProfile } from "@/lib/profile-storage";
 import type { StudentProfile } from "@/lib/types";
 
 export type ChatMessage = {
@@ -95,7 +96,7 @@ export function ChatIntake() {
 
   useEffect(() => {
     try {
-      const stored = safeLoadChatProfile(loadProfile);
+      const stored = safeLoadChatProfile(loadProfileHydratingShare);
       if (interactedRef.current) {
         return;
       }
