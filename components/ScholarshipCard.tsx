@@ -11,7 +11,7 @@ import { profileFocusHref } from "@/lib/profile-fields";
 import { downloadIcs } from "@/lib/ics";
 import { trackingLabelHe } from "@/lib/tracking";
 import { TRACKING_STATUSES } from "@/lib/types";
-import { ExternalLink } from "@/components/ExternalLink";
+import { ApplyLink } from "@/components/ApplyLink";
 import { HeWithEn } from "@/components/HeWithEn";
 import { useTracking } from "@/components/TrackingProvider";
 import { VerificationNotes } from "@/components/VerificationNotes";
@@ -188,9 +188,9 @@ export function ScholarshipCard({
           </p>
           {s.applyUrl ? (
             <p>
-              <ExternalLink className="underline underline-offset-4 ltr-isolate" href={s.applyUrl}>
+              <ApplyLink className="underline underline-offset-4 ltr-isolate" href={s.applyUrl}>
                 קישור להגשה / מידע
-              </ExternalLink>
+              </ApplyLink>
             </p>
           ) : null}
           {s.amounts.uncertain || s.deadline.uncertain ? (

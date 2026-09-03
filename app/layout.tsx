@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { AnalyticsScript } from "@/components/AnalyticsScript";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { Providers } from "@/components/Providers";
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps) {
           </main>
           <SiteFooter />
         </Providers>
+        <AnalyticsScript />
       </body>
     </html>
   );

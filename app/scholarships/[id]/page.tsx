@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { COUNTS, studentCountsLine } from "@/data/counts";
 import { getScholarshipById } from "@/data/scholarships";
-import { ExternalLink } from "@/components/ExternalLink";
+import { ApplyLink } from "@/components/ApplyLink";
 import { HeWithEn } from "@/components/HeWithEn";
 import { CoverageNote } from "@/components/CoverageNote";
 import {
@@ -161,9 +161,9 @@ export default async function ScholarshipPage({
         <p className="mt-3 leading-relaxed">{s.howToApplyHe}</p>
         {s.applyUrl ? (
           <p className="mt-2">
-            <ExternalLink href={s.applyUrl} className="underline underline-offset-4 ltr-isolate">
+            <ApplyLink href={s.applyUrl} className="underline underline-offset-4 ltr-isolate">
               קישור להגשה / מידע
-            </ExternalLink>
+            </ApplyLink>
           </p>
         ) : null}
       </section>

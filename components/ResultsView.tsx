@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
 import { uniqueMatchableByApplyUrl } from "@/lib/catalog";
@@ -18,11 +18,13 @@ import {
 } from "@/lib/report-conversion";
 import { FAST_REPORT_FIELDS, WIZARD_FIELDS, profileFocusHref } from "@/lib/profile-fields";
 import { profileIsEmpty } from "@/lib/profile-storage";
+import { trackEvent } from "@/lib/analytics";
 import type { ScholarshipMatch, ScholarshipScope, StudentProfile } from "@/lib/types";
 import { amountSortValue, deadlineSortValue, deadlineStatus, formatDeadline, shouldHideIcs } from "@/lib/format";
 import { fieldLabelHe } from "@/lib/labels";
 import { AmountLegend } from "@/components/AmountLegend";
 import { CopyReportLink } from "@/components/CopyReportLink";
+import { WhatsAppReminderButton } from "@/components/WhatsAppReminderButton";
 import { CoverageNote } from "@/components/CoverageNote";
 import { CatalogAgeBanner } from "@/components/CatalogAgeBanner";
 import { EmptyBucket, ScholarshipCard } from "@/components/ScholarshipCard";
@@ -51,11 +53,18 @@ export function ResultsView() {
   const [showIneligible, setShowIneligible] = useState(false);
   const { tracking } = useTracking();
   const asOf = useMemo(() => new Date(), []);
+  const reportViewed = useRef(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- client storage
     setProfile(loadProfileHydratingShare());
   }, []);
+
+  useEffect(() => {
+    if (!profile || profileIsEmpty(profile) || reportViewed.current) return;
+    reportViewed.current = true;
+    trackEvent("report_view");
+  }, [profile]);
 
   useEffect(() => {
     const openAll = () => {
@@ -256,6 +265,7 @@ export function ResultsView() {
             {HE.results.editProfile}
           </Link>
           <CopyReportLink profile={profile} />
+          <WhatsAppReminderButton profile={profile} />
           <button
             type="button"
             onClick={() => window.print()}

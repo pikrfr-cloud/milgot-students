@@ -4,11 +4,16 @@
 # runs the real matcher (not a reduced copy).
 #
 # Deploy:  npx wrangler deploy
-# Local:   npm run whatsapp
-# Secret:  npx wrangler secret put TWILIO_AUTH_TOKEN
+# Local:   npm run whatsapp   (no cron, no KV — reminders do not fire here)
+# Secrets: npx wrangler secret put TWILIO_AUTH_TOKEN
+#          npx wrangler secret put TWILIO_ACCOUNT_SID
+#          npx wrangler secret put TWILIO_WHATSAPP_FROM
 #
-# Multi-isolate note: sessions are in-memory. After deploy, add KV or a
-# Durable Object if more than one Worker isolate will handle the same phone.
+# Multi-isolate note: questionnaire sessions are in-memory. Reminder
+# subscriptions live in the REMINDERS KV namespace (see below).
+#
+# Cron 0 4 * * * is 04:00 UTC — morning Asia/Jerusalem
+# (IDT = UTC+3 → 07:00; winter IST = UTC+2 → 06:00).
 
 name = "milgot-students-whatsapp"
 main = "whatsapp/src/worker.ts"
@@ -17,3 +22,13 @@ compatibility_date = "2026-09-02"
 # Resolve the same @/ aliases as the Next app (lib/, data/).
 [alias]
 "@" = "."
+
+[triggers]
+crons = ["0 4 * * *"]
+
+# PLACEHOLDER id — not a live namespace. Create one and paste the id:
+#   npx wrangler kv namespace create REMINDERS
+# Then replace the id below. Do not invent a production-looking id.
+[[kv_namespaces]]
+binding = "REMINDERS"
+id = "00000000000000000000000000000000"

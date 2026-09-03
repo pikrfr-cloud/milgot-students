@@ -65,6 +65,7 @@ export const HE = {
     toCatalog: "לכל המלגות",
     toHome: "לעמוד הראשי",
     shareWhatsapp: "שיתוף בוואטסאפ",
+    whatsappReminder: "שלחו לי תזכורת בוואטסאפ",
     urgentNow: "נסגר בקרוב",
     produceReport: "להראות תוצאות",
     skip: "לא יודע/ת — דלג",
@@ -118,6 +119,12 @@ export const HE = {
     githubIssuesUrl: "https://github.com/pikrfr-cloud/milgot-students/issues",
     contactIssues: "מצאתם טעות או מלגה חסרה?",
     contactIssuesA11y: "משהו לא נגיש? כתבו לנו וציינו את העמוד.",
+    analyticsHeading: "ספירת שימוש",
+    analyticsWhat:
+      "כשהספירה פועלת נרשמים רק אירועים כלליים: התחלת שיחה, סיום שיחה, צפייה בדוח, לחיצה על קישור להגשה. בלי עוגיות, בלי שם, בלי טלפון ובלי התשובות שלכם.",
+    analyticsOff: "כרגע הספירה כבויה — אין כתובת סקריפט בהגדרות, ולא נשלחת שום בקשת מדידה.",
+    analyticsOn: "הספירה פועלת בגרסה הזו.",
+    analyticsLocal: "התשובות נשארות במכשיר ולא נשלחות לכלי המדידה.",
   },
 
   catalog: {
@@ -185,7 +192,13 @@ export const HE = {
     fullReportLink: "התוצאות המלאות באתר:",
     disclaimer: "זה סיכום לפי מה שמילאתם — לא החלטת זכאות. בודקים באתר המלגה לפני הגשה.",
     sessionPrivacy: "התשובות נשמרות בשיחה הזו בלבד. אין חשבון ואין תשלום.",
-    continueAfterReport: "אפשר להמשיך לענות, לשלוח «דוח» שוב, או «התחל מחדש».",
+    continueAfterReport:
+      "אפשר להמשיך לענות, לשלוח «דוח» שוב, «תזכורת», או «התחל מחדש». להפסקת תזכורות: «הפסק».",
+    reminderNeedReport: "קודם צריך לסיים את השאלות ולקבל דוח. אחר כך שלחו «תזכורת».",
+    reminderSubscribed: "נרשמתם לתזכורת. נשלח הודעה שבוע לפני המועד הרשום.",
+    reminderNoneDated: "אין מלגות מתאימות עם תאריך סגירה. לא נרשמה תזכורת.",
+    reminderStopped: "הפסקנו את התזכורות.",
+    reminderSaveFailed: "לא הצלחנו לשמור את התזכורת עכשיו.",
   },
 
   review: {
