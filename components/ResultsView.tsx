@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
+import { uniqueMatchableByApplyUrl } from "@/lib/catalog";
 import { ProfileLoadingFallback } from "@/components/ProfileLoadingFallback";
 import { loadProfileHydratingShare } from "@/lib/profile-share";
 import { groupMatches, matchAll } from "@/lib/matcher";
@@ -30,6 +31,8 @@ import { downloadCombinedIcs, downloadIcs } from "@/lib/ics";
 import { HE } from "@/lib/i18n/he";
 
 type SortKey = "amount" | "deadline" | "name";
+
+const MATCH_CATALOG = uniqueMatchableByApplyUrl(SCHOLARSHIPS);
 
 function passesAmountFilter(match: ScholarshipMatch, minAmount: number): boolean {
   if (minAmount <= 0) return true;
@@ -66,7 +69,7 @@ export function ResultsView() {
 
   const allMatches = useMemo(() => {
     if (!profile) return [];
-    return matchAll(SCHOLARSHIPS, profile, { asOf });
+    return matchAll(MATCH_CATALOG, profile, { asOf });
   }, [profile, asOf]);
 
   const grouped = useMemo(() => {

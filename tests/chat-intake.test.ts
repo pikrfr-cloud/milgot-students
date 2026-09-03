@@ -22,6 +22,7 @@ import {
   skipChatQuestion,
 } from "@/lib/chat-intake";
 import { matchAll, matchScholarship } from "@/lib/matcher";
+import { uniqueMatchableByApplyUrl } from "@/lib/catalog";
 import { CATALOG_STATS, SCHOLARSHIPS } from "@/data/scholarships";
 import {
   CHAT_CORE_FIELDS,
@@ -226,5 +227,24 @@ describe("chat partial profile still produces a report", () => {
     expect(chatCountWithinCatalog(counts)).toBe(true);
     expect(counts.ineligible).toBeLessThanOrEqual(CATALOG_STATS.total);
     expect(counts.eligible + counts.needInfo + counts.nearMiss + counts.guide).toBeGreaterThan(0);
+  });
+
+  it("results and chat counts stay within the unique catalog total", () => {
+    const unique = uniqueMatchableByApplyUrl(SCHOLARSHIPS);
+    expect(unique.length).toBe(CATALOG_STATS.total);
+    const asOf = new Date("2026-09-01T12:00:00+03:00");
+    const profile: StudentProfile = {
+      institution: "tau",
+      degreeLevel: "ba",
+      cityOfResidence: "תל אביב-יפו",
+      reservistDaysLastYear: 0,
+    };
+    const matches = matchAll(unique, profile, { asOf });
+    expect(matches.length).toBe(CATALOG_STATS.total);
+    const ineligible = matches.filter((m) => m.bucket === "ineligible").length;
+    expect(ineligible).toBeLessThanOrEqual(CATALOG_STATS.total);
+    const counts = chatReportCounts(profile, asOf);
+    expect(counts.ineligible).toBeLessThanOrEqual(CATALOG_STATS.total);
+    expect(chatCountWithinCatalog(counts)).toBe(true);
   });
 });
