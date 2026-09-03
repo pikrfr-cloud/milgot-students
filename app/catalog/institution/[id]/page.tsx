@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CatalogLandingPage } from "@/components/CatalogLandingPage";
 import { institutionStaticParams } from "@/lib/catalog-routes";
 import { institutionLanding, landingMetadata } from "@/lib/landing-pages";
+import { decodeRouteParam } from "@/lib/route-params";
 
 export const dynamicParams = false;
 
@@ -16,7 +17,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const landing = institutionLanding(id);
+  const landing = institutionLanding(decodeRouteParam(id));
   if (!landing) return { title: "מוסד" };
   return landingMetadata(landing);
 }
@@ -27,7 +28,7 @@ export default async function InstitutionCollectionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const landing = institutionLanding(id);
+  const landing = institutionLanding(decodeRouteParam(id));
   if (!landing || landing.scholarships.length === 0) notFound();
   return <CatalogLandingPage landing={landing} />;
 }

@@ -4,6 +4,7 @@ import { CatalogLandingPage } from "@/components/CatalogLandingPage";
 import { groupStaticParams, isSearchGroupId } from "@/lib/catalog-groups";
 import { groupLanding, landingMetadata } from "@/lib/landing-pages";
 import { HE } from "@/lib/i18n/he";
+import { decodeRouteParam } from "@/lib/route-params";
 
 export const dynamicParams = false;
 
@@ -17,8 +18,9 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  if (!isSearchGroupId(id)) return { title: HE.nav.catalog };
-  return landingMetadata(groupLanding(id));
+  const groupId = decodeRouteParam(id);
+  if (!isSearchGroupId(groupId)) return { title: HE.nav.catalog };
+  return landingMetadata(groupLanding(groupId));
 }
 
 export default async function GroupCollectionPage({
@@ -27,8 +29,9 @@ export default async function GroupCollectionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  if (!isSearchGroupId(id)) notFound();
-  const landing = groupLanding(id);
+  const groupId = decodeRouteParam(id);
+  if (!isSearchGroupId(groupId)) notFound();
+  const landing = groupLanding(groupId);
   if (!landing.scholarships.length) notFound();
   return <CatalogLandingPage landing={landing} />;
 }

@@ -2,6 +2,7 @@ import { SCHOLARSHIPS } from "@/data/scholarships";
 import { searchGroupsWithCounts } from "./catalog-groups";
 import { INSTITUTIONS } from "./institutions";
 import { fieldLabelHe } from "./labels";
+import { decodeRouteParam } from "./route-params";
 import { collectCityValues, collectInstitutionValues, collectSectorValues } from "./rule-walk";
 import { absoluteUrl } from "./site";
 import type { Scholarship, Sector } from "./types";
@@ -55,7 +56,11 @@ export function catalogCities(list: Scholarship[] = SCHOLARSHIPS): string[] {
 }
 
 export function cityFromSlug(slug: string, list: Scholarship[] = SCHOLARSHIPS): string | undefined {
-  return catalogCities(list).find((c) => cityToSlug(c) === slug);
+  const decoded = decodeRouteParam(slug);
+  return catalogCities(list).find((c) => {
+    const citySlug = cityToSlug(c);
+    return citySlug === decoded || citySlug === slug;
+  });
 }
 
 export function scholarshipsForCity(cityHe: string, list: Scholarship[] = SCHOLARSHIPS): Scholarship[] {

@@ -5,6 +5,7 @@ import { SECTORS } from "@/lib/types";
 import { CatalogLandingPage } from "@/components/CatalogLandingPage";
 import { sectorStaticParams } from "@/lib/catalog-routes";
 import { landingMetadata, sectorLanding } from "@/lib/landing-pages";
+import { decodeRouteParam } from "@/lib/route-params";
 
 export const dynamicParams = false;
 
@@ -22,7 +23,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const sector = asSector(id);
+  const sector = asSector(decodeRouteParam(id));
   if (!sector) return { title: "מגזר" };
   return landingMetadata(sectorLanding(sector));
 }
@@ -33,7 +34,7 @@ export default async function SectorCollectionPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const sector = asSector(id);
+  const sector = asSector(decodeRouteParam(id));
   if (!sector) notFound();
   const landing = sectorLanding(sector);
   if (!landing.scholarships.length) notFound();
