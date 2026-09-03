@@ -12,8 +12,6 @@ import { missingFieldUnlocks, mostUrgentOpen } from "@/lib/match-insights";
 import {
   NO_DOUBLE_COUNT_CAVEAT_HE,
   matchingNowHeadlineHe,
-  potentialHeadlineHe,
-  potentialOpenAmount,
   upcomingCloseDates,
   unifiedDocuments,
 } from "@/lib/report-conversion";
@@ -37,6 +35,16 @@ import { HE } from "@/lib/i18n/he";
 type SortKey = "amount" | "deadline" | "name";
 
 const MATCH_CATALOG = uniqueMatchableByApplyUrl(SCHOLARSHIPS);
+
+/** Count of matching scholarships + a plain-Hebrew no-stacking line. No catalog-sum ₪. */
+export function ResultsMatchingHeader({ eligibleCount }: { eligibleCount: number }) {
+  return (
+    <section className="mt-6 rounded-2xl border border-forest/20 bg-forest/5 p-5" aria-label="מלגות שמתאימות">
+      <p className="font-display text-2xl text-forest-deep">{matchingNowHeadlineHe(eligibleCount)}</p>
+      <p className="mt-2 text-sm leading-relaxed text-ink">{NO_DOUBLE_COUNT_CAVEAT_HE}</p>
+    </section>
+  );
+}
 
 function passesAmountFilter(match: ScholarshipMatch, minAmount: number): boolean {
   if (minAmount <= 0) return true;
@@ -177,7 +185,6 @@ export function ResultsView() {
   const urgent = mostUrgentOpen(visibleActionable, asOf, 3);
   const unlocks = missingFieldUnlocks(allMatches);
   const topUnlock = unlocks[0];
-  const potential = potentialOpenAmount(allMatches, asOf);
   const timeline = upcomingCloseDates(allMatches, asOf);
   const docs = unifiedDocuments(allMatches);
   const remainingUnlocks = unlocks.filter(({ field }) => !FAST_REPORT_FIELDS.includes(field));
@@ -291,16 +298,7 @@ export function ResultsView() {
       <AmountLegend className="mt-3 no-print" />
       <p className="mt-2 text-xs text-ink-soft no-print">{HE.results.iphonePrint}</p>
 
-      <section className="mt-6 rounded-2xl border border-forest/20 bg-forest/5 p-5" aria-label="מלגות שמתאימות">
-        <p className="font-display text-2xl text-forest-deep">{matchingNowHeadlineHe(eligible.length)}</p>
-        <p className="mt-2 text-sm text-ink-soft leading-relaxed">{potentialHeadlineHe(potential)}</p>
-        <p className="mt-2 text-sm text-ink-soft leading-relaxed">{NO_DOUBLE_COUNT_CAVEAT_HE}</p>
-        {potential.missingAmountCount > 0 ? (
-          <p className="mt-2 text-sm text-ink-soft">
-            {HE.results.missingAmounts.replace("{n}", String(potential.missingAmountCount))}
-          </p>
-        ) : null}
-      </section>
+      <ResultsMatchingHeader eligibleCount={eligible.length} />
 
       {isPartialProfile ? (
         <section className="no-print mt-6 rounded-2xl border border-info/30 bg-info/5 p-5">
