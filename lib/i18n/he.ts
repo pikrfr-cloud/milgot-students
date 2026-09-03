@@ -65,6 +65,7 @@ export const HE = {
     toCatalog: "לכל המלגות",
     toHome: "לעמוד הראשי",
     shareWhatsapp: "שיתוף בוואטסאפ",
+    whatsappReminder: "שלחו לי תזכורת בוואטסאפ",
     urgentNow: "נסגר בקרוב",
     produceReport: "להראות תוצאות",
     skip: "לא יודע/ת — דלג",

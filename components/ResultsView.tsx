@@ -23,6 +23,7 @@ import { amountSortValue, deadlineSortValue, deadlineStatus, formatDeadline, sho
 import { fieldLabelHe } from "@/lib/labels";
 import { AmountLegend } from "@/components/AmountLegend";
 import { CopyReportLink } from "@/components/CopyReportLink";
+import { WhatsAppReminderButton } from "@/components/WhatsAppReminderButton";
 import { CoverageNote } from "@/components/CoverageNote";
 import { CatalogAgeBanner } from "@/components/CatalogAgeBanner";
 import { EmptyBucket, ScholarshipCard } from "@/components/ScholarshipCard";
@@ -256,6 +257,7 @@ export function ResultsView() {
             {HE.results.editProfile}
           </Link>
           <CopyReportLink profile={profile} />
+          <WhatsAppReminderButton profile={profile} />
           <button
             type="button"
             onClick={() => window.print()}
