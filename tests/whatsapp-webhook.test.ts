@@ -116,8 +116,6 @@ describe("skip, numbered choice, button payload", () => {
     const started = applyWhatsAppTurn(undefined, { body: "התחלה" });
     let session = started.session;
     session = applyWhatsAppTurn(session, { body: "1" }).session;
-    session = applyWhatsAppTurn(session, { body: "1" }).session;
-    session = applyWhatsAppTurn(session, { body: "שדרות" }).session;
     expect(nextChatQuestion(session.profile, session.askedIds)?.id).toBe("miluim");
     const skipped = applyWhatsAppTurn(session, { body: "דלג" });
     expect(skipped.session.profile.reservistDaysLastYear).toBeNull();
@@ -133,13 +131,13 @@ describe("skip, numbered choice, button payload", () => {
 describe("session reset and sandbox keywords", () => {
   it("התחלה / start / התחל מחדש reset the session", async () => {
     const first = await xmlOf("היי");
-    expect(first.xml).toContain("באיזה מוסד");
+    expect(first.xml).toContain("איזה תואר");
     await xmlOf("1");
     const reset = await xmlOf("התחל מחדש");
-    expect(reset.xml).toContain("באיזה מוסד");
+    expect(reset.xml).toContain("איזה תואר");
     expect(reset.xml).toContain("התחל מחדש");
     const startEn = handleInbound({ from: FROM, body: "start" });
-    expect(startEn.xml).toContain("באיזה מוסד");
+    expect(startEn.xml).toContain("איזה תואר");
   });
 
   it("ignores Twilio sandbox join/stop without wiping the session", async () => {
@@ -150,7 +148,7 @@ describe("session reset and sandbox keywords", () => {
     expect(join.xml).toBe(twimlEmpty());
     const stop = await xmlOf("stop");
     expect(stop.xml).toBe(twimlEmpty());
-    const next = await xmlOf("1");
+    const next = await xmlOf("2");
     expect(next.xml).toContain("באיזו עיר");
   });
 });
@@ -172,7 +170,7 @@ describe("webhook TwiML + matcher on the built profile", () => {
     const matchAllFn = vi.fn(matchAll);
     await xmlOf("התחלה");
     await xmlOf("1");
-    await xmlOf("1");
+    await xmlOf("2");
     await xmlOf("שדרות");
     const early = handleInbound({ from: FROM, body: "דוח" }, { asOf: AS_OF });
     expect(early.xml).toContain("סיכום לפי התשובות שלכם");

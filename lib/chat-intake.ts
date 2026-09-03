@@ -1,6 +1,6 @@
 import { SCHOLARSHIPS } from "@/data/scholarships";
-import { cityNeedsNeighborhood } from "./cities";
-import { INSTITUTIONS } from "./institutions";
+import { CITY_SUGGESTIONS, cityNeedsNeighborhood } from "./cities";
+import { INSTITUTIONS, type Institution } from "./institutions";
 import { fieldLabelHe } from "./labels";
 import { groupMatches, matchAll } from "./matcher";
 import {
@@ -51,19 +51,41 @@ export const CHAT_POPULAR_INSTITUTION_IDS = [
   "ono",
 ] as const;
 
+/** Large-city chips so the city question is tap-first, search-second. */
+export const CHAT_POPULAR_CITIES = [
+  "תל אביב-יפו",
+  "ירושלים",
+  "חיפה",
+  "באר שבע",
+  "רמת גן",
+  "ראשון לציון",
+  "פתח תקווה",
+  "נתניה",
+] as const;
+
 function choice(id: string, labelHe: string, patch: StudentProfile): ChatChoice {
   return { id, labelHe, patch };
 }
 
+/**
+ * Popular institution chips. An empty list is a catalog bug — fall back to the
+ * first eight schools so the UI never shows a lone search box.
+ */
+export function popularInstitutions(): Institution[] {
+  const found = CHAT_POPULAR_INSTITUTION_IDS.map((id) => INSTITUTIONS.find((i) => i.id === id)).filter(
+    (i): i is Institution => Boolean(i),
+  );
+  if (found.length > 0) return found;
+  return INSTITUTIONS.slice(0, 8);
+}
+
+export function popularCities(): string[] {
+  const found = CHAT_POPULAR_CITIES.filter((c) => CITY_SUGGESTIONS.includes(c));
+  if (found.length > 0) return [...found];
+  return CITY_SUGGESTIONS.slice(0, 8);
+}
+
 export const CHAT_QUESTIONS: ChatQuestion[] = [
-  {
-    id: "institution",
-    field: "institution",
-    promptHe: "באיזה מוסד אתם לומדים?",
-    hintHe: "אפשר לחפש בשם, או לבחור מהרשימה.",
-    kind: "search-institution",
-    core: true,
-  },
   {
     id: "degreeLevel",
     field: "degreeLevel",
@@ -71,13 +93,6 @@ export const CHAT_QUESTIONS: ChatQuestion[] = [
     kind: "choices",
     core: true,
     choices: DEGREE_LEVELS.map((d) => choice(d, fieldLabelHe(d), { degreeLevel: d as DegreeLevel })),
-  },
-  {
-    id: "cityOfResidence",
-    field: "cityOfResidence",
-    promptHe: "באיזו עיר אתם גרים עכשיו?",
-    kind: "search-city",
-    core: true,
   },
   {
     id: "miluim",
@@ -107,6 +122,22 @@ export const CHAT_QUESTIONS: ChatQuestion[] = [
       choice("d30", "21–49 ימים", { reservistDaysLastYear: 30 }),
       choice("d50", "50 ימים ומעלה", { reservistDaysLastYear: 50 }),
     ],
+  },
+  {
+    id: "cityOfResidence",
+    field: "cityOfResidence",
+    promptHe: "באיזו עיר אתם גרים עכשיו?",
+    hintHe: "בחרו עיר, או חפשו בשם.",
+    kind: "search-city",
+    core: true,
+  },
+  {
+    id: "institution",
+    field: "institution",
+    promptHe: "באיזה מוסד אתם לומדים?",
+    hintHe: "בחרו מוסד, או חפשו בשם.",
+    kind: "search-institution",
+    core: true,
   },
   {
     id: "householdSize",
@@ -299,16 +330,20 @@ export function applyChatAction(state: ChatSessionState, action: ChatAction): Ch
 
 export function filterInstitutions(query: string) {
   const q = query.trim();
-  if (!q) {
-    const popular = CHAT_POPULAR_INSTITUTION_IDS.map((id) => INSTITUTIONS.find((i) => i.id === id)).filter(
-      (i): i is NonNullable<typeof i> => Boolean(i),
-    );
-    return popular;
-  }
+  if (!q) return popularInstitutions();
   return INSTITUTIONS.filter((i) => i.nameHe.includes(q) || i.id.toLowerCase().includes(q.toLowerCase())).slice(
     0,
     12,
   );
+}
+
+/** Never throws — chat first paint must not depend on storage succeeding. */
+export function safeLoadChatProfile(load: () => StudentProfile): StudentProfile {
+  try {
+    return load() ?? {};
+  } catch {
+    return {};
+  }
 }
 
 export type ChatReportCounts = {

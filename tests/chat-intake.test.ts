@@ -6,10 +6,15 @@ import {
   applyInstitutionAnswer,
   askedIdsAfterSkip,
   canOfferChatReport,
+  CHAT_POPULAR_INSTITUTION_IDS,
+  CHAT_QUESTIONS,
   chatFieldsCoverWizardKeys,
   chatQuestionById,
   chatReportCounts,
   nextChatQuestion,
+  popularCities,
+  popularInstitutions,
+  safeLoadChatProfile,
   skipChatQuestion,
 } from "@/lib/chat-intake";
 import { matchAll, matchScholarship } from "@/lib/matcher";
@@ -32,6 +37,61 @@ const byId = (id: string) => {
 };
 
 describe("chat intake field glue", () => {
+  it("first nextChatQuestion on empty profile is degreeLevel choices, not search-institution", () => {
+    const first = nextChatQuestion({}, []);
+    expect(first?.id).toBe("degreeLevel");
+    expect(first?.kind).toBe("choices");
+    expect(first?.field).toBe("degreeLevel");
+    expect(first?.choices?.length).toBeGreaterThan(0);
+    expect(CHAT_QUESTIONS[0]?.id).toBe("degreeLevel");
+    expect(CHAT_QUESTIONS[0]?.kind).toBe("choices");
+    expect(CHAT_QUESTIONS.find((q) => q.id === "institution")?.kind).toBe("search-institution");
+    const ids = CHAT_QUESTIONS.map((q) => q.id);
+    expect(ids.indexOf("degreeLevel")).toBeLessThan(ids.indexOf("miluim"));
+    expect(ids.indexOf("miluim")).toBeLessThan(ids.indexOf("cityOfResidence"));
+    expect(ids.indexOf("cityOfResidence")).toBeLessThan(ids.indexOf("institution"));
+  });
+
+  it("walks degree → miluim → city → institution without typing", () => {
+    const degree = nextChatQuestion({}, []);
+    const ba = degree?.choices?.find((c) => c.id === "ba");
+    if (!degree || !ba) throw new Error("missing degree");
+    const afterDegree = applyChatAction({ profile: {}, askedIds: [] }, {
+      type: "choice",
+      question: degree,
+      choice: ba,
+    });
+    const miluim = nextChatQuestion(afterDegree.profile, afterDegree.askedIds);
+    expect(miluim?.id).toBe("miluim");
+    const no = miluim?.choices?.find((c) => c.id === "no");
+    if (!miluim || !no) throw new Error("missing miluim");
+    const afterMiluim = applyChatAction(afterDegree, { type: "choice", question: miluim, choice: no });
+    const city = nextChatQuestion(afterMiluim.profile, afterMiluim.askedIds);
+    expect(city?.id).toBe("cityOfResidence");
+    const afterCity = applyChatAction(afterMiluim, { type: "city", question: city!, city: "חיפה" });
+    const institution = nextChatQuestion(afterCity.profile, afterCity.askedIds);
+    expect(institution?.id).toBe("institution");
+    expect(institution?.kind).toBe("search-institution");
+    expect(canOfferChatReport(afterCity.profile)).toBe(true);
+  });
+
+  it("popular institution chips are eight named schools, never an empty list", () => {
+    const list = popularInstitutions();
+    expect(list).toHaveLength(8);
+    expect(list.map((i) => i.id)).toEqual([...CHAT_POPULAR_INSTITUTION_IDS]);
+    expect(popularCities()).toHaveLength(8);
+  });
+
+  it("safeLoadChatProfile still yields the first choice question when storage throws", () => {
+    const profile = safeLoadChatProfile(() => {
+      throw new Error("localStorage blocked");
+    });
+    expect(profile).toEqual({});
+    const first = nextChatQuestion(profile, []);
+    expect(first?.id).toBe("degreeLevel");
+    expect(first?.kind).toBe("choices");
+  });
+
   it("drives questions from existing profile fields, not a parallel schema", () => {
     expect(chatFieldsCoverWizardKeys()).toBe(true);
     for (const field of [...CHAT_CORE_FIELDS, ...CHAT_EXTRA_FIELDS]) {
@@ -44,7 +104,7 @@ describe("chat intake field glue", () => {
   it("skips already-filled fields and advances past a skip without looping", () => {
     const filled: StudentProfile = { institution: "tau", degreeLevel: "ba" };
     const first = nextChatQuestion(filled, []);
-    expect(first?.field).toBe("cityOfResidence");
+    expect(first?.id).toBe("miluim");
 
     const miluim = chatQuestionById("miluim");
     if (!miluim) throw new Error("missing miluim");
