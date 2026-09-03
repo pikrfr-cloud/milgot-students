@@ -3,6 +3,7 @@ import { amount, deadline } from "@/data/scholarships/helpers";
 import { matchScholarship } from "@/lib/matcher";
 import {
   dropMutexDuplicates,
+  matchingNowHeadlineHe,
   potentialHeadlineHe,
   potentialOpenAmount,
   unifiedDocuments,
@@ -71,6 +72,9 @@ describe("₪ header — potentialOpenAmount", () => {
     expect(potentialHeadlineHe(result)).toContain("10,000");
     expect(potentialHeadlineHe(result)).toContain("₪");
     expect(potentialHeadlineHe(result)).not.toMatch(/עד 0 ₪/);
+    expect(potentialHeadlineHe(result)).not.toContain("פוטנציאל");
+    expect(matchingNowHeadlineHe(5)).toBe("5 מלגות שמתאימות עכשיו");
+    expect(matchingNowHeadlineHe(1)).toBe("מלגה אחת שמתאימה עכשיו");
   });
 
   it("does not double-count mutex overlapping programs", () => {

@@ -66,10 +66,10 @@ export const HIGH_IMPACT_FIELDS: ProfileField[] = [
  * Same StudentProfile keys as the wizard — not a parallel schema.
  */
 export const CHAT_CORE_FIELDS: ProfileField[] = [
-  "institution",
   "degreeLevel",
-  "cityOfResidence",
+  "institution",
   "reservistDaysLastYear",
+  "cityOfResidence",
   "householdSize",
   "householdIncomeBand",
 ];

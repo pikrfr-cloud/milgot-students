@@ -1,6 +1,7 @@
-import { SCHOLARSHIPS } from "@/data/scholarships";
-import { cityNeedsNeighborhood } from "./cities";
-import { INSTITUTIONS } from "./institutions";
+import { CATALOG_STATS, SCHOLARSHIPS } from "@/data/scholarships";
+import { uniqueMatchableByApplyUrl } from "./catalog";
+import { CITY_SUGGESTIONS, cityNeedsNeighborhood } from "./cities";
+import { INSTITUTIONS, type Institution } from "./institutions";
 import { fieldLabelHe } from "./labels";
 import { groupMatches, matchAll } from "./matcher";
 import {
@@ -10,6 +11,7 @@ import {
   filledWizardFieldCount,
   isProfileFieldFilled,
 } from "./profile-fields";
+import { profileIsEmpty } from "./profile-storage";
 import type { DegreeLevel, HouseholdIncomeBand, ProfileField, ServiceType, StudentProfile } from "./types";
 import {
   DEGREE_LEVELS,
@@ -51,19 +53,41 @@ export const CHAT_POPULAR_INSTITUTION_IDS = [
   "ono",
 ] as const;
 
+/** Large-city chips so the city question is tap-first, search-second. */
+export const CHAT_POPULAR_CITIES = [
+  "תל אביב-יפו",
+  "ירושלים",
+  "חיפה",
+  "באר שבע",
+  "רמת גן",
+  "ראשון לציון",
+  "פתח תקווה",
+  "נתניה",
+] as const;
+
 function choice(id: string, labelHe: string, patch: StudentProfile): ChatChoice {
   return { id, labelHe, patch };
 }
 
+/**
+ * Popular institution chips. An empty list is a catalog bug — fall back to the
+ * first eight schools so the UI never shows a lone search box.
+ */
+export function popularInstitutions(): Institution[] {
+  const found = CHAT_POPULAR_INSTITUTION_IDS.map((id) => INSTITUTIONS.find((i) => i.id === id)).filter(
+    (i): i is Institution => Boolean(i),
+  );
+  if (found.length > 0) return found;
+  return INSTITUTIONS.slice(0, 8);
+}
+
+export function popularCities(): string[] {
+  const found = CHAT_POPULAR_CITIES.filter((c) => CITY_SUGGESTIONS.includes(c));
+  if (found.length > 0) return [...found];
+  return CITY_SUGGESTIONS.slice(0, 8);
+}
+
 export const CHAT_QUESTIONS: ChatQuestion[] = [
-  {
-    id: "institution",
-    field: "institution",
-    promptHe: "באיזה מוסד אתם לומדים?",
-    hintHe: "אפשר לחפש בשם, או לבחור מהרשימה.",
-    kind: "search-institution",
-    core: true,
-  },
   {
     id: "degreeLevel",
     field: "degreeLevel",
@@ -73,10 +97,11 @@ export const CHAT_QUESTIONS: ChatQuestion[] = [
     choices: DEGREE_LEVELS.map((d) => choice(d, fieldLabelHe(d), { degreeLevel: d as DegreeLevel })),
   },
   {
-    id: "cityOfResidence",
-    field: "cityOfResidence",
-    promptHe: "באיזו עיר אתם גרים עכשיו?",
-    kind: "search-city",
+    id: "institution",
+    field: "institution",
+    promptHe: "באיזה מוסד אתם לומדים?",
+    hintHe: "בחרו מוסד, או חפשו בשם.",
+    kind: "search-institution",
     core: true,
   },
   {
@@ -107,6 +132,14 @@ export const CHAT_QUESTIONS: ChatQuestion[] = [
       choice("d30", "21–49 ימים", { reservistDaysLastYear: 30 }),
       choice("d50", "50 ימים ומעלה", { reservistDaysLastYear: 50 }),
     ],
+  },
+  {
+    id: "cityOfResidence",
+    field: "cityOfResidence",
+    promptHe: "באיזו עיר אתם גרים עכשיו?",
+    hintHe: "בחרו עיר, או חפשו בשם.",
+    kind: "search-city",
+    core: true,
   },
   {
     id: "householdSize",
@@ -299,16 +332,20 @@ export function applyChatAction(state: ChatSessionState, action: ChatAction): Ch
 
 export function filterInstitutions(query: string) {
   const q = query.trim();
-  if (!q) {
-    const popular = CHAT_POPULAR_INSTITUTION_IDS.map((id) => INSTITUTIONS.find((i) => i.id === id)).filter(
-      (i): i is NonNullable<typeof i> => Boolean(i),
-    );
-    return popular;
-  }
+  if (!q) return popularInstitutions();
   return INSTITUTIONS.filter((i) => i.nameHe.includes(q) || i.id.toLowerCase().includes(q.toLowerCase())).slice(
     0,
     12,
   );
+}
+
+/** Never throws — chat first paint must not depend on storage succeeding. */
+export function safeLoadChatProfile(load: () => StudentProfile): StudentProfile {
+  try {
+    return load() ?? {};
+  } catch {
+    return {};
+  }
 }
 
 export type ChatReportCounts = {
@@ -318,21 +355,58 @@ export type ChatReportCounts = {
   guide: number;
   ineligible: number;
   closedCycle: number;
+  catalogTotal: number;
 };
 
 export function chatReportCounts(
   profile: StudentProfile,
   asOf: Date = new Date(),
 ): ChatReportCounts {
-  const grouped = groupMatches(matchAll(SCHOLARSHIPS, profile, { asOf }));
+  const unique = uniqueMatchableByApplyUrl(SCHOLARSHIPS);
+  const catalogTotal = unique.length;
+  const grouped = groupMatches(matchAll(unique, profile, { asOf }));
+  const cap = (n: number) => Math.min(n, catalogTotal);
   return {
-    eligible: grouped.eligible.length,
-    needInfo: grouped.needInfo.length,
-    nearMiss: grouped.nearMiss.length,
-    guide: grouped.checkAtInstitution.length,
-    ineligible: grouped.ineligible.length,
-    closedCycle: grouped.closedCycle.length,
+    eligible: cap(grouped.eligible.length),
+    needInfo: cap(grouped.needInfo.length),
+    nearMiss: cap(grouped.nearMiss.length),
+    guide: 0,
+    ineligible: cap(grouped.ineligible.length),
+    closedCycle: cap(grouped.closedCycle.length),
+    catalogTotal,
   };
+}
+
+export function chatCountWithinCatalog(counts: ChatReportCounts): boolean {
+  const buckets = [
+    counts.eligible,
+    counts.needInfo,
+    counts.nearMiss,
+    counts.guide,
+    counts.ineligible,
+    counts.closedCycle,
+  ];
+  return (
+    counts.catalogTotal === CATALOG_STATS.total &&
+    buckets.every((n) => n <= counts.catalogTotal) &&
+    buckets.reduce((a, b) => a + b, 0) <= counts.catalogTotal
+  );
+}
+
+export type ChatScrollTrigger = "messages" | "multi-toggle" | "question-change" | "report-open";
+
+/** Auto-scroll shifts tap targets on mobile. Only the report panel may scroll. */
+export function shouldScrollChat(trigger: ChatScrollTrigger): boolean {
+  return trigger === "report-open";
+}
+
+/** Keep in-session answers if the student tapped before storage hydrated. */
+export function mergeSessionAndStoredProfile(
+  session: StudentProfile,
+  stored: StudentProfile,
+): StudentProfile {
+  if (!profileIsEmpty(session)) return session;
+  return stored;
 }
 
 export function chatFieldsCoverWizardKeys(): boolean {

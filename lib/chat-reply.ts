@@ -4,6 +4,7 @@ import {
   emptyChatState,
   filterInstitutions,
   nextChatQuestion,
+  popularCities,
   type ChatAction,
   type ChatQuestion,
   type ChatChoice,
@@ -20,7 +21,13 @@ import type { StudentProfile } from "./types";
 const SANDBOX_IGNORE = /^(join(\s+\S+)?|stop|unstop)$/i;
 
 const RESET_COMMANDS = new Set(["התחלה", "התחל", "התחל מחדש", "start", "reset"]);
-const REPORT_COMMANDS = new Set(["דוח", "להראות דוח עכשיו", "report"]);
+const REPORT_COMMANDS = new Set([
+  "דוח",
+  "להראות דוח עכשיו",
+  "להראות תוצאות",
+  "הציגו לי מלגות",
+  "report",
+]);
 const SKIP_COMMANDS = new Set(["דלג", "דילוג", "skip", "0"]);
 
 export type NumberedOption = {
@@ -101,7 +108,7 @@ export function questionOptions(question: ChatQuestion, searchQuery = ""): Numbe
 
 export function filterCities(query: string): string[] {
   const q = query.trim();
-  if (!q) return CITY_SUGGESTIONS.slice(0, 8);
+  if (!q) return popularCities();
   const exact = CITY_SUGGESTIONS.find((c) => citiesMatch(c, q));
   if (exact) return [exact];
   const needle = compactCityKey(normalizeCityName(q));

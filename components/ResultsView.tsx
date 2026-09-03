@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { SCHOLARSHIPS, TIPS } from "@/data/scholarships";
+import { uniqueMatchableByApplyUrl } from "@/lib/catalog";
 import { ProfileLoadingFallback } from "@/components/ProfileLoadingFallback";
 import { loadProfileHydratingShare } from "@/lib/profile-share";
 import { groupMatches, matchAll } from "@/lib/matcher";
 import { missingFieldUnlocks, mostUrgentOpen } from "@/lib/match-insights";
 import {
   NO_DOUBLE_COUNT_CAVEAT_HE,
+  matchingNowHeadlineHe,
   potentialHeadlineHe,
   potentialOpenAmount,
   upcomingCloseDates,
@@ -29,6 +31,8 @@ import { downloadCombinedIcs, downloadIcs } from "@/lib/ics";
 import { HE } from "@/lib/i18n/he";
 
 type SortKey = "amount" | "deadline" | "name";
+
+const MATCH_CATALOG = uniqueMatchableByApplyUrl(SCHOLARSHIPS);
 
 function passesAmountFilter(match: ScholarshipMatch, minAmount: number): boolean {
   if (minAmount <= 0) return true;
@@ -65,7 +69,7 @@ export function ResultsView() {
 
   const allMatches = useMemo(() => {
     if (!profile) return [];
-    return matchAll(SCHOLARSHIPS, profile, { asOf });
+    return matchAll(MATCH_CATALOG, profile, { asOf });
   }, [profile, asOf]);
 
   const grouped = useMemo(() => {
@@ -246,7 +250,7 @@ export function ResultsView() {
         <div>
           <h1 className="font-display text-4xl text-forest-deep">{HE.results.title}</h1>
           <p className="mt-2 text-ink-soft" aria-live="polite">
-            {eligible.length} {HE.buckets.eligible} · {needInfo.length} חסר פרט · {nearMiss.length}{" "}
+            {eligible.length} {HE.buckets.eligible} · {needInfo.length} {HE.chat.needInfoHuman} · {nearMiss.length}{" "}
             {HE.buckets.nearMiss} · {checkAtInstitution.length} {HE.buckets.guide} ·{" "}
             {closedCycle.length} {HE.buckets.closedCycle} · {ineligible.length} {HE.buckets.ineligible}
             {filtersOn ? HE.results.afterFilter : ""}
@@ -269,8 +273,9 @@ export function ResultsView() {
       <AmountLegend className="mt-3 no-print" />
       <p className="mt-2 text-xs text-ink-soft no-print">{HE.results.iphonePrint}</p>
 
-      <section className="mt-6 rounded-2xl border border-forest/20 bg-forest/5 p-5" aria-label="פוטנציאל בשקלים">
-        <p className="font-display text-2xl text-forest-deep">{potentialHeadlineHe(potential)}</p>
+      <section className="mt-6 rounded-2xl border border-forest/20 bg-forest/5 p-5" aria-label="מלגות שמתאימות">
+        <p className="font-display text-2xl text-forest-deep">{matchingNowHeadlineHe(eligible.length)}</p>
+        <p className="mt-2 text-sm text-ink-soft leading-relaxed">{potentialHeadlineHe(potential)}</p>
         <p className="mt-2 text-sm text-ink-soft leading-relaxed">{NO_DOUBLE_COUNT_CAVEAT_HE}</p>
         {potential.missingAmountCount > 0 ? (
           <p className="mt-2 text-sm text-ink-soft">
