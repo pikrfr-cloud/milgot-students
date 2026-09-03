@@ -1,0 +1,23 @@
+name: דיווח על טעות
+description: מצאתם טעות במלגה, בסכום, במועד או בעמוד
+title: "[טעות] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        תארו מה לא נכון. בלי שם, תמונה או פרטי תשלום.
+  - type: textarea
+    id: what
+    attributes:
+      label: מה לא נכון?
+      description: סכום, מועד, תנאי, או קישור שבור.
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: איזה עמוד או מלגה?
+      description: כתובת או שם המלגה, אם ידוע.
+    validations:
+      required: false
