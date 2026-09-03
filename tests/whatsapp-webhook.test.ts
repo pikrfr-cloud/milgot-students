@@ -4,7 +4,8 @@ import { applyWhatsAppTurn, formatQuestionMessage, parseInbound, questionOptions
 import { chatQuestionById, chatReportCounts, nextChatQuestion } from "@/lib/chat-intake";
 import { matchAll } from "@/lib/matcher";
 import { MIN_CHAT_ANSWERS_FOR_REPORT } from "@/lib/profile-fields";
-import { WHATSAPP_CHAT_URL, buildWhatsAppReport } from "@/lib/whatsapp-report";
+import { buildWhatsAppReport } from "@/lib/whatsapp-report";
+import { sharedResultsUrl } from "@/lib/profile-share";
 import type { StudentProfile } from "@/lib/types";
 import nextConfig from "../next.config";
 import { app } from "@/whatsapp/src/app";
@@ -175,9 +176,7 @@ describe("webhook TwiML + matcher on the built profile", () => {
     await xmlOf("שדרות");
     await xmlOf("1");
     const early = await handleInbound({ from: FROM, body: "דוח" }, { asOf: AS_OF });
-    expect(early.xml).toContain("סיכום לפי התשובות שלכם");
-    expect(early.xml).toContain(WHATSAPP_CHAT_URL);
-
+    expect(early.xml).toContain("הנה מה שמצאתי לפי התשובות שלכם");
     const expected: StudentProfile = {
       institution: "tau",
       degreeLevel: "ba",
@@ -185,6 +184,10 @@ describe("webhook TwiML + matcher on the built profile", () => {
       cityOfResidence: "שדרות",
       neighborhood: null,
     };
+    expect(early.xml).toContain("#p=");
+    expect(early.xml).toContain("/results/");
+    expect(early.xml).toContain(sharedResultsUrl(expected).replace(/&/g, "&amp;"));
+
     const report = buildWhatsAppReport(expected, { asOf: AS_OF, matchAllFn });
     expect(matchAllFn).toHaveBeenCalledTimes(1);
     expect(matchAllFn.mock.calls[0][0]).toBe(SCHOLARSHIPS);
@@ -193,13 +196,10 @@ describe("webhook TwiML + matcher on the built profile", () => {
     expect(report.counts.eligible + report.counts.needInfo + report.counts.nearMiss + report.counts.guide).toBeGreaterThan(
       0,
     );
-    expect(report.text).toContain("מתאים:");
-    expect(report.text).toContain(String(report.counts.eligible));
+    expect(report.text).toMatch(/מתאים עכשיו|חסר פרט אחד|כמעט מתאים|צריך לבדוק במוסד/);
+    expect(report.resultsUrl).toContain("#p=");
     expect(report.text).not.toContain("זכאים לזכייה");
     expect(MIN_CHAT_ANSWERS_FOR_REPORT).toBe(3);
-    for (const line of report.text.split("\n").filter((l) => l.startsWith("• "))) {
-      expect(line.length).toBeLessThan(160);
-    }
   });
 });
 
