@@ -7,6 +7,8 @@ import { decodeSharedProfile } from "@/lib/profile-share";
 import { HE } from "@/lib/i18n/he";
 import {
   cityLandingTitleHe,
+  groupLanding,
+  groupLandingTitleHe,
   institutionLanding,
   institutionLandingTitleHe,
   landingIntroHe,
@@ -147,5 +149,31 @@ describe("live catalog landings stay honest", () => {
         expect(SCHOLARSHIPS.some((row) => row.id === s.id)).toBe(true);
       }
     }
+  });
+});
+
+describe("no-volunteering and miluim landings", () => {
+  it("uses the required group titles and pre-seeds chat", () => {
+    expect(groupLandingTitleHe("without-volunteering")).toBe(`מלגות ללא התנדבות ${TASHPAZ_HE}`);
+    expect(groupLandingTitleHe("miluim")).toBe(`מלגות למילואימניקים ${TASHPAZ_HE}`);
+
+    const none = groupLanding("without-volunteering");
+    expect(none.scholarships.length).toBeGreaterThanOrEqual(2);
+    expect(none.titleHe).toBe(`מלגות ללא התנדבות ${TASHPAZ_HE}`);
+    expect(none.introHe).toMatch(/מלגות בקטלוג/);
+    const noneSeed = decodeSharedProfile(none.chatHref.split("#p=")[1]!);
+    expect(noneSeed).toEqual({ willingToVolunteer: false });
+
+    const miluim = groupLanding("miluim");
+    expect(miluim.scholarships.length).toBeGreaterThanOrEqual(2);
+    expect(miluim.titleHe).toBe(`מלגות למילואימניקים ${TASHPAZ_HE}`);
+    const miluimSeed = decodeSharedProfile(miluim.chatHref.split("#p=")[1]!);
+    expect(miluimSeed?.service).toBe("idf");
+    expect(miluimSeed?.reservistDaysLastYear).toBe(1);
+
+    const html = renderToStaticMarkup(<CatalogLandingPage landing={none} />);
+    expect(html).toContain(none.titleHe);
+    expect(html).toContain(HE.actions.chatIntake);
+    expect(html).toContain("#p=");
   });
 });

@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { SCHOLARSHIPS } from "@/data/scholarships";
-import { hasNumericIls } from "./catalog";
+import { hasNumericIls, uniqueMatchableByApplyUrl } from "./catalog";
+import {
+  groupCollectionPath,
+  SEARCH_GROUP_IDS,
+  scholarshipsForGroup,
+  type SearchGroupId,
+} from "./catalog-groups";
 import {
   catalogCities,
   catalogInstitutionIds,
@@ -28,7 +34,7 @@ export const TASHPAZ_HE = "תשפ״ז";
 export const UNCERTAIN_HE = "לא ודאי";
 export const MIN_LANDING_SCHOLARSHIPS = 2;
 
-export type CollectionLandingKind = "city" | "institution" | "sector";
+export type CollectionLandingKind = "city" | "institution" | "sector" | "group";
 
 export type CollectionLanding = {
   kind: CollectionLandingKind;
@@ -103,6 +109,28 @@ export function institutionLandingTitleHe(nameHe: string): string {
 
 export function sectorLandingTitleHe(sector: Sector): string {
   return `מלגות ל${SECTOR_CHIP_HE[sector]} ${TASHPAZ_HE}`;
+}
+
+export function groupLandingTitleHe(id: SearchGroupId): string {
+  switch (id) {
+    case "without-volunteering":
+      return `מלגות ללא התנדבות ${TASHPAZ_HE}`;
+    case "miluim":
+      return `מלגות למילואימניקים ${TASHPAZ_HE}`;
+    case "periphery":
+      return `מלגות לפריפריה ${TASHPAZ_HE}`;
+  }
+}
+
+export function groupChatSeed(id: SearchGroupId): StudentProfile {
+  switch (id) {
+    case "without-volunteering":
+      return { willingToVolunteer: false };
+    case "miluim":
+      return { service: "idf", reservistDaysLastYear: 1 };
+    case "periphery":
+      return { peripheryResidence: true };
+  }
 }
 
 /**
@@ -212,9 +240,33 @@ export function sectorLandings(list: Scholarship[] = SCHOLARSHIPS): CollectionLa
     .filter((l) => l.scholarships.length > 0);
 }
 
+export function groupLanding(id: SearchGroupId): CollectionLanding {
+  const scholarships = uniqueMatchableByApplyUrl(scholarshipsForGroup(id));
+  return toLanding(
+    "group",
+    id,
+    groupCollectionPath(id),
+    groupLandingTitleHe(id),
+    scholarships,
+    groupChatSeed(id),
+  );
+}
+
+export function groupLandings(): CollectionLanding[] {
+  return SEARCH_GROUP_IDS.map(groupLanding).filter((l) => l.scholarships.length > 0);
+}
+
 /** City / institution / sector pages with at least two catalog rows. */
 export function qualifyingCollectionLandings(list: Scholarship[] = SCHOLARSHIPS): CollectionLanding[] {
   return [...cityLandings(list), ...institutionLandings(list), ...sectorLandings(list)].filter(
     (l) => l.scholarships.length >= MIN_LANDING_SCHOLARSHIPS,
   );
+}
+
+/** All student landings that meet the two-scholarship bar, including groups. */
+export function qualifyingStudentLandings(list: Scholarship[] = SCHOLARSHIPS): CollectionLanding[] {
+  return [
+    ...qualifyingCollectionLandings(list),
+    ...groupLandings().filter((l) => l.scholarships.length >= MIN_LANDING_SCHOLARSHIPS),
+  ];
 }
