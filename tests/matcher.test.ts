@@ -335,6 +335,125 @@ describe("near-miss counting", () => {
   });
 });
 
+describe("institutionIds is a student-institution gate", () => {
+  const openuYear3Ba: StudentProfile = {
+    institution: "openu",
+    yearOfStudy: 3,
+    degreeLevel: "ba",
+    average: 80,
+    fieldOfStudy: "computer_science",
+    willingToVolunteer: false,
+  };
+
+  it("has a real catalog row with institutionIds and no institutionIn (Young Weizmann Scholars)", () => {
+    const s = byId("weizmann-young-scholars");
+    expect(s.institutionIds).toEqual(["weizmann"]);
+    expect(collectInstitutionIn(s.eligibility)).toEqual([]);
+  });
+
+  it("sends Open University year 3 to ineligible for that row, not nearMiss from GPA", () => {
+    const match = matchScholarship(byId("weizmann-young-scholars"), openuYear3Ba);
+    expect(match.bucket).toBe("ineligible");
+    expect(match.eval.immutableFailCount).toBeGreaterThan(0);
+    expect(match.failed.some((c) => c.field === "institution")).toBe(true);
+    expect(match.failed.some((c) => c.detailHe.includes("לא מתקיים. בפרופיל: האוניברסיטה הפתוחה."))).toBe(
+      true,
+    );
+  });
+
+  it("puts the same row in needInfo when institution is still blank, not nearMiss", () => {
+    const match = matchScholarship(byId("weizmann-young-scholars"), {
+      yearOfStudy: 3,
+      degreeLevel: "ba",
+      average: 80,
+      fieldOfStudy: "computer_science",
+    });
+    expect(match.bucket).toBe("needInfo");
+    expect(match.bucket).not.toBe("nearMiss");
+    expect(match.bucket).not.toBe("eligible");
+    expect(match.unknown.some((c) => c.field === "institution")).toBe(true);
+  });
+
+  it("still passes when the profile institution is in institutionIds", () => {
+    const match = matchScholarship(byId("weizmann-young-scholars"), {
+      institution: "weizmann",
+      yearOfStudy: 3,
+      degreeLevel: "ba",
+      fieldOfStudy: "computer_science",
+      average: 91,
+    });
+    expect(match.failed.some((c) => c.field === "institution")).toBe(false);
+    expect(match.passed.some((c) => c.field === "institution")).toBe(true);
+    expect(match.eval.immutableFailCount).toBe(0);
+    expect(match.bucket).not.toBe("ineligible");
+  });
+
+  it("does not nearMiss a school-gated fund for a student who has not picked a school yet", () => {
+    const match = matchScholarship(byId("ramat-gan-biu"), {
+      degreeLevel: "ba",
+      cityOfResidence: "רמת גן",
+      willingToVolunteer: false,
+    });
+    expect(match.bucket).toBe("needInfo");
+    expect(match.bucket).not.toBe("nearMiss");
+    expect(match.unknown.some((c) => c.field === "institution")).toBe(true);
+  });
+
+  it("does not treat city-or-campus anyOf as a hard institutionIds fail", () => {
+    const match = matchScholarship(byId("sderot-students"), {
+      institution: "openu",
+      cityOfResidence: "שדרות",
+      willingToVolunteer: true,
+    });
+    expect(match.bucket).not.toBe("ineligible");
+    expect(match.failed.some((c) => c.field === "institution")).toBe(false);
+  });
+
+  it("gates a fixture with institutionIds and no institutionIn the same way", () => {
+    const sch = {
+      ...byId("perach"),
+      id: "synthetic-institution-ids-only",
+      institutionIds: ["tau"],
+      treatment: undefined,
+      eligibility: allOf({ type: "minAverage", value: 90 }, { type: "willingToVolunteer" }),
+    };
+    const wrongSchool = matchScholarship(sch, {
+      institution: "openu",
+      average: 80,
+      willingToVolunteer: false,
+    });
+    expect(wrongSchool.bucket).toBe("ineligible");
+    expect(wrongSchool.eval.immutableFailCount).toBeGreaterThan(0);
+    expect(wrongSchool.failed.some((c) => c.field === "institution")).toBe(true);
+
+    const missingSchool = matchScholarship(sch, { average: 80, willingToVolunteer: false });
+    expect(missingSchool.bucket).toBe("needInfo");
+    expect(missingSchool.unknown.some((c) => c.field === "institution")).toBe(true);
+
+    const rightSchool = matchScholarship(sch, {
+      institution: "tau",
+      average: 92,
+      willingToVolunteer: true,
+    });
+    expect(rightSchool.bucket).toBe("eligible");
+  });
+
+  it("does not put Open University year-3 nearMiss on records whose institutionIds exclude openu", () => {
+    const matches = matchAll(SCHOLARSHIPS, openuYear3Ba);
+    const leaked = matches.filter(
+      (m) =>
+        m.bucket === "nearMiss" &&
+        (m.scholarship.institutionIds?.length ?? 0) > 0 &&
+        !m.scholarship.institutionIds!.includes("openu") &&
+        collectInstitutionIn(m.scholarship.eligibility).length === 0,
+    );
+    expect(leaked.map((m) => m.scholarship.id)).toEqual([]);
+    expect(matches.find((m) => m.scholarship.id === "weizmann-young-scholars")?.bucket).toBe(
+      "ineligible",
+    );
+  });
+});
+
 describe("ordinary Colman BA year-2 profile near-miss cap", () => {
   it("has a tight volunteering-related near-miss list after field immutability", () => {
     const matches = matchAll(SCHOLARSHIPS, ordinaryColmanProfile);
