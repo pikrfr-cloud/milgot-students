@@ -482,7 +482,9 @@ function prepareSections(
   profile: StudentProfile,
 ): BuiltSections {
   const eligible = grouped.eligible.map((m, i) => formatEligibleBlock(m, profile, i + 1));
-  const needInfo = grouped.needInfo.map(formatNeedInfoExample);
+  const namedNeedInfo = grouped.needInfo.filter((m) => leafUnknown(m).some((c) => !!c.field));
+  const unnamedNeedInfo = grouped.needInfo.filter((m) => !leafUnknown(m).some((c) => !!c.field));
+  const needInfo = [...namedNeedInfo, ...unnamedNeedInfo].map(formatNeedInfoExample);
   const nearMiss = grouped.nearMiss
     .filter(isMutableNearMiss)
     .map(formatNearMissExample)

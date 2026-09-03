@@ -287,11 +287,21 @@ describe("needInfo names the exact missing field", () => {
     });
     expect(needInfoMissingHe(unnamed)).toBe(HE.whatsapp.needInfoMissingFallback);
 
-    const report = buildWhatsAppReport(profile, {
-      asOf: AS_OF,
-      matchAllFn: (_c, p, opts) => matchAll([sch], p, opts),
+    const scoreBased = testScholarship({
+      id: "score-need",
+      nameHe: "מלגת ניקוד",
+      treatment: "scoreBased",
+      eligibility: { type: "degreeLevelIn", values: ["ba"] },
     });
-    expect(report.text).toContain("*רקנאטי בדיקה* — חסר תחום לימוד");
+    const mixed = buildWhatsAppReport(profile, {
+      asOf: AS_OF,
+      matchAllFn: (_c, p, opts) => matchAll([scoreBased, sch], p, opts),
+    });
+    expect(mixed.text).toContain("*רקנאטי בדיקה* — חסר תחום לימוד");
+    const namedIdx = mixed.text.indexOf("רקנאטי בדיקה");
+    const scoreIdx = mixed.text.indexOf("מלגת ניקוד");
+    expect(namedIdx).toBeGreaterThan(-1);
+    if (scoreIdx !== -1) expect(namedIdx).toBeLessThan(scoreIdx);
   });
 });
 
