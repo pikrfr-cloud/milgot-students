@@ -23,6 +23,7 @@ describe("per-scholarship SEO pages", () => {
       expect(urls).toContain(`https://pikrfr-cloud.github.io/milgot-students/scholarships/${s.id}/`);
     }
     expect(urls).toContain("https://pikrfr-cloud.github.io/milgot-students/catalog/updates/");
+    expect(urls).toContain("https://pikrfr-cloud.github.io/milgot-students/closing/");
     expect(catalogInstitutionIds().length).toBeGreaterThan(0);
     expect(catalogCities().length).toBeGreaterThan(0);
     expect(catalogSectors().length).toBeGreaterThan(0);

@@ -5,6 +5,7 @@ import { CityPicker, moveActiveIndex } from "@/components/CityPicker";
 import { HeWithEn } from "@/components/HeWithEn";
 import { ScholarshipFaceChips } from "@/components/ScholarshipFaceChips";
 import { TriStateSelect } from "@/components/TriStateSelect";
+import { AmountLegend } from "@/components/AmountLegend";
 import { MATCHABLE_SCHOLARSHIPS } from "@/data/scholarships";
 import { faceChips } from "@/lib/card-chips";
 
@@ -67,6 +68,21 @@ describe("collapsed card face chips", () => {
     expect(html).toContain(chips.deadlineHe);
     expect(html).toContain(chips.volunteeringHe);
     expect(html).toContain("aria-label=\"סכום, מועד והתנדבות\"");
+  });
+});
+
+describe("AmountLegend tooltips", () => {
+  it("exposes one keyboard-openable tooltip per amount label", () => {
+    const html = renderToStaticMarkup(<AmountLegend />);
+    expect(html).toContain('role="tooltip"');
+    expect(html).toContain('aria-describedby="amount-legend-approved-tip"');
+    expect(html).toContain('aria-describedby="amount-legend-estimate-tip"');
+    expect(html).toContain('aria-describedby="amount-legend-unpublished-tip"');
+    expect(html).toContain("הסכום כתוב בדף הרשמי של המלגה.");
+    expect(html).toContain("יש מספר משוער — כדאי לבדוק בדף הרשמי.");
+    expect(html).toContain("בדף הרשמי אין סכום ברור.");
+    expect(html.match(/role="tooltip"/g)?.length).toBe(3);
+    expect(html).toContain("type=\"button\"");
   });
 });
 

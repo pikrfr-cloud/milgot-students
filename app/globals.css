@@ -96,6 +96,41 @@ textarea:focus-visible {
   direction: ltr;
 }
 
+.legend-chip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+  border: 0;
+  font: inherit;
+  line-height: inherit;
+}
+.legend-chip .legend-tooltip {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: 16rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: right;
+  box-shadow: 0 4px 12px rgba(28, 24, 20, 0.12);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.legend-chip:hover .legend-tooltip,
+.legend-chip:focus .legend-tooltip,
+.legend-chip:focus-visible .legend-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
 .pattern-band {
   background-color: var(--forest-deep);
   background-image:

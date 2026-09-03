@@ -26,7 +26,9 @@ export function UrgentNowStrip() {
   return (
     <section className="mx-auto max-w-6xl px-4 pb-14" aria-labelledby="urgent-now">
       <h2 id="urgent-now" className="font-display text-3xl text-forest-deep">
-        {HE.actions.urgentNow}
+        <Link href="/closing/" className="hover:underline underline-offset-4">
+          {HE.actions.urgentNow}
+        </Link>
       </h2>
       <ul className="mt-5 grid gap-3">
         {items.map((s) => {

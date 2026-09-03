@@ -218,20 +218,22 @@ export function deadlineSortValue(deadline: Deadline, asOf: Date = new Date()): 
   return SORT_UNPUBLISHED;
 }
 
-const HEBREW_MONTHS = [
-  "בינואר",
-  "בפברואר",
-  "במרץ",
-  "באפריל",
-  "במאי",
-  "ביוני",
-  "ביולי",
-  "באוגוסט",
-  "בספטמבר",
-  "באוקטובר",
-  "בנובמבר",
-  "בדצמבר",
+const HEBREW_MONTH_NAMES = [
+  "ינואר",
+  "פברואר",
+  "מרץ",
+  "אפריל",
+  "מאי",
+  "יוני",
+  "יולי",
+  "אוגוסט",
+  "ספטמבר",
+  "אוקטובר",
+  "נובמבר",
+  "דצמבר",
 ] as const;
+
+const HEBREW_MONTHS = HEBREW_MONTH_NAMES.map((name) => `ב${name}`);
 
 /** `2026-09-01` or `2026-09` → `1 בספטמבר 2026`. */
 export function whatsappScholarshipShareText(opts: {
@@ -260,6 +262,17 @@ export function formatHebrewLongDate(iso: string): string {
   const monthHe = HEBREW_MONTHS[month - 1];
   if (!monthHe) return iso;
   return `${day} ${monthHe} ${year}`;
+}
+
+/** `2026-09` / `2026-09-02` → `ספטמבר 2026`. Invalid input → null. */
+export function hebrewMonthYear(iso: string): string | null {
+  const m = /^(\d{4})-(\d{2})(?:-\d{2})?$/.exec(iso.trim());
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]);
+  const monthHe = HEBREW_MONTH_NAMES[month - 1];
+  if (!monthHe) return null;
+  return `${monthHe} ${year}`;
 }
 
 export function countLabel(n: number, singular: string, plural: string): string {

@@ -99,6 +99,7 @@ const STATIC_PAGES = [
   "/about/",
   "/catalog/",
   "/catalog/updates/",
+  "/closing/",
   "/accessibility/",
   "/terms/",
   "/privacy/",

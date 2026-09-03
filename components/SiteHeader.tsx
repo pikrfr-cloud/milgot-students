@@ -8,6 +8,7 @@ import { HE } from "@/lib/i18n/he";
 const links = [
   { href: "/chat", label: HE.nav.chat },
   { href: "/catalog", label: HE.nav.catalog },
+  { href: "/closing", label: HE.nav.closing },
   { href: "/results", label: HE.nav.results },
 ];
 

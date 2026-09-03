@@ -38,8 +38,24 @@ describe("chat first paint", () => {
 
   it("home CTA is the one student action and has no waitlist", () => {
     const home = readFileSync(join(process.cwd(), "app/page.tsx"), "utf8");
+    expect(home).toContain("בלי מנוי. בלי חשבון. רק מלגות שבאמת מתאימות לכם, עם הסבר למה.");
     expect(home).toContain("HE.actions.chatIntake");
+    expect(home).toContain("מה מתאים");
+    expect(home).toContain("מה חסר לאישור");
+    expect(home).toContain("כמעט מתאים ומה הפער");
     expect(home).not.toMatch(/waitlist|רשימת המתנה|מייל/i);
+  });
+});
+
+describe("results unlock copy is not duplicated", () => {
+  it("keeps the heading and uses a different sentence underneath", () => {
+    const src = readFileSync(join(process.cwd(), "components/ResultsView.tsx"), "utf8");
+    expect(src).toContain("HE.results.completeToUnlock");
+    expect(src).toContain("HE.results.completeToUnlockHint");
+    expect(HE.results.completeToUnlockHint).not.toBe(HE.results.completeToUnlock);
+    expect(src).not.toMatch(
+      /completeToUnlock\}[\s\S]{0,80}HE\.results\.completeToUnlock\}/,
+    );
   });
 });
 
