@@ -43,4 +43,4 @@ Work order on `main` (live GitHub Pages, `output: "export"`, `basePath: "/milgot
 
 - Next static export passes `params.slug` percent-encoded (`%D7...`). `cityFromSlug` compared that to the raw Hebrew slug, so every `/catalog/city/<slug>/` page called `notFound()` («העמוד לא נמצא») in `out/` and on GitHub Pages.
 - Decode `decodeURIComponent` (including a double-encoded pass) before city lookup. Same decode on institution / sector / group dynamic params so they cannot 404 the same way.
-- Vitest: encoded `תל-אביב-יפו` resolves and the landing has ItemList JSON-LD. `postbuild` scans `out/catalog/city` and fails if any city **document** is the not-found page (title / visible H1; RSC fallback copy in `<script>` is ignored) or a city page is missing ItemList.
+- Vitest: encoded `תל-אביב-יפו` resolves and the landing has ItemList JSON-LD. `postbuild` / export test assert **`<title>` and `<h1>` only** (good page: «מלגות לסטודנטים ב… תשפ״ז»; 404: «העמוד לא נמצא»). Never search the raw HTML — Next puts the layout notFound string in every RSC payload.
