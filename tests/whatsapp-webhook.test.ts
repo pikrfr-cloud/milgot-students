@@ -144,6 +144,14 @@ describe("session reset and sandbox keywords", () => {
     expect(startEn.xml).toContain("איזה תואר");
   });
 
+  it("restates the question on ??? instead of a dead לא הבנתי loop", async () => {
+    await xmlOf("התחלה");
+    const clarify = await xmlOf("???");
+    expect(clarify.xml).toContain("איזה תואר");
+    expect(clarify.xml).toMatch(/אפשר לכתוב במלים|מספר מהרשימה/);
+    expect(clarify.xml).not.toContain("לא הבנתי. שלחו מספר");
+  });
+
   it("ignores Twilio sandbox join without wiping the session", async () => {
     await xmlOf("התחלה");
     await xmlOf("1");
@@ -175,8 +183,20 @@ describe("webhook TwiML + matcher on the built profile", () => {
     await xmlOf("2");
     await xmlOf("שדרות");
     await xmlOf("1");
-    const early = await handleInbound({ from: FROM, body: "דוח" }, { asOf: AS_OF });
+    const early = await handleInbound({ from: FROM, body: "לראות מלגות" }, { asOf: AS_OF });
     expect(early.xml).toContain("הנה מה שמצאתי לפי התשובות שלכם");
+    const messageBodies = [...early.xml.matchAll(/<Message>([\s\S]*?)<\/Message>/g)].map((m) =>
+      (m[1] ?? "")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"'),
+    );
+    expect(messageBodies.length).toBeGreaterThan(1);
+    for (const body of messageBodies) {
+      expect(body.length).toBeLessThan(1500);
+    }
+    expect(messageBodies.some((b) => b.includes("#p="))).toBe(true);
     const expected: StudentProfile = {
       institution: "tau",
       degreeLevel: "ba",

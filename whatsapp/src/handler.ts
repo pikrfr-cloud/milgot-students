@@ -1,4 +1,12 @@
-import { applyWhatsAppTurn } from "../../lib/chat-reply";
+import { resolveUnparsedWithLlm, type LlmEnv } from "../../lib/chat-nlu";
+import {
+  applyWhatsAppTurn,
+  isClarifyNudge,
+  parseInbound,
+  questionOptions,
+  sessionQuestion,
+  type InboundText,
+} from "../../lib/chat-reply";
 import {
   isReminderStopCommand,
   isReminderSubscribeCommand,
@@ -25,6 +33,9 @@ export type WhatsAppEnv = {
   TWILIO_WEBHOOK_URL?: string;
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_WHATSAPP_FROM?: string;
+  WHATSAPP_LLM_API_KEY?: string;
+  WHATSAPP_LLM_BASE_URL?: string;
+  WHATSAPP_LLM_MODEL?: string;
   REMINDERS?: ReminderKv;
 };
 
@@ -79,6 +90,14 @@ export async function handleWhatsAppPost(args: {
 
 function kvOf(env: WhatsAppEnv | undefined): ReminderKv | undefined {
   return env?.REMINDERS;
+}
+
+function llmEnvOf(env: WhatsAppEnv | undefined): LlmEnv {
+  return {
+    WHATSAPP_LLM_API_KEY: envString(env, "WHATSAPP_LLM_API_KEY"),
+    WHATSAPP_LLM_BASE_URL: envString(env, "WHATSAPP_LLM_BASE_URL"),
+    WHATSAPP_LLM_MODEL: envString(env, "WHATSAPP_LLM_MODEL"),
+  };
 }
 
 async function handleReminderStop(from: string, env: WhatsAppEnv | undefined): Promise<HandleResult> {
@@ -166,10 +185,26 @@ export async function handleInbound(
 
   const maskedFrom = maskFrom(inbound.from);
   const existing = getSession(inbound.from);
-  const turn = applyWhatsAppTurn(existing, {
+  const inboundText: InboundText = {
     body: inbound.body,
     buttonPayload: inbound.buttonPayload,
-  });
+  };
+  const question = existing ? sessionQuestion(existing) : undefined;
+  const listed = existing?.listed?.length
+    ? existing.listed
+    : question
+      ? questionOptions(question)
+      : [];
+  let parsed = parseInbound(inboundText, question, listed);
+  if (parsed.kind === "unparsed" && question && !isClarifyNudge(inboundText.body)) {
+    parsed = await resolveUnparsedWithLlm({
+      inbound: inboundText,
+      question,
+      listed,
+      env: llmEnvOf(options.env),
+    });
+  }
+  const turn = applyWhatsAppTurn(existing, inboundText, { parsed });
   putSession(inbound.from, turn.session);
 
   if (turn.ignore) {
@@ -183,7 +218,7 @@ export async function handleInbound(
     const report = buildWhatsAppReport(profile, { asOf });
     const lastReportEligible = reminderCandidatesFromProfile(profile, asOf);
     putSession(inbound.from, { ...turn.session, lastReportEligible });
-    messages.push(report.text);
+    messages.push(...report.messages);
   }
 
   return {

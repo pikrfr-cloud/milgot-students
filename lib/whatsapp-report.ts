@@ -20,7 +20,10 @@ import type {
 export const WHATSAPP_CHAT_URL = absoluteUrl("/chat/");
 export const WHATSAPP_RESULTS_URL = absoluteUrl("/results/");
 export const WHATSAPP_TOP_MATCH_LIMIT = 4;
-export const WHATSAPP_REPORT_MAX_CHARS = 3500;
+/** Twilio WhatsApp rejects a single concatenated body over 1600 (error 21617). */
+export const WHATSAPP_MESSAGE_MAX_CHARS = 1500;
+/** Per outbound WhatsApp message — not a total-report cap. */
+export const WHATSAPP_REPORT_MAX_CHARS = WHATSAPP_MESSAGE_MAX_CHARS;
 
 export const ELIGIBLE_EXAMPLE_LIMIT = 4;
 export const NEED_INFO_EXAMPLE_LIMIT = 3;
@@ -84,7 +87,10 @@ export type WhatsAppReportMatch = {
 };
 
 export type WhatsAppReport = {
+  /** All chunks joined — for assertions. Not sent as one Twilio body. */
   text: string;
+  /** Sequential WhatsApp bodies, each under {@link WHATSAPP_MESSAGE_MAX_CHARS}. */
+  messages: string[];
   counts: ChatReportCounts;
   top: WhatsAppReportMatch[];
   profile: StudentProfile;
@@ -322,7 +328,76 @@ function take<T>(rows: T[], n: number): T[] {
   return n <= 0 ? [] : rows.slice(0, n);
 }
 
-function renderReportText(args: {
+function joinReportLines(lines: string[]): string {
+  return lines.filter((l) => l !== undefined).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+function fitChunkByDroppingExamples(head: string[], examples: string[], tail: string[] = []): string {
+  const maxChars = WHATSAPP_MESSAGE_MAX_CHARS;
+  for (let n = examples.length; n >= 0; n -= 1) {
+    const text = joinReportLines([...head, ...examples.slice(0, n), ...tail]);
+    if (text.length <= maxChars) return text;
+  }
+  return joinReportLines([...head, ...tail]);
+}
+
+function needInfoExampleLines(examples: string[]): string[] {
+  if (examples.length === 1) return [`לדוגמה: ${examples[0]!.replace(/^• /, "")}`];
+  return examples;
+}
+
+function renderEligibleChunk(args: {
+  eligibleCount: number;
+  sections: BuiltSections;
+  limits: ExampleLimits;
+}): string {
+  const head = [HE.whatsapp.reportTitle, ""];
+  if (args.eligibleCount <= 0) {
+    head.push(HE.whatsapp.reportNoneEligible);
+    return joinReportLines(head);
+  }
+  head.push(sectionHeading("✅", HE.whatsapp.eligibleNow, args.eligibleCount));
+  head.push(HE.whatsapp.eligibleIntro);
+  head.push("");
+  return fitChunkByDroppingExamples(head, take(args.sections.eligible, args.limits.eligible));
+}
+
+function renderBucketChunk(args: {
+  emoji: string;
+  title: string;
+  count: number;
+  intro: string;
+  examples: string[];
+}): string | undefined {
+  if (args.count <= 0) return undefined;
+  const head = [sectionHeading(args.emoji, args.title, args.count), args.intro];
+  return fitChunkByDroppingExamples(head, args.examples);
+}
+
+function renderFooterChunks(args: {
+  resultsUrl: string;
+  ineligibleCount: number;
+  includeIneligibleNote: boolean;
+}): string[] {
+  const link = joinReportLines([`🔗 ${boldHe(HE.whatsapp.fullReportHeading)}`, args.resultsUrl]);
+  const afterLines = [HE.whatsapp.disclaimer];
+  if (args.ineligibleCount > 0 && args.includeIneligibleNote) {
+    afterLines.push(ineligibleClosingHe(args.ineligibleCount));
+  }
+  afterLines.push("");
+  afterLines.push(HE.whatsapp.continueAfterReport);
+  const after = joinReportLines(afterLines);
+  const combined = joinReportLines([link, "", after]);
+  if (combined.length <= WHATSAPP_MESSAGE_MAX_CHARS) return [combined];
+  return [link, after].filter((t) => t.length > 0);
+}
+
+/**
+ * Counselor report as sequential WhatsApp bodies.
+ * Natural splits: intro+✅, 🟡, 🟠, 🏫, 📅, then 🔗 URL + disclaimer.
+ * Each chunk is strictly under {@link WHATSAPP_MESSAGE_MAX_CHARS}.
+ */
+export function splitWhatsAppReportMessages(args: {
   eligibleCount: number;
   needInfoCount: number;
   nearMissCount: number;
@@ -330,145 +405,71 @@ function renderReportText(args: {
   closedCount: number;
   ineligibleCount: number;
   sections: BuiltSections;
-  limits: ExampleLimits;
-  include: {
-    needInfo: boolean;
-    nearMiss: boolean;
-    checkAtInstitution: boolean;
-    closedCycle: boolean;
-    ineligibleNote: boolean;
-  };
   resultsUrl: string;
-}): string {
-  const lines: string[] = [HE.whatsapp.reportTitle, ""];
+}): string[] {
+  const limits = cloneLimits(DEFAULT_LIMITS);
+  const chunks: string[] = [];
 
-  if (args.eligibleCount > 0) {
-    lines.push(sectionHeading("✅", HE.whatsapp.eligibleNow, args.eligibleCount));
-    lines.push(HE.whatsapp.eligibleIntro);
-    lines.push("");
-    for (const block of take(args.sections.eligible, args.limits.eligible)) {
-      lines.push(block);
-      lines.push("");
-    }
+  chunks.push(renderEligibleChunk({ ...args, limits }));
+
+  if (args.needInfoCount > 0) {
+    const examples = needInfoExampleLines(take(args.sections.needInfo, limits.needInfo));
+    const chunk = renderBucketChunk({
+      emoji: "🟡",
+      title: HE.whatsapp.needInfoOne,
+      count: args.needInfoCount,
+      intro: HE.whatsapp.needInfoIntro,
+      examples,
+    });
+    if (chunk) chunks.push(chunk);
   }
 
-  if (args.needInfoCount > 0 && args.include.needInfo) {
-    lines.push(sectionHeading("🟡", HE.whatsapp.needInfoOne, args.needInfoCount));
-    lines.push(HE.whatsapp.needInfoIntro);
-    const examples = take(args.sections.needInfo, args.limits.needInfo);
-    if (examples.length === 1) {
-      lines.push(`לדוגמה: ${examples[0]!.replace(/^• /, "")}`);
-    } else {
-      for (const ex of examples) lines.push(ex);
-    }
-    lines.push("");
+  if (args.nearMissCount > 0) {
+    const chunk = renderBucketChunk({
+      emoji: "🟠",
+      title: HE.buckets.nearMiss,
+      count: args.nearMissCount,
+      intro: HE.whatsapp.nearMissIntro,
+      examples: take(args.sections.nearMiss, limits.nearMiss),
+    });
+    if (chunk) chunks.push(chunk);
   }
 
-  if (args.nearMissCount > 0 && args.include.nearMiss) {
-    lines.push(sectionHeading("🟠", HE.buckets.nearMiss, args.nearMissCount));
-    lines.push(HE.whatsapp.nearMissIntro);
-    for (const ex of take(args.sections.nearMiss, args.limits.nearMiss)) lines.push(ex);
-    lines.push("");
+  if (args.institutionCount > 0) {
+    const chunk = renderBucketChunk({
+      emoji: "🏫",
+      title: HE.whatsapp.checkInstitution,
+      count: args.institutionCount,
+      intro: HE.whatsapp.checkInstitutionIntro,
+      examples: take(args.sections.checkAtInstitution, limits.checkAtInstitution),
+    });
+    if (chunk) chunks.push(chunk);
   }
 
-  if (args.institutionCount > 0 && args.include.checkAtInstitution) {
-    lines.push(sectionHeading("🏫", HE.whatsapp.checkInstitution, args.institutionCount));
-    lines.push(HE.whatsapp.checkInstitutionIntro);
-    for (const ex of take(args.sections.checkAtInstitution, args.limits.checkAtInstitution)) {
-      lines.push(ex);
-    }
-    lines.push("");
+  if (args.closedCount > 0) {
+    const chunk = renderBucketChunk({
+      emoji: "📅",
+      title: HE.buckets.closedCycle,
+      count: args.closedCount,
+      intro: HE.whatsapp.closedCycleIntro,
+      examples: take(args.sections.closedCycle, limits.closedCycle),
+    });
+    if (chunk) chunks.push(chunk);
   }
 
-  if (args.closedCount > 0 && args.include.closedCycle) {
-    lines.push(sectionHeading("📅", HE.buckets.closedCycle, args.closedCount));
-    lines.push(HE.whatsapp.closedCycleIntro);
-    for (const ex of take(args.sections.closedCycle, args.limits.closedCycle)) lines.push(ex);
-    lines.push("");
-  }
+  chunks.push(
+    ...renderFooterChunks({
+      resultsUrl: args.resultsUrl,
+      ineligibleCount: args.ineligibleCount,
+      includeIneligibleNote: args.ineligibleCount > 0,
+    }),
+  );
 
-  lines.push(`🔗 ${boldHe(HE.whatsapp.fullReportHeading)}`);
-  lines.push(args.resultsUrl);
-  lines.push("");
-  lines.push(HE.whatsapp.disclaimer);
-  if (args.ineligibleCount > 0 && args.include.ineligibleNote) {
-    lines.push(ineligibleClosingHe(args.ineligibleCount));
-  }
-  lines.push("");
-  lines.push(HE.whatsapp.continueAfterReport);
-
-  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return chunks.filter((c) => c.length > 0);
 }
 
 function cloneLimits(limits: ExampleLimits): ExampleLimits {
   return { ...limits };
-}
-
-/**
- * Fit to WhatsApp/Twilio length by dropping lower-priority examples, then
- * whole optional sections. Never slices a scholarship name or the results URL.
- */
-export function fitWhatsAppReportText(args: {
-  eligibleCount: number;
-  needInfoCount: number;
-  nearMissCount: number;
-  institutionCount: number;
-  closedCount: number;
-  ineligibleCount: number;
-  sections: BuiltSections;
-  resultsUrl: string;
-  maxChars?: number;
-}): string {
-  const maxChars = args.maxChars ?? WHATSAPP_REPORT_MAX_CHARS;
-  const limits = cloneLimits(DEFAULT_LIMITS);
-  const include = {
-    needInfo: args.needInfoCount > 0,
-    nearMiss: args.nearMissCount > 0,
-    checkAtInstitution: args.institutionCount > 0,
-    closedCycle: args.closedCount > 0,
-    ineligibleNote: args.ineligibleCount > 0,
-  };
-
-  const render = () =>
-    renderReportText({
-      ...args,
-      limits,
-      include,
-    });
-
-  const trimExampleOrder: (keyof ExampleLimits)[] = [
-    "closedCycle",
-    "checkAtInstitution",
-    "nearMiss",
-    "needInfo",
-    "eligible",
-  ];
-  const dropSectionOrder: (keyof typeof include)[] = [
-    "ineligibleNote",
-    "closedCycle",
-    "checkAtInstitution",
-    "nearMiss",
-    "needInfo",
-  ];
-
-  let text = render();
-  while (text.length > maxChars) {
-    const reducible = trimExampleOrder.find((key) => limits[key] > 0 && args.sections[key].length > 0);
-    if (reducible) {
-      limits[reducible] -= 1;
-      text = render();
-      continue;
-    }
-    const droppable = dropSectionOrder.find((key) => include[key]);
-    if (droppable) {
-      include[droppable] = false;
-      text = render();
-      continue;
-    }
-    break;
-  }
-
-  return text;
 }
 
 export type WhatsAppReportOptions = {
@@ -514,7 +515,7 @@ export function buildWhatsAppReport(
   const sections = prepareSections(grouped, profile);
   const top = grouped.eligible.slice(0, WHATSAPP_TOP_MATCH_LIMIT).map(compactMatchLine);
 
-  const text = fitWhatsAppReportText({
+  const messages = splitWhatsAppReportMessages({
     eligibleCount: grouped.eligible.length,
     needInfoCount: grouped.needInfo.length,
     nearMissCount: grouped.nearMiss.length,
@@ -524,6 +525,7 @@ export function buildWhatsAppReport(
     sections,
     resultsUrl,
   });
+  const text = messages.join("\n\n");
 
-  return { text, counts, top, profile, resultsUrl };
+  return { text, messages, counts, top, profile, resultsUrl };
 }
