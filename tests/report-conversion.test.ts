@@ -37,9 +37,10 @@ function matchOf(s: Scholarship, bucket: ScholarshipMatch["bucket"] = "eligible"
 
 describe("matching count headline — no catalog-sum ₪", () => {
   it("names how many scholarships match and never mentions a summed ₪", () => {
-    expect(matchingNowHeadlineHe(5)).toBe("5 מלגות שמתאימות עכשיו");
-    expect(matchingNowHeadlineHe(1)).toBe("מלגה אחת שמתאימה עכשיו");
-    expect(matchingNowHeadlineHe(2)).toBe("2 מלגות שמתאימות עכשיו");
+    expect(matchingNowHeadlineHe(5)).toBe("יש 5 מלגות שמתאימות לפי מה שמילאתם");
+    expect(matchingNowHeadlineHe(1)).toBe("יש מלגה אחת שמתאימה לפי מה שמילאתם");
+    expect(matchingNowHeadlineHe(2)).toBe("יש 2 מלגות שמתאימות לפי מה שמילאתם");
+    expect(matchingNowHeadlineHe(0)).toBe("לפי מה שמילאתם, אין כרגע מלגה שמתאימה במלואה");
     expect(matchingNowHeadlineHe(2)).not.toMatch(/₪|סכום משוער|סה״כ|הערכה/);
     expect(NO_DOUBLE_COUNT_CAVEAT_HE).toBe(
       "כל מלגה מציגה את הסכום שפורסם אצלה. אי אפשר לקבל את כולן ביחד.",

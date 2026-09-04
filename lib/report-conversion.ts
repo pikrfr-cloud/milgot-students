@@ -75,9 +75,9 @@ export function potentialOpenAmount(
 }
 
 export function matchingNowHeadlineHe(eligibleCount: number): string {
-  if (eligibleCount <= 0) return "אין כרגע מלגות שמתאימות לפי מה שמילאתם";
-  if (eligibleCount === 1) return "מלגה אחת שמתאימה עכשיו";
-  return `${eligibleCount} מלגות שמתאימות עכשיו`;
+  if (eligibleCount <= 0) return "לפי מה שמילאתם, אין כרגע מלגה שמתאימה במלואה";
+  if (eligibleCount === 1) return "יש מלגה אחת שמתאימה לפי מה שמילאתם";
+  return `יש ${eligibleCount} מלגות שמתאימות לפי מה שמילאתם`;
 }
 
 export const NO_DOUBLE_COUNT_CAVEAT_HE =

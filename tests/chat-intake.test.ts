@@ -179,6 +179,19 @@ describe("chat intake field glue", () => {
     expect(nextChatQuestion(skipped, asked)?.id).not.toBe("miluimDays");
   });
 
+  it("maps household size 4 to a filled numeric householdSize", () => {
+    const sizeQ = chatQuestionById("householdSize");
+    const four = sizeQ?.choices?.find((c) => c.id === "4");
+    if (!sizeQ || !four) throw new Error("missing householdSize 4");
+    const next = applyChatAction({ profile: {}, askedIds: [] }, {
+      type: "choice",
+      question: sizeQ,
+      choice: four,
+    });
+    expect(next.profile.householdSize).toBe(4);
+    expect(isProfileFieldFilled(next.profile, "householdSize")).toBe(true);
+  });
+
   it("applyChatAction is the single mutation used by web and WhatsApp", () => {
     const degree = chatQuestionById("degreeLevel");
     const ba = degree?.choices?.find((c) => c.id === "ba");

@@ -313,7 +313,18 @@ export function matchHeadline(match: ScholarshipMatch): string {
       return "חסר פרט";
     case "nearMiss":
       return `כמעט מתאים — פער ב־${match.eval.failCount} דברים`;
-    default:
-      return "לא מתאים לפי מה שמילאתם";
+    default: {
+      const reason = primaryFailReasonHe(match);
+      return reason ? `לא מתאים: ${reason}` : "לא מתאים לפי מה שמילאתם";
+    }
   }
+}
+
+/** First failed leaf in Hebrew — never an internal id or raw household-size digit. */
+export function primaryFailReasonHe(match: ScholarshipMatch): string | undefined {
+  const leaf = match.failed.find((c) => !c.group && c.labelHe);
+  if (!leaf) return undefined;
+  const label = leaf.labelHe.trim();
+  if (!label || /^\d+$/.test(label)) return undefined;
+  return label;
 }

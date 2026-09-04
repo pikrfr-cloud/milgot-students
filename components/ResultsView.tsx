@@ -183,7 +183,7 @@ export function ResultsView() {
 
   const visibleActionable = [...eligible, ...needInfo, ...nearMiss];
   const urgent = mostUrgentOpen(visibleActionable, asOf, 3);
-  const unlocks = missingFieldUnlocks(allMatches);
+  const unlocks = missingFieldUnlocks(allMatches, profile);
   const topUnlock = unlocks[0];
   const timeline = upcomingCloseDates(allMatches, asOf);
   const docs = unifiedDocuments(allMatches);

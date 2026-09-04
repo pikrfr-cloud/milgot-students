@@ -7,7 +7,6 @@ import {
   STEM_PLUS_MED,
   VERIFIED_GATE,
   allOf,
-  anyOf,
   amount,
   deadline,
   s,
@@ -302,10 +301,14 @@ export const VERIFIED_EXTRA_2: Scholarship[] = [
         type: "fieldOfStudyIn",
         values: ["health", "nursing", "education", "social_work", "social_sciences"],
       },
-      anyOf(
-        { type: "serviceIn", values: ["idf", "national", "civil"] },
-        { type: "willingToVolunteer" },
-      ),
+      {
+        op: "anyOf",
+        labelHe: "שירות מלא או התנדבות משמעותית של שנתיים ומעלה",
+        rules: [
+          { type: "serviceIn", values: ["idf", "national", "civil"] },
+          { type: "willingToVolunteer" },
+        ],
+      },
     ),
   }),
   s({

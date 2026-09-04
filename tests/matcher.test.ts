@@ -3,9 +3,9 @@ import { matchAll, matchScholarship } from "@/lib/matcher";
 import { SCHOLARSHIPS } from "@/data/scholarships";
 import { TIPS, TIP_IDS } from "@/data/tips";
 import { citiesMatch, isPeripheryCity, neighborhoodMatches } from "@/lib/cities";
-import { catalogAgeBanner, daysSinceVerified, daysUntilIsoDate, deadlineSortValue, deadlineStatus, isDeadlineClosed, matchHeadline, shouldHideIcs } from "@/lib/format";
+import { catalogAgeBanner, daysSinceVerified, daysUntilIsoDate, deadlineSortValue, deadlineStatus, isDeadlineClosed, matchHeadline, primaryFailReasonHe, shouldHideIcs } from "@/lib/format";
 import { allOf, anyOf, collectInstitutionIn, deadline, FLAGSHIP_IDS, not } from "@/data/scholarships/helpers";
-import { mostUrgentOpen, partialKnownAmountSum } from "@/lib/match-insights";
+import { missingFieldUnlocks, mostUrgentOpen, partialKnownAmountSum } from "@/lib/match-insights";
 import { bestSourceGrade, gradeSourceUrl, hasOfficialSource, isValidHttpUrl } from "@/lib/sources";
 import { deriveIncomeBand } from "@/lib/income";
 import { INSTITUTIONS } from "@/lib/institutions";
@@ -731,6 +731,16 @@ describe("incomeAtMost missing-field reporting", () => {
     expect(match.unknown.some((c) => c.field === "householdIncomeBand")).toBe(true);
   });
 
+  it("does not tag householdSize as missing when size and band are both filled", () => {
+    const match = matchScholarship(byId("mechina-worthy-of-aid"), {
+      degreeLevel: "prep",
+      householdIncomeBand: "over_40k",
+      householdSize: 4,
+    });
+    expect(match.unknown.some((c) => c.field === "householdSize")).toBe(false);
+    expect(match.unknown.some((c) => c.detailHe.match(/בפרופיל:\s*4/))).toBe(false);
+  });
+
   it("does not mark a high estimated income as ineligible", () => {
     const match = matchScholarship(byId("mechina-worthy-of-aid"), {
       degreeLevel: "prep",
@@ -1086,5 +1096,56 @@ describe("naamat-students official gates", () => {
         service: "idf",
       }).bucket,
     ).toBe("eligible");
+  });
+});
+
+/** Real /chat/ → /results/ walkthrough persona (not a real student). */
+export const OPENU_YEAR3_PETAH_TIKVA_PERSONA: StudentProfile = {
+  institution: "openu",
+  degreeLevel: "ba",
+  yearOfStudy: 3,
+  cityOfResidence: "פתח תקווה",
+  householdSize: 4,
+  householdIncomeBand: "band_8_15k",
+  service: "none",
+  willingToVolunteer: false,
+  sectors: ["jewish_general"],
+  isOleh: false,
+};
+
+describe("live-site student persona P0s", () => {
+  it("does not ask to fill householdSize when the chat already answered 4", () => {
+    const matches = matchAll(SCHOLARSHIPS, OPENU_YEAR3_PETAH_TIKVA_PERSONA);
+    const unlocks = missingFieldUnlocks(matches, OPENU_YEAR3_PETAH_TIKVA_PERSONA);
+    expect(unlocks.some((u) => u.field === "householdSize")).toBe(false);
+    expect(OPENU_YEAR3_PETAH_TIKVA_PERSONA.householdSize).toBe(4);
+  });
+
+  it("marks מלגות 6000 ineligible when there is no service and no volunteering", () => {
+    const match = matchScholarship(byId("isef-recanati-6000"), OPENU_YEAR3_PETAH_TIKVA_PERSONA);
+    expect(match.bucket).toBe("ineligible");
+    expect(match.bucket).not.toBe("nearMiss");
+    expect(match.eval.immutableFailCount).toBeGreaterThan(0);
+    expect(matchHeadline(match)).toMatch(/לא מתאים/);
+    expect(primaryFailReasonHe(match)).toMatch(/שירות|התנדבות/);
+  });
+
+  it("shows income-band Hebrew in economic reasons, never a raw household-size 4", () => {
+    const prep = matchScholarship(byId("mechina-worthy-of-aid"), {
+      degreeLevel: "prep",
+      householdSize: 4,
+      householdIncomeBand: "band_8_15k",
+    });
+    const rows = [...prep.passed, ...prep.failed, ...prep.unknown];
+    expect(rows.some((c) => c.field === "householdIncomeBand" || c.labelHe.includes("מצב כלכלי"))).toBe(
+      true,
+    );
+    for (const c of rows) {
+      expect(c.detailHe).not.toMatch(/בפרופיל:\s*4\.?/);
+      expect(c.labelHe).not.toBe("4");
+      expect(c.detailHe).not.toBe("4");
+    }
+    const income = rows.find((c) => c.labelHe.includes("מצב כלכלי") || c.field === "householdIncomeBand");
+    expect(income?.detailHe).toMatch(/8,000|15,000|הכנסה/);
   });
 });
