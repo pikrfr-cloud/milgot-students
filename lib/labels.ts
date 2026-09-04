@@ -107,6 +107,7 @@ const LABELS: Record<string, string> = {
   incomeBand: "רמת הכנסה",
   socialBenefits: "גמלאות",
   firstGeneration: "דור ראשון להשכלה גבוהה",
+  histadrutMember: "חברה בנעמת / בהסתדרות",
   completedMechina: "סיום מכינה קדם-אקדמית",
   weeklyHours: "שעות שבועיות / נק״ז",
   disabilityRecognizedBy: "גורם מכיר במוגבלות / שיקום",
@@ -254,6 +255,10 @@ export function predicateLabelHe(pred: Predicate): string {
       return `פעילות בולטת: ${pred.values.map(fieldLabelHe).join(" / ")}`;
     case "firstGeneration":
       return "דור ראשון להשכלה גבוהה";
+    case "histadrutMember":
+      return pred.value === false
+        ? "לא חברה בנעמת / בהסתדרות"
+        : "חברה בנעמת / בהסתדרות העובדים הכללית החדשה";
     case "completedMechina":
       return pred.value === false ? "לא בוגר/ת מכינה" : "בוגר/ת מכינה קדם-אקדמית";
     case "weeklyHoursMin":

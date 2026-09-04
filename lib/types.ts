@@ -206,6 +206,11 @@ export type StudentProfile = {
   socialBenefits?: SocialBenefit[] | null;
   firstGeneration?: boolean | null;
   completedMechina?: boolean | null;
+  /**
+   * Membership in הסתדרות העובדים הכללית החדשה and/or נעמת.
+   * Official Naamat rule: Histadrut membership confers Naamat membership automatically.
+   */
+  histadrutMember?: boolean | null;
 };
 
 export type ProfileField = keyof StudentProfile;
@@ -268,6 +273,7 @@ export type Predicate =
   | { type: "ageMax"; value: number; labelHe?: string }
   | { type: "outstandingIn"; values: OutstandingActivity[]; labelHe?: string }
   | { type: "firstGeneration"; value?: boolean; labelHe?: string }
+  | { type: "histadrutMember"; value?: boolean; labelHe?: string }
   | { type: "completedMechina"; value?: boolean; labelHe?: string }
   | { type: "weeklyHoursMin"; value: number; labelHe?: string }
   | { type: "disabilityRecognizedBy"; values: DisabilityAuthority[]; labelHe?: string };

@@ -60,6 +60,7 @@ export const studentProfileSchema: z.ZodType<StudentProfile> = z
     incomeBand: nullish(z.enum(INCOME_BANDS)),
     socialBenefits: nullish(z.array(z.enum(SOCIAL_BENEFITS))),
     firstGeneration: nullish(z.boolean()),
+    histadrutMember: nullish(z.boolean()),
     completedMechina: nullish(z.boolean()),
   })
   .passthrough();

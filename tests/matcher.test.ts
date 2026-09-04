@@ -1042,3 +1042,49 @@ describe("bidirectional excludes already claimed in card text", () => {
     expect(byId("mod-uniform-to-studies").excludes).toContain("yeud-44");
   });
 });
+
+describe("naamat-students official gates", () => {
+  const missingFacts: StudentProfile = {
+    institution: "openu",
+    degreeLevel: "ba",
+    yearOfStudy: 3,
+    gender: "female",
+    incomeBand: "low",
+    householdIncomeBand: "under_8k",
+    householdSize: 3,
+  };
+
+  it("is not eligible when Histadrut/Naamat membership and qualifying service are unknown", () => {
+    const match = matchScholarship(byId("naamat-students"), missingFacts);
+    expect(match.bucket).not.toBe("eligible");
+    expect(["needInfo", "ineligible", "nearMiss"]).toContain(match.bucket);
+    expect(match.unknown.some((c) => c.field === "histadrutMember" || c.field === "service")).toBe(true);
+  });
+
+  it("is ineligible when membership is false or service is none", () => {
+    expect(
+      matchScholarship(byId("naamat-students"), {
+        ...missingFacts,
+        histadrutMember: false,
+        service: "idf",
+      }).bucket,
+    ).toBe("ineligible");
+    expect(
+      matchScholarship(byId("naamat-students"), {
+        ...missingFacts,
+        histadrutMember: true,
+        service: "none",
+      }).bucket,
+    ).toBe("ineligible");
+  });
+
+  it("can be eligible when official membership, service, gender, and year gates pass", () => {
+    expect(
+      matchScholarship(byId("naamat-students"), {
+        ...missingFacts,
+        histadrutMember: true,
+        service: "idf",
+      }).bucket,
+    ).toBe("eligible");
+  });
+});

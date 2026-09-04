@@ -1,16 +1,17 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { HE } from "@/lib/i18n/he";
 import { CATALOG_STATS, SCHOLARSHIPS } from "@/data/scholarships";
-import { applyWhatsAppTurn, formatQuestionMessage, parseInbound, questionOptions } from "@/lib/chat-reply";
+import { applyWhatsAppTurn, emptyWhatsAppSession, formatQuestionMessage, parseInbound, questionOptions } from "@/lib/chat-reply";
 import { chatQuestionById, chatReportCounts, nextChatQuestion } from "@/lib/chat-intake";
 import { matchAll } from "@/lib/matcher";
 import { MIN_CHAT_ANSWERS_FOR_REPORT } from "@/lib/profile-fields";
-import { buildWhatsAppReport } from "@/lib/whatsapp-report";
+import { buildWhatsAppReport, reportHasEligibleOrNeedInfoLead, reportIsUrlOnly } from "@/lib/whatsapp-report";
 import { sharedResultsUrl } from "@/lib/profile-share";
 import type { StudentProfile } from "@/lib/types";
 import nextConfig from "../next.config";
 import { app } from "@/whatsapp/src/app";
 import { handleInbound, handleWhatsAppPost } from "@/whatsapp/src/handler";
-import { resetSessionStore } from "@/whatsapp/src/session";
+import { putSession, resetSessionStore } from "@/whatsapp/src/session";
 import {
   maskFrom,
   parseTwilioForm,
@@ -18,6 +19,8 @@ import {
   twimlMessages,
   validateTwilioSignature,
 } from "@/whatsapp/src/twilio";
+import * as twilio from "@/whatsapp/src/twilio";
+import { OPENU_YEAR3_FIXTURE } from "./whatsapp-report.test";
 
 const FROM = "whatsapp:+972501234567";
 const AS_OF = new Date("2026-09-01T12:00:00+03:00");
@@ -41,6 +44,10 @@ async function xmlOf(body: string, from = FROM, extra: Record<string, string> = 
 
 beforeEach(() => {
   resetSessionStore();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 describe("Twilio inbound parse + TwiML", () => {
@@ -316,5 +323,52 @@ describe("Twilio signature", () => {
     });
     expect(result.status).toBe(200);
     expect(result.xml).toContain("<Message>");
+  });
+});
+
+describe("Twilio report is sequential, never URL-only", () => {
+  it("Open University year-3 fixture yields ≥2 TwiML messages with a counselor lead then the URL", async () => {
+    putSession(FROM, {
+      ...emptyWhatsAppSession(),
+      profile: OPENU_YEAR3_FIXTURE,
+      askedIds: ["degreeLevel", "miluim", "cityOfResidence", "institution"],
+      offerShown: true,
+    });
+    const result = await handleInbound({ from: FROM, body: "לראות מלגות" }, { asOf: AS_OF });
+    expect(result.status).toBe(200);
+    const messageBodies = [...result.xml.matchAll(/<Message>([\s\S]*?)<\/Message>/g)].map((m) =>
+      (m[1] ?? "")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"'),
+    );
+    expect(messageBodies.length).toBeGreaterThan(1);
+    expect(messageBodies.length).toBeLessThanOrEqual(6);
+    for (const body of messageBodies) {
+      expect(body.length).toBeLessThan(1500);
+    }
+    expect(messageBodies[0]).toMatch(/מתאים|סיימנו/);
+    expect(messageBodies.some((b) => b.includes("/results/") && b.includes("#p="))).toBe(true);
+    expect(reportHasEligibleOrNeedInfoLead(messageBodies)).toBe(true);
+    expect(reportIsUrlOnly(messageBodies, sharedResultsUrl(OPENU_YEAR3_FIXTURE))).toBe(false);
+  });
+});
+
+describe("webhook crash apology", () => {
+  it("returns Hebrew TwiML on 200 when the POST handler throws", async () => {
+    vi.spyOn(twilio, "parseTwilioForm").mockImplementation(() => {
+      throw new Error("forced crash");
+    });
+    const result = await handleWhatsAppPost({
+      rawBody: form("התחלה"),
+      requestUrl: "https://example.com/whatsapp",
+      signature: undefined,
+    });
+    expect(result.status).toBe(200);
+    expect(result.xml).toContain("<Response>");
+    expect(result.xml).toContain("<Message>");
+    expect(result.xml).toContain(HE.whatsapp.crashApology);
+    expect(result.xml).not.toBe(twimlEmpty());
   });
 });

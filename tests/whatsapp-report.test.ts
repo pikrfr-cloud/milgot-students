@@ -23,10 +23,13 @@ import {
   compactAmountHe,
   compactDeadlineHe,
   eligibleWhyHe,
+  finalizeWhatsAppReportMessages,
   formatCatalogDeadlineHe,
   isMutableNearMiss,
   needInfoMissingHe,
   publishedAmountHe,
+  reportHasEligibleOrNeedInfoLead,
+  reportIsUrlOnly,
   reportResultsUrl,
 } from "@/lib/whatsapp-report";
 const AS_OF = new Date("2026-09-01T12:00:00+03:00");
@@ -491,6 +494,7 @@ describe("max WhatsApp length on a worst-case catalog", () => {
     });
 
     expect(report.messages.length).toBeGreaterThan(1);
+    expect(report.messages.length).toBeLessThanOrEqual(6);
     for (const chunk of report.messages) {
       expect(chunk.length).toBeLessThan(WHATSAPP_MESSAGE_MAX_CHARS);
     }
@@ -559,6 +563,7 @@ describe("Twilio 1600-character split (error 21617)", () => {
   it("every chunk is under 1500 and the Open University year-3 report keeps the full-report URL", () => {
     const report = buildWhatsAppReport(OPENU_YEAR3_FIXTURE, { asOf: AS_OF });
     expect(report.messages.length).toBeGreaterThan(1);
+    expect(report.messages.length).toBeLessThanOrEqual(6);
     for (const chunk of report.messages) {
       expect(chunk.length).toBeLessThan(1500);
       expect(chunk.length).toBeLessThan(WHATSAPP_MESSAGE_MAX_CHARS);
@@ -570,5 +575,54 @@ describe("Twilio 1600-character split (error 21617)", () => {
     expect(report.text).toContain(sharedResultsUrl(OPENU_YEAR3_FIXTURE));
     expect(report.text).toMatch(/✅|🟡|🟠|🏫|📅|🔗/);
     expect(report.messages.at(-1)).toContain("🔗");
+
+    const first = report.messages[0] ?? "";
+    expect(first).toMatch(/מתאים|סיימנו/);
+    expect(reportIsUrlOnly(report.messages, report.resultsUrl)).toBe(false);
+    expect(reportHasEligibleOrNeedInfoLead(report.messages)).toBe(true);
+    const grouped = groupMatches(matchAll(SCHOLARSHIPS, OPENU_YEAR3_FIXTURE, { asOf: AS_OF }));
+    if (grouped.eligible.length + grouped.needInfo.length > 0) {
+      expect(report.messages[0]).not.toContain(report.resultsUrl);
+      expect(report.messages.some((m) => m.includes(report.resultsUrl))).toBe(true);
+    }
+  });
+
+  it("never returns URL-only when eligible or needInfo rows exist", () => {
+    const sch = testScholarship({
+      id: "elig-keep",
+      nameHe: "מלגת שמירה",
+      eligibility: { type: "degreeLevelIn", values: ["ba"] },
+    });
+    const need = testScholarship({
+      id: "need-keep",
+      nameHe: "מלגת חסר",
+      eligibility: {
+        op: "allOf",
+        rules: [
+          { type: "degreeLevelIn", values: ["ba"] },
+          { type: "fieldOfStudyIn", values: ["law"] },
+        ],
+      },
+    });
+    const report = buildWhatsAppReport({ degreeLevel: "ba" }, {
+      asOf: AS_OF,
+      matchAllFn: (_c, p, opts) => matchAll([sch, need], p, opts),
+    });
+    expect(report.messages.length).toBeGreaterThan(1);
+    expect(report.messages[0]).toMatch(/מתאים|סיימנו/);
+    expect(report.messages.some((m) => m.includes(report.resultsUrl))).toBe(true);
+    expect(reportIsUrlOnly(report.messages, report.resultsUrl)).toBe(false);
+  });
+
+  it("recovers a counselor lead if only a URL chunk is supplied", () => {
+    const url = "https://example.test/results/#p=abc";
+    const recovered = finalizeWhatsAppReportMessages({
+      chunks: [{ kind: "footer", text: `🔗 *הדוח המלא שלך*\n${url}` }],
+      resultsUrl: url,
+    });
+    expect(recovered.length).toBeGreaterThan(1);
+    expect(recovered[0]).toMatch(/סיימנו|אין כרגע מלגות שמתאימות/);
+    expect(recovered.some((m) => m.includes(url))).toBe(true);
+    expect(reportIsUrlOnly(recovered, url)).toBe(false);
   });
 });

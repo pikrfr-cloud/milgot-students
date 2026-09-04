@@ -68,7 +68,10 @@ The LLM is a fallback only after the deterministic parser returns unparsed.
 
 The counselor report is several sequential TwiML `<Message>` bodies (each under
 1500 characters). One concatenated WhatsApp body over 1600 is rejected by
-Twilio (error 21617) and the student never sees the report.
+Twilio (error 21617) and the student never sees the report. Do not collapse
+chunks into a single URL-only fallback — send the ✅ / «אין מתאים» lead first,
+then the 🔗 results URL. Cap at about six `<Message>` nouns by dropping
+near-miss/closed sections before eligible + URL.
 
 `[vars]` in `wrangler.toml` is only for non-secrets. Do not put tokens there.
 Local Node: the same names as environment variables. If outbound secrets are

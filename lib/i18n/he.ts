@@ -218,6 +218,7 @@ export const HE = {
     reminderNoneDated: "אין מלגות מתאימות עם תאריך סגירה. לא נרשמה תזכורת.",
     reminderStopped: "הפסקנו את התזכורות.",
     reminderSaveFailed: "לא הצלחנו לשמור את התזכורת עכשיו.",
+    crashApology: "משהו השתבש אצלנו. נסו שוב בעוד רגע, או שלחו «התחל מחדש».",
   },
 
   review: {

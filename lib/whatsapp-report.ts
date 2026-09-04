@@ -24,6 +24,11 @@ export const WHATSAPP_TOP_MATCH_LIMIT = 4;
 export const WHATSAPP_MESSAGE_MAX_CHARS = 1500;
 /** Per outbound WhatsApp message — not a total-report cap. */
 export const WHATSAPP_REPORT_MAX_CHARS = WHATSAPP_MESSAGE_MAX_CHARS;
+/**
+ * Twilio TwiML `<Message>` nouns in one reply. Keep eligible + URL; drop
+ * lower-priority sections rather than collapsing to a single URL body.
+ */
+export const WHATSAPP_MAX_OUTBOUND_MESSAGES = 6;
 
 export const ELIGIBLE_EXAMPLE_LIMIT = 4;
 export const NEED_INFO_EXAMPLE_LIMIT = 3;
@@ -184,6 +189,8 @@ function naturalPassedWhy(field: ProfileField, profile: StudentProfile): string 
       return valueHe && valueHe !== "דולג / לא צוין" ? `סימנתם ${valueHe}` : undefined;
     case "service":
       return valueHe && valueHe !== "דולג / לא צוין" ? `לפי ${valueHe}` : undefined;
+    case "histadrutMember":
+      return profile.histadrutMember === true ? "סימנתם חברות בנעמת / בהסתדרות" : undefined;
     default:
       return undefined;
   }
@@ -392,10 +399,69 @@ function renderFooterChunks(args: {
   return [link, after].filter((t) => t.length > 0);
 }
 
+type ReportChunkKind = "eligible" | "needInfo" | "nearMiss" | "institution" | "closed" | "footer";
+
+type TaggedChunk = { kind: ReportChunkKind; text: string };
+
+/** Drop closed → nearMiss → institution → needInfo. Never drop eligible or URL. */
+const TRIM_ORDER: ReportChunkKind[] = ["closed", "nearMiss", "institution", "needInfo"];
+
+export function reportHasEligibleOrNeedInfoLead(messages: string[]): boolean {
+  return messages.some(
+    (m) =>
+      m.includes(HE.whatsapp.eligibleNow) ||
+      m.includes(HE.whatsapp.reportTitle) ||
+      m.includes(HE.whatsapp.reportNoneEligible) ||
+      m.includes(HE.whatsapp.needInfoOne),
+  );
+}
+
+export function reportIsUrlOnly(messages: string[], resultsUrl: string): boolean {
+  if (messages.length === 0) return false;
+  const hasUrl = messages.some((m) => m.includes(resultsUrl) || m.includes("🔗"));
+  return hasUrl && !reportHasEligibleOrNeedInfoLead(messages);
+}
+
+function capTaggedChunks(chunks: TaggedChunk[]): TaggedChunk[] {
+  let kept = chunks.filter((c) => c.text.length > 0);
+  while (kept.length > WHATSAPP_MAX_OUTBOUND_MESSAGES) {
+    const dropKind = TRIM_ORDER.find((k) => kept.some((c) => c.kind === k));
+    if (!dropKind) break;
+    kept = kept.filter((c) => c.kind !== dropKind);
+  }
+  return kept;
+}
+
+/**
+ * Sequential WhatsApp bodies: eligible/none note first, URL last.
+ * Never collapse to the results link alone.
+ */
+export function finalizeWhatsAppReportMessages(args: {
+  chunks: TaggedChunk[];
+  resultsUrl: string;
+}): string[] {
+  const capped = capTaggedChunks(args.chunks);
+  const texts = capped.map((c) => c.text).filter((t) => t.length > 0);
+  if (texts.length === 0) {
+    return [
+      joinReportLines([HE.whatsapp.reportTitle, "", HE.whatsapp.reportNoneEligible]),
+      joinReportLines([`🔗 ${boldHe(HE.whatsapp.fullReportHeading)}`, args.resultsUrl]),
+    ];
+  }
+  if (reportIsUrlOnly(texts, args.resultsUrl)) {
+    return [
+      joinReportLines([HE.whatsapp.reportTitle, "", HE.whatsapp.reportNoneEligible]),
+      ...texts,
+    ].slice(0, WHATSAPP_MAX_OUTBOUND_MESSAGES);
+  }
+  return texts;
+}
+
 /**
  * Counselor report as sequential WhatsApp bodies.
  * Natural splits: intro+✅, 🟡, 🟠, 🏫, 📅, then 🔗 URL + disclaimer.
  * Each chunk is strictly under {@link WHATSAPP_MESSAGE_MAX_CHARS}.
+ * At most {@link WHATSAPP_MAX_OUTBOUND_MESSAGES} nouns — trim closed/nearMiss first.
  */
 export function splitWhatsAppReportMessages(args: {
   eligibleCount: number;
@@ -408,9 +474,12 @@ export function splitWhatsAppReportMessages(args: {
   resultsUrl: string;
 }): string[] {
   const limits = cloneLimits(DEFAULT_LIMITS);
-  const chunks: string[] = [];
+  const chunks: TaggedChunk[] = [];
 
-  chunks.push(renderEligibleChunk({ ...args, limits }));
+  chunks.push({
+    kind: "eligible",
+    text: renderEligibleChunk({ ...args, limits }),
+  });
 
   if (args.needInfoCount > 0) {
     const examples = needInfoExampleLines(take(args.sections.needInfo, limits.needInfo));
@@ -421,7 +490,7 @@ export function splitWhatsAppReportMessages(args: {
       intro: HE.whatsapp.needInfoIntro,
       examples,
     });
-    if (chunk) chunks.push(chunk);
+    if (chunk) chunks.push({ kind: "needInfo", text: chunk });
   }
 
   if (args.nearMissCount > 0) {
@@ -432,7 +501,7 @@ export function splitWhatsAppReportMessages(args: {
       intro: HE.whatsapp.nearMissIntro,
       examples: take(args.sections.nearMiss, limits.nearMiss),
     });
-    if (chunk) chunks.push(chunk);
+    if (chunk) chunks.push({ kind: "nearMiss", text: chunk });
   }
 
   if (args.institutionCount > 0) {
@@ -443,7 +512,7 @@ export function splitWhatsAppReportMessages(args: {
       intro: HE.whatsapp.checkInstitutionIntro,
       examples: take(args.sections.checkAtInstitution, limits.checkAtInstitution),
     });
-    if (chunk) chunks.push(chunk);
+    if (chunk) chunks.push({ kind: "institution", text: chunk });
   }
 
   if (args.closedCount > 0) {
@@ -454,18 +523,19 @@ export function splitWhatsAppReportMessages(args: {
       intro: HE.whatsapp.closedCycleIntro,
       examples: take(args.sections.closedCycle, limits.closedCycle),
     });
-    if (chunk) chunks.push(chunk);
+    if (chunk) chunks.push({ kind: "closed", text: chunk });
   }
 
-  chunks.push(
-    ...renderFooterChunks({
-      resultsUrl: args.resultsUrl,
-      ineligibleCount: args.ineligibleCount,
-      includeIneligibleNote: args.ineligibleCount > 0,
-    }),
-  );
+  const footer = renderFooterChunks({
+    resultsUrl: args.resultsUrl,
+    ineligibleCount: args.ineligibleCount,
+    includeIneligibleNote: args.ineligibleCount > 0,
+  });
+  for (const text of footer) {
+    chunks.push({ kind: "footer", text });
+  }
 
-  return chunks.filter((c) => c.length > 0);
+  return finalizeWhatsAppReportMessages({ chunks, resultsUrl: args.resultsUrl });
 }
 
 function cloneLimits(limits: ExampleLimits): ExampleLimits {

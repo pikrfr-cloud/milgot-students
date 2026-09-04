@@ -54,6 +54,7 @@ const KNOWN_PROFILE_KEYS = [
   "incomeBand",
   "socialBenefits",
   "firstGeneration",
+  "histadrutMember",
   "completedMechina",
 ] as const satisfies readonly ProfileField[];
 
@@ -233,12 +234,23 @@ export function stripSharedProfileFromLocation(win?: HistoryWindow): void {
 }
 
 /**
- * If the hash/query is a valid seed, merge it onto the stored profile then strip.
+ * Apply a URL seed, then strip it.
+ *
+ * A full shared profile (`#p=` / `?p=`) is authoritative — leftover
+ * localStorage keys must not change matcher buckets vs WhatsApp.
+ * Soft landing seeds (`?institution=` / `?city=` without `#p=`) still merge.
  * Invalid or empty payloads are ignored and do not wipe a filled profile.
  */
 export function hydrateSharedProfileFromLocation(win?: HistoryWindow): StudentProfile | null {
   const w = resolveWindow(win);
   if (!w) return null;
+  const fullShared = readSharedProfileFromLocation(w.location);
+  if (fullShared && !sharedProfileIsEmpty(fullShared)) {
+    const compact = compactStudentProfile(fullShared);
+    saveProfile(compact);
+    stripSharedProfileFromLocation(w);
+    return compact;
+  }
   const fromUrl = readChatSeedFromLocation(w.location);
   if (!fromUrl) return null;
   const merged = mergeUrlSeedWithStored(loadProfile(), fromUrl);
