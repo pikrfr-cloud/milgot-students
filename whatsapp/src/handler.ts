@@ -16,7 +16,7 @@ import {
   type ReminderItem,
 } from "../../lib/whatsapp-reminders";
 import { HE } from "../../lib/i18n/he";
-import { buildWhatsAppReport } from "../../lib/whatsapp-report";
+import { buildWhatsAppBucketFollowup, buildWhatsAppReport } from "../../lib/whatsapp-report";
 import { getSession, putSession } from "./session";
 import { deleteSubscription, putSubscription, type ReminderKv } from "./reminders-kv";
 import {
@@ -257,6 +257,11 @@ async function handleInboundUnchecked(
     const lastReportEligible = reminderCandidatesFromProfile(profile, asOf);
     putSession(inbound.from, { ...turn.session, lastReportEligible });
     messages.push(...report.messages);
+  } else if (turn.bucketRequested) {
+    const profile = turn.appliedProfile ?? turn.session.profile;
+    const asOf = options.asOf ?? new Date();
+    const follow = buildWhatsAppBucketFollowup(profile, turn.bucketRequested, { asOf });
+    messages.push(...follow.messages);
   }
 
   return {

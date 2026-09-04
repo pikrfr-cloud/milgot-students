@@ -16,16 +16,20 @@ import type {
 import {
   ELIGIBLE_EXAMPLE_LIMIT,
   MUTABLE_NEAR_MISS_FIELDS,
+  WHATSAPP_COMBINED_BODY_MAX,
+  WHATSAPP_MAX_OUTBOUND_MESSAGES,
   WHATSAPP_MESSAGE_MAX_CHARS,
   WHATSAPP_REPORT_MAX_CHARS,
   WHATSAPP_RESULTS_URL,
+  buildWhatsAppBucketFollowup,
   buildWhatsAppReport,
   compactAmountHe,
   compactDeadlineHe,
-  eligibleWhyHe,
+  counselorBucketCounts,
   finalizeWhatsAppReportMessages,
   formatCatalogDeadlineHe,
   isMutableNearMiss,
+  isVolunteerRefusalNearMiss,
   needInfoMissingHe,
   publishedAmountHe,
   reportHasEligibleOrNeedInfoLead,
@@ -120,7 +124,7 @@ function syntheticMatch(
 }
 
 describe("section labels and natural explanations", () => {
-  it("uses counselor Hebrew, WhatsApp bold, and restrained heading emojis", () => {
+  it("sends a short counselor summary plus URL, not a bucket dump", () => {
     const catalog = [
       testScholarship({
         id: "eligible-ba",
@@ -184,45 +188,50 @@ describe("section labels and natural explanations", () => {
       matchAllFn: (_catalog, p, opts) => matchAll(catalog, p, opts),
     });
 
+    expect(report.messages).toHaveLength(2);
     expect(report.text).toContain(HE.whatsapp.reportTitle);
     expect(report.text).toContain("✅");
     expect(report.text).toContain(`*${HE.whatsapp.eligibleNow} — 1*`);
-    expect(report.text).toContain(HE.whatsapp.eligibleIntro);
     expect(report.text).toContain("*מלגת בדיקת התאמה*");
-    expect(report.text).toContain(HE.whatsapp.volunteerRequired);
-    expect(report.text).toContain("למה: סימנתם שנוח לכם להתנדב");
+    expect(report.text).toContain("8,000 ₪");
+    expect(report.text).toContain(HE.whatsapp.notAwardLine);
+    expect(report.text).toContain("עוד 1 חסר פרט, 1 כמעט, 0 לא מתאים — בדוח המלא");
 
-    expect(report.text).toContain("🟡");
-    expect(report.text).toContain(`*${HE.whatsapp.needInfoOne} — 1*`);
-    expect(report.text).toContain(HE.whatsapp.needInfoIntro);
-    expect(report.text).toContain("חסר תחום לימוד");
-
-    expect(report.text).toContain("🟠");
-    expect(report.text).toContain(`*${HE.buckets.nearMiss} — 1*`);
-    expect(report.text).toContain(HE.whatsapp.nearMissIntro);
-    expect(report.text).toContain("*מלגת ממוצע גבוה*");
-    expect(report.text).toMatch(/ממוצע 95 לפחות|הממוצע שמילאתם נמוך מהסף/);
-
-    expect(report.text).toContain("🏫");
-    expect(report.text).toContain(`*${HE.whatsapp.checkInstitution} — 1*`);
-    expect(report.text).toContain(HE.whatsapp.checkInstitutionIntro);
-    expect(report.text).toContain("צריך לבדוק במוסד או ברשות");
-
-    expect(report.text).toContain("📅");
-    expect(report.text).toContain(`*${HE.buckets.closedCycle} — 1*`);
-    expect(report.text).toContain(HE.whatsapp.closedCycleIntro);
-    expect(report.text).toContain(formatHebrewLongDate("2026-03-01"));
+    expect(report.text).not.toContain("מלגת חסר תחום");
+    expect(report.text).not.toContain("מלגת ממוצע גבוה");
+    expect(report.text).not.toContain("מלגת דיקן לבדיקה");
+    expect(report.text).not.toContain("מלגה שנסגרה");
+    expect(report.text).not.toContain("🟡");
+    expect(report.text).not.toContain("🟠");
+    expect(report.text).not.toContain("🏫");
+    expect(report.text).not.toContain("📅");
+    expect(report.text).not.toContain(HE.chat.done);
 
     expect(report.text).toContain("🔗");
     expect(report.text).toContain(`*${HE.whatsapp.fullReportHeading}*`);
-    expect(report.text).toContain(HE.whatsapp.disclaimer);
     expect(report.text).toContain(HE.whatsapp.continueAfterReport);
-    expect(report.text).toContain("תזכורת");
+    expect(report.text).toContain("דוח מפורט");
     expect(report.text).toContain("התחל מחדש");
 
     expect(report.text).not.toContain("**");
     expect(report.text).not.toMatch(/🎉|🥳|🌈|✨/);
     expect(report.text).not.toContain("זכאים לזכייה");
+
+    const details = buildWhatsAppBucketFollowup(profile, "needInfo", {
+      asOf: AS_OF,
+      matchAllFn: (_catalog, p, opts) => matchAll(catalog, p, opts),
+    });
+    expect(details.messages).toHaveLength(1);
+    expect(details.text).toContain("🟡");
+    expect(details.text).toContain("מלגת חסר תחום");
+    expect(details.text).toContain("חסר תחום לימוד");
+
+    const almost = buildWhatsAppBucketFollowup(profile, "nearMiss", {
+      asOf: AS_OF,
+      matchAllFn: (_catalog, p, opts) => matchAll(catalog, p, opts),
+    });
+    expect(almost.text).toContain("🟠");
+    expect(almost.text).toContain("מלגת ממוצע גבוה");
   });
 });
 
@@ -252,7 +261,7 @@ describe("per-row amounts and deadlines, no summed total", () => {
     expect(publishedAmountHe(b.amounts)).toBe("עד 10,000 ₪");
     expect(report.text).toContain("6,000 ₪");
     expect(report.text).toContain("עד 10,000 ₪");
-    expect(report.text).toContain(`מועד: ${formatHebrewLongDate("2026-10-15")}`);
+    expect(report.text).toContain(formatHebrewLongDate("2026-10-15"));
     expect(report.text).not.toContain("מועד: חלון");
     expect(compactDeadlineHe(b.deadline)).toBeUndefined();
     expect(formatCatalogDeadlineHe(b.deadline)).toBeUndefined();
@@ -297,7 +306,7 @@ describe("needInfo names the exact missing field", () => {
       treatment: "scoreBased",
       eligibility: { type: "degreeLevelIn", values: ["ba"] },
     });
-    const mixed = buildWhatsAppReport(profile, {
+    const mixed = buildWhatsAppBucketFollowup(profile, "needInfo", {
       asOf: AS_OF,
       matchAllFn: (_c, p, opts) => matchAll([scoreBased, sch], p, opts),
     });
@@ -327,15 +336,23 @@ describe("nearMiss shows only mutable reasons", () => {
     const real = matchOf(volunteerSch, profile);
     expect(real.bucket).toBe("nearMiss");
     expect(isMutableNearMiss(real)).toBe(true);
+    expect(isVolunteerRefusalNearMiss(real, profile)).toBe(true);
     expect(real.failed.every((c) => c.field && MUTABLE_NEAR_MISS_FIELDS.has(c.field))).toBe(true);
 
     const report = buildWhatsAppReport(profile, {
       asOf: AS_OF,
       matchAllFn: (_c, p, opts) => matchAll([volunteerSch], p, opts),
     });
-    expect(report.text).toContain("*מלגת התנדבות*");
-    expect(report.text).toContain("דורשת נכונות להתנדב");
+    expect(report.text).not.toContain("*מלגת התנדבות*");
+    expect(report.text).toContain(HE.whatsapp.volunteerNotFit);
+    expect(report.text).toContain("עוד 0 חסר פרט, 0 כמעט, 1 לא מתאים — בדוח המלא");
     expect(report.text).not.toMatch(/כמעט.*מוסד|כמעט.*תואר|כמעט.*עיר/);
+
+    const follow = buildWhatsAppBucketFollowup(profile, "nearMiss", {
+      asOf: AS_OF,
+      matchAllFn: (_c, p, opts) => matchAll([volunteerSch], p, opts),
+    });
+    expect(follow.text).not.toContain("מלגת התנדבות");
 
     const immutableRow = syntheticMatch({
       bucket: "nearMiss",
@@ -356,13 +373,18 @@ describe("nearMiss shows only mutable reasons", () => {
     });
     expect(isMutableNearMiss(immutableRow)).toBe(false);
 
+    const grouped = groupMatches([real, immutableRow]);
+    const counselor = counselorBucketCounts(grouped, profile);
+    expect(counselor.nearMiss).toBe(1);
+    expect(counselor.volunteerRefusal).toBe(1);
+    expect(counselor.ineligible).toBe(1);
     const mixed = buildWhatsAppReport(profile, {
       asOf: AS_OF,
       matchAllFn: () => [real, immutableRow],
     });
-    expect(mixed.text).toContain("*מלגת התנדבות*");
+    expect(mixed.text).not.toContain("מלגת התנדבות");
     expect(mixed.text).not.toContain("מלגת מוסד אחר");
-    expect(mixed.text).toContain("*כמעט מתאים — 2*");
+    expect(mixed.text).toContain(HE.whatsapp.volunteerNotFit);
   });
 });
 
@@ -392,14 +414,16 @@ describe("empty sections are omitted", () => {
       matchAllFn: (_c, p, opts) => matchAll([onlyEligible], p, opts),
     });
     expect(report.text).toContain(HE.whatsapp.eligibleNow);
+    expect(report.text).toContain("*רק מתאימה*");
     expect(report.text).not.toContain(HE.whatsapp.needInfoOne);
-    expect(report.text).not.toContain(HE.buckets.nearMiss);
+    expect(report.text).not.toContain(`*${HE.buckets.nearMiss}`);
     expect(report.text).not.toContain(HE.whatsapp.checkInstitution);
     expect(report.text).not.toContain(HE.buckets.closedCycle);
     expect(report.text).not.toContain("🟡");
     expect(report.text).not.toContain("🟠");
     expect(report.text).not.toContain("🏫");
     expect(report.text).not.toContain("📅");
+    expect(report.messages).toHaveLength(2);
   });
 });
 
@@ -493,11 +517,14 @@ describe("max WhatsApp length on a worst-case catalog", () => {
       matchAllFn: (_c, p, opts) => matchAll(catalog, p, opts),
     });
 
-    expect(report.messages.length).toBeGreaterThan(1);
-    expect(report.messages.length).toBeLessThanOrEqual(6);
+    expect(report.messages.length).toBe(2);
+    expect(report.messages.length).toBeLessThanOrEqual(WHATSAPP_MAX_OUTBOUND_MESSAGES);
     for (const chunk of report.messages) {
       expect(chunk.length).toBeLessThan(WHATSAPP_MESSAGE_MAX_CHARS);
     }
+    expect(report.messages.reduce((n, m) => n + m.length, 0)).toBeLessThanOrEqual(
+      WHATSAPP_COMBINED_BODY_MAX,
+    );
     expect(WHATSAPP_REPORT_MAX_CHARS).toBe(1500);
     expect(WHATSAPP_MESSAGE_MAX_CHARS).toBe(1500);
     expect(report.resultsUrl).toContain("#p=");
@@ -525,21 +552,18 @@ describe("real catalog fixture sample (not a student)", () => {
       const shown = grouped.eligible.slice(0, ELIGIBLE_EXAMPLE_LIMIT);
       for (const m of shown) {
         expect(report.text).toContain(m.scholarship.nameHe);
-        const why = eligibleWhyHe(m, WHATSAPP_REPORT_FIXTURE_PROFILE);
-        expect(report.text).toContain(`למה: ${why}`);
         const amountHe = publishedAmountHe(m.scholarship.amounts);
         if (amountHe) expect(report.text).toContain(amountHe);
       }
     } else {
-      expect(report.text).not.toContain(HE.whatsapp.eligibleNow);
+      expect(report.text).toContain(HE.whatsapp.reportNoneEligible);
     }
 
-    if (grouped.needInfo.length === 0) expect(report.text).not.toContain(HE.whatsapp.needInfoOne);
-    if (grouped.nearMiss.length === 0) expect(report.text).not.toContain(`*${HE.buckets.nearMiss}`);
-    if (grouped.checkAtInstitution.length === 0) {
-      expect(report.text).not.toContain(HE.whatsapp.checkInstitution);
-    }
-    if (grouped.closedCycle.length === 0) expect(report.text).not.toContain(HE.buckets.closedCycle);
+    expect(report.text).toContain(HE.whatsapp.notAwardLine);
+    expect(report.text).toContain("בדוח המלא");
+    expect(report.text).not.toContain("🟡");
+    expect(report.text).not.toContain("🟠");
+    expect(report.messages.length).toBeLessThanOrEqual(3);
 
     expect(report.text).toContain(sharedResultsUrl(WHATSAPP_REPORT_FIXTURE_PROFILE));
     for (const chunk of report.messages) {
@@ -562,18 +586,22 @@ export const OPENU_YEAR3_FIXTURE: StudentProfile = {
 describe("Twilio 1600-character split (error 21617)", () => {
   it("every chunk is under 1500 and the Open University year-3 report keeps the full-report URL", () => {
     const report = buildWhatsAppReport(OPENU_YEAR3_FIXTURE, { asOf: AS_OF });
-    expect(report.messages.length).toBeGreaterThan(1);
-    expect(report.messages.length).toBeLessThanOrEqual(6);
+    expect(report.messages.length).toBe(2);
+    expect(report.messages.length).toBeLessThanOrEqual(WHATSAPP_MAX_OUTBOUND_MESSAGES);
     for (const chunk of report.messages) {
       expect(chunk.length).toBeLessThan(1500);
       expect(chunk.length).toBeLessThan(WHATSAPP_MESSAGE_MAX_CHARS);
     }
+    expect(report.messages.reduce((n, m) => n + m.length, 0)).toBeLessThanOrEqual(
+      WHATSAPP_COMBINED_BODY_MAX,
+    );
     const joined = report.messages.join("\n\n");
     expect(joined).toBe(report.text);
     expect(report.resultsUrl).toContain("#p=");
     expect(report.messages.some((m) => m.includes(report.resultsUrl))).toBe(true);
     expect(report.text).toContain(sharedResultsUrl(OPENU_YEAR3_FIXTURE));
-    expect(report.text).toMatch(/✅|🟡|🟠|🏫|📅|🔗/);
+    expect(report.text).toMatch(/✅|🔗/);
+    expect(report.text).not.toMatch(/🟡|🟠|🏫|📅/);
     expect(report.messages.at(-1)).toContain("🔗");
 
     const first = report.messages[0] ?? "";

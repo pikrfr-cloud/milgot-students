@@ -161,6 +161,7 @@ export function formatProfileValueHe(
     return INSTITUTIONS.find((i) => i.id === value)?.nameHe ?? String(value);
   }
   if (field === "yearOfStudy") return `שנה ${value}`;
+  if (field === "householdSize" && typeof value === "number") return `${value} נפשות`;
   if (typeof value === "number") return String(value);
   return fieldLabelHe(String(value));
 }

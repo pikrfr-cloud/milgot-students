@@ -210,11 +210,11 @@ export function ProfileWizard() {
   const hints = validationHints(profile);
   const topUnblock = useMemo(() => {
     if (step !== 5) return [];
-    return missingFieldUnlocks(matchAll(SCHOLARSHIPS, profile)).slice(0, 3);
+    return missingFieldUnlocks(matchAll(SCHOLARSHIPS, profile), profile).slice(0, 3);
   }, [profile, step]);
 
   const unlockByField = useMemo(() => {
-    const entries = missingFieldUnlocks(matchAll(SCHOLARSHIPS, profile));
+    const entries = missingFieldUnlocks(matchAll(SCHOLARSHIPS, profile), profile);
     return new Map(entries.map((u) => [u.field, u.count]));
   }, [profile]);
 

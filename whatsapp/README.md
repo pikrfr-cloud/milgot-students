@@ -66,12 +66,12 @@ Without `WHATSAPP_LLM_API_KEY` the bot still works: numbered choices, Hebrew
 synonyms («תואר ראשון», «הפתוחה», «שנה שלישית», «לראות מלגות»), and skip/reset.
 The LLM is a fallback only after the deterministic parser returns unparsed.
 
-The counselor report is several sequential TwiML `<Message>` bodies (each under
-1500 characters). One concatenated WhatsApp body over 1600 is rejected by
-Twilio (error 21617) and the student never sees the report. Do not collapse
-chunks into a single URL-only fallback — send the ✅ / «אין מתאים» lead first,
-then the 🔗 results URL. Cap at about six `<Message>` nouns by dropping
-near-miss/closed sections before eligible + URL.
+The counselor report is **two** short TwiML `<Message>` bodies (summary +
+full-report URL). Each body is under 1500 characters; combined bodies stay
+under 1500 so a concatenated send cannot hit Twilio error 21617. Do not dump
+needInfo / nearMiss / closed lists in the default reply. «פרטים» or «כמעט»
+after the report may add one extra short bucket message (at most three nouns).
+Never collapse to a URL-only fallback — send the ✅ / «אין מתאים» lead first.
 
 `[vars]` in `wrangler.toml` is only for non-secrets. Do not put tokens there.
 Local Node: the same names as environment variables. If outbound secrets are
@@ -165,8 +165,10 @@ Hebrew replies as TwiML `<Response><Message>`. Choice questions list numbered
 options plus `דלג`. Students can answer in ordinary Hebrew or send a number.
 «לראות מלגות» / «דוח» asks for the catalog summary. After the same completion
 rule as the site (`3` filled wizard fields, or the short question list is done),
-the report is several short WhatsApp messages: ✅ eligible, 🟡 need-info,
-🟠 near-miss, 🏫 institution, 📅 closed, then the full-report URL. Amounts and
-dates appear **only when the catalog has them**. No fund decision is claimed.
+the report is two short WhatsApp messages: how many ✅ now (up to three names
+with catalog ₪/date), then the full-report URL. Amounts and dates appear
+**only when the catalog has them**. No fund decision is claimed. Volunteer-only
+near-misses after the student said they will not volunteer are counted as
+«לא מתאים בלי התנדבות», not as «כמעט».
 
 There is no payment flow and no operator identity on this endpoint.

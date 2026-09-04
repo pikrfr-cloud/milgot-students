@@ -55,6 +55,37 @@ describe("chat intake field glue", () => {
     expect(ids.indexOf("degreeLevel")).toBeLessThan(ids.indexOf("miluim"));
     expect(ids.indexOf("miluim")).toBeLessThan(ids.indexOf("cityOfResidence"));
     expect(ids.indexOf("cityOfResidence")).toBeLessThan(ids.indexOf("institution"));
+    expect(ids.indexOf("institution")).toBeLessThan(ids.indexOf("gender"));
+    expect(ids.indexOf("gender")).toBeLessThan(ids.indexOf("householdSize"));
+  });
+
+  it("asks gender in the core path after institution", () => {
+    const gender = chatQuestionById("gender");
+    expect(gender?.core).toBe(true);
+    expect(gender?.field).toBe("gender");
+    expect(gender?.promptHe).toMatch(/מגדר/);
+    const afterInst = applyChatAction(
+      {
+        profile: {
+          degreeLevel: "ba",
+          reservistDaysLastYear: 0,
+          cityOfResidence: "חיפה",
+          institution: "haifa",
+        },
+        askedIds: ["degreeLevel", "miluim", "cityOfResidence", "institution"],
+      },
+      { type: "skip", question: gender! },
+    );
+    expect(afterInst.askedIds).toContain("gender");
+    expect(nextChatQuestion(
+      {
+        degreeLevel: "ba",
+        reservistDaysLastYear: 0,
+        cityOfResidence: "חיפה",
+        institution: "haifa",
+      },
+      ["degreeLevel", "miluim", "cityOfResidence", "institution"],
+    )?.id).toBe("gender");
   });
 
   it("walks degree → miluim → city → institution chips", () => {
@@ -146,6 +177,19 @@ describe("chat intake field glue", () => {
     expect(asked).toContain("miluimDays");
     expect(nextChatQuestion(skipped, asked)?.id).not.toBe("miluim");
     expect(nextChatQuestion(skipped, asked)?.id).not.toBe("miluimDays");
+  });
+
+  it("maps household size 4 to a filled numeric householdSize", () => {
+    const sizeQ = chatQuestionById("householdSize");
+    const four = sizeQ?.choices?.find((c) => c.id === "4");
+    if (!sizeQ || !four) throw new Error("missing householdSize 4");
+    const next = applyChatAction({ profile: {}, askedIds: [] }, {
+      type: "choice",
+      question: sizeQ,
+      choice: four,
+    });
+    expect(next.profile.householdSize).toBe(4);
+    expect(isProfileFieldFilled(next.profile, "householdSize")).toBe(true);
   });
 
   it("applyChatAction is the single mutation used by web and WhatsApp", () => {

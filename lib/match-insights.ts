@@ -1,6 +1,6 @@
-import type { ProfileField, ScholarshipMatch } from "./types";
+import type { ProfileField, ScholarshipMatch, StudentProfile } from "./types";
 import { deadlineSortValue, deadlineStatus } from "./format";
-import { HIGH_IMPACT_FIELDS } from "./profile-fields";
+import { HIGH_IMPACT_FIELDS, isProfileFieldFilled } from "./profile-fields";
 
 const ACTIONABLE_BUCKETS = new Set([
   "eligible",
@@ -16,6 +16,7 @@ export function isActionableMatch(match: ScholarshipMatch): boolean {
 /** Fields whose fill would move the most «חסר פרט» cards; high-impact first when tied. */
 export function missingFieldUnlocks(
   matches: ScholarshipMatch[],
+  profile?: StudentProfile,
 ): { field: ProfileField; count: number }[] {
   const counts = new Map<ProfileField, number>();
   for (const m of matches) {
@@ -23,6 +24,7 @@ export function missingFieldUnlocks(
     const seen = new Set<ProfileField>();
     for (const c of m.unknown) {
       if (!c.field || seen.has(c.field)) continue;
+      if (profile && isProfileFieldFilled(profile, c.field)) continue;
       seen.add(c.field);
       counts.set(c.field, (counts.get(c.field) ?? 0) + 1);
     }

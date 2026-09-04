@@ -2,10 +2,28 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { ScholarshipCard } from "@/components/ScholarshipCard";
 import { ResultsMatchingHeader } from "@/components/ResultsView";
 import { ScholarshipFaceChips } from "@/components/ScholarshipFaceChips";
 import { amount, deadline } from "@/data/scholarships/helpers";
+import { matchHeadline } from "@/lib/format";
+import { matchScholarship } from "@/lib/matcher";
+import { SCHOLARSHIPS } from "@/data/scholarships";
 import { compactAmountHe, buildWhatsAppReport } from "@/lib/whatsapp-report";
+import type { StudentProfile } from "@/lib/types";
+
+const OPENU_YEAR3_PETAH_TIKVA_PERSONA: StudentProfile = {
+  institution: "openu",
+  degreeLevel: "ba",
+  yearOfStudy: 3,
+  cityOfResidence: "פתח תקווה",
+  householdSize: 4,
+  householdIncomeBand: "band_8_15k",
+  service: "none",
+  willingToVolunteer: false,
+  sectors: ["jewish_general"],
+  isOleh: false,
+};
 import {
   NO_DOUBLE_COUNT_CAVEAT_HE,
   matchingNowHeadlineHe,
@@ -90,6 +108,25 @@ describe("results header has no summed ₪", () => {
     expect(src).not.toContain("missingAmounts");
     expect(src).not.toContain("סכום משוער");
     expect(src).not.toMatch(/formatIls\(.*sum/);
+  });
+});
+
+describe("ineligible cards show the fail reason without expand", () => {
+  it("prints one Hebrew fail line on the card face for מלגות 6000", () => {
+    const sch = SCHOLARSHIPS.find((s) => s.id === "isef-recanati-6000");
+    if (!sch) throw new Error("missing isef-recanati-6000");
+    const match = matchScholarship(sch, OPENU_YEAR3_PETAH_TIKVA_PERSONA);
+    expect(match.bucket).toBe("ineligible");
+    const html = renderToStaticMarkup(<ScholarshipCard match={match} />);
+    const headline = matchHeadline(match);
+    expect(headline).toMatch(/לא מתאים/);
+    expect(headline).toMatch(/שירות|התנדבות/);
+    expect(html).toContain(headline);
+    const reasonAt = html.indexOf(headline);
+    const detailsAt = html.indexOf("פירוט קריטריונים");
+    expect(reasonAt).toBeGreaterThan(-1);
+    expect(detailsAt).toBeGreaterThan(reasonAt);
+    expect(html).not.toContain(">4<");
   });
 });
 

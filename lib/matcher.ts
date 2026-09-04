@@ -16,7 +16,7 @@ import {
 } from "./types";
 import { INSTITUTIONS } from "./institutions";
 import { cityInList, isPeripheryCity, neighborhoodMatches } from "./cities";
-import { fieldLabelHe, predicateLabelHe } from "./labels";
+import { fieldLabelHe, formatProfileValueHe, predicateLabelHe } from "./labels";
 import { isDeadlineClosed } from "./format";
 import { profileIncomeBand } from "./income";
 
@@ -177,12 +177,20 @@ function profileValueHe(profile: StudentProfile, field?: ProfileField): string {
   if (!field) return "";
   const v = profile[field];
   if (isUnknown(v)) return "לא צוין";
-  if (typeof v === "boolean") return v ? "כן" : "לא";
-  if (Array.isArray(v)) return v.length ? v.map((x) => fieldLabelHe(String(x))).join(", ") : "אין";
-  if (field === "institution") {
-    return INSTITUTIONS.find((i) => i.id === v)?.nameHe ?? String(v);
+  return formatProfileValueHe(field, v);
+}
+
+function incomeProfileValueHe(profile: StudentProfile): string {
+  const bits: string[] = [];
+  const household = profile.householdIncomeBand;
+  if (!isUnknown(household)) bits.push(fieldLabelHe(String(household)));
+  const perPerson = profileIncomeBand(profile);
+  if (!isUnknown(perPerson) && perPerson !== household) {
+    bits.push(`הכנסה לנפש: ${fieldLabelHe(String(perPerson))}`);
   }
-  return fieldLabelHe(String(v));
+  const fallback = profile.incomeBand;
+  if (bits.length === 0 && !isUnknown(fallback)) bits.push(fieldLabelHe(String(fallback)));
+  return bits.join(" · ");
 }
 
 function detailFor(
@@ -191,7 +199,8 @@ function detailFor(
   profile: StudentProfile,
   field?: ProfileField,
 ): string {
-  const value = field ? profileValueHe(profile, field) : "";
+  const value =
+    pred.type === "incomeAtMost" ? incomeProfileValueHe(profile) : field ? profileValueHe(profile, field) : "";
   if (status === "unknown") {
     if (pred.type === "incomeAtMost" && profile && !isUnknown(profileIncomeBand(profile))) {
       return "ההכנסה שבפרופיל היא הערכה פנימית לפי סדר גודל, לא נוסחת הקרן. לא נפסלה המלגה — יש לאמת מול הקרן.";
@@ -212,7 +221,8 @@ function incomeMissingField(profile: StudentProfile): ProfileField {
   if (hasBand && !hasSize) return "householdSize";
   if (hasSize && !hasBand) return "householdIncomeBand";
   if (!hasBand) return "householdIncomeBand";
-  return "householdSize";
+  // Both filled — this is the economic check, not a missing household-size unlock.
+  return "householdIncomeBand";
 }
 
 function fieldFor(pred: Predicate, profile?: StudentProfile): ProfileField | undefined {
@@ -431,6 +441,20 @@ function nextId(prefix: string): string {
   return `${prefix}-${seq}`;
 }
 
+const VOLUNTEER_REFUSAL_FIELDS = new Set<ProfileField>([
+  "willingToVolunteer",
+  "volunteerHoursPerYear",
+  "hasPerach",
+]);
+
+/** Explicit no to volunteering — not a «maybe I could still change this» near-miss. */
+function isVolunteerRefusalEval(evaluation: RuleEval): boolean {
+  if (evaluation.status !== "fail") return false;
+  const leaves = evaluation.criteria.filter((c) => !c.group && c.status === "fail");
+  if (leaves.length === 0) return false;
+  return leaves.every((c) => !!c.field && VOLUNTEER_REFUSAL_FIELDS.has(c.field));
+}
+
 function failSplit(
   status: EvalStatus,
   immutable: boolean,
@@ -561,7 +585,11 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
       };
     }
 
-    const blockedImmutably = children.every((c) => c.immutableFailCount > 0);
+    const blockedImmutably =
+      children.every((c) => c.immutableFailCount > 0) ||
+      (children.every((c) => c.status === "fail") &&
+        children.some((c) => c.immutableFailCount > 0) &&
+        children.every((c) => c.immutableFailCount > 0 || isVolunteerRefusalEval(c)));
     const leaf: CriterionResult = {
       id: nextId("any-fail"),
       labelHe: rule.labelHe ?? "לפחות אחד מהמסלולים",
