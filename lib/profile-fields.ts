@@ -71,6 +71,7 @@ export const CHAT_CORE_FIELDS: ProfileField[] = [
   "reservistDaysLastYear",
   "cityOfResidence",
   "institution",
+  "gender",
   "householdSize",
   "householdIncomeBand",
 ];

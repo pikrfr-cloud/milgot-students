@@ -55,6 +55,37 @@ describe("chat intake field glue", () => {
     expect(ids.indexOf("degreeLevel")).toBeLessThan(ids.indexOf("miluim"));
     expect(ids.indexOf("miluim")).toBeLessThan(ids.indexOf("cityOfResidence"));
     expect(ids.indexOf("cityOfResidence")).toBeLessThan(ids.indexOf("institution"));
+    expect(ids.indexOf("institution")).toBeLessThan(ids.indexOf("gender"));
+    expect(ids.indexOf("gender")).toBeLessThan(ids.indexOf("householdSize"));
+  });
+
+  it("asks gender in the core path after institution", () => {
+    const gender = chatQuestionById("gender");
+    expect(gender?.core).toBe(true);
+    expect(gender?.field).toBe("gender");
+    expect(gender?.promptHe).toMatch(/מגדר/);
+    const afterInst = applyChatAction(
+      {
+        profile: {
+          degreeLevel: "ba",
+          reservistDaysLastYear: 0,
+          cityOfResidence: "חיפה",
+          institution: "haifa",
+        },
+        askedIds: ["degreeLevel", "miluim", "cityOfResidence", "institution"],
+      },
+      { type: "skip", question: gender! },
+    );
+    expect(afterInst.askedIds).toContain("gender");
+    expect(nextChatQuestion(
+      {
+        degreeLevel: "ba",
+        reservistDaysLastYear: 0,
+        cityOfResidence: "חיפה",
+        institution: "haifa",
+      },
+      ["degreeLevel", "miluim", "cityOfResidence", "institution"],
+    )?.id).toBe("gender");
   });
 
   it("walks degree → miluim → city → institution chips", () => {

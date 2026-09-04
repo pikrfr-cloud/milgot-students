@@ -1,3 +1,5 @@
+import { capWhatsAppOutboundBodies } from "../../lib/whatsapp-report";
+
 /** Twilio form-encoded inbound + TwiML helpers. No official SDK (keeps the Worker small). */
 
 export type TwilioInbound = {
@@ -40,8 +42,7 @@ function escapeXml(text: string): string {
 }
 
 export function twimlMessages(texts: string[]): string {
-  const body = texts
-    .filter((t) => t.trim().length > 0)
+  const body = capWhatsAppOutboundBodies(texts)
     .map((t) => `<Message>${escapeXml(t)}</Message>`)
     .join("");
   return `<?xml version="1.0" encoding="UTF-8"?><Response>${body}</Response>`;

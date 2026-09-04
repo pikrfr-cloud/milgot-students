@@ -43,6 +43,31 @@ export const NO_ALIASES = [
   "no",
 ] as const;
 
+/** Service choice ids → phrases. Bare «לא» is none, not skip and not exempt. */
+export const SERVICE_ALIASES: Record<string, readonly string[]> = {
+  none: ["לא", "לא שירתתי", "בלי שירות", "אין שירות", "לא עשיתי שירות", "ללא שירות"],
+  exempt: ["פטור", "פטור משירות", "משוחרר בפטור"],
+  idf: ["צהל", "צבא", "שירות צבאי", "חייל", "חיילת"],
+  national: ["שירות לאומי", "לאומי"],
+  civil: ["שירות אזרחי", "אזרחי"],
+};
+
+/**
+ * Household-income choice ids → student phrasing.
+ * «בינונית» / «ממוצעת» map to the middle ₪ band — not a new invented range.
+ */
+export const INCOME_ALIASES: Record<string, readonly string[]> = {
+  band_15_25k: ["בינונית", "ממוצעת", "הכנסה בינונית", "הכנסה ממוצעת", "בינוני", "ממוצע"],
+  under_8k: ["נמוכה מאוד", "הכנסה נמוכה מאוד"],
+  over_40k: ["גבוהה", "הכנסה גבוהה"],
+};
+
+export const GENDER_ALIASES: Record<string, readonly string[]> = {
+  female: ["אישה", "אשה", "נקבה", "בת"],
+  male: ["גבר", "זכר", "בן"],
+  other: ["אחר", "לא בינארי", "אחר / לא בינארי"],
+};
+
 /** Degree choice ids → extra phrases. Only used on the degree question. */
 export const DEGREE_ALIASES: Record<string, readonly string[]> = {
   ba: ["תואר ראשון", "ראשון", "ba", "b.a", "bachelor"],

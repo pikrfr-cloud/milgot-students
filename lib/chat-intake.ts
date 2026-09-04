@@ -12,9 +12,10 @@ import {
   isProfileFieldFilled,
 } from "./profile-fields";
 import { profileIsEmpty } from "./profile-storage";
-import type { DegreeLevel, HouseholdIncomeBand, ProfileField, ServiceType, StudentProfile } from "./types";
+import type { DegreeLevel, Gender, HouseholdIncomeBand, ProfileField, ServiceType, StudentProfile } from "./types";
 import {
   DEGREE_LEVELS,
+  GENDERS,
   HOUSEHOLD_INCOME_BANDS,
   SECTORS,
   SERVICE_TYPES,
@@ -140,6 +141,17 @@ export const CHAT_QUESTIONS: ChatQuestion[] = [
     hintHe: "בחרו מוסד, או חפשו בשם.",
     kind: "search-institution",
     core: true,
+  },
+  {
+    id: "gender",
+    field: "gender",
+    promptHe: "מגדר? יש מלגות שנפתחות רק לנשים או לפי מגדר.",
+    hintHe: "שאלה אחת, אפשר לדלג.",
+    kind: "choices",
+    core: true,
+    choices: GENDERS.map((g) =>
+      choice(g, g === "other" ? "אחר / לא בינארי" : fieldLabelHe(g), { gender: g as Gender }),
+    ),
   },
   {
     id: "householdSize",

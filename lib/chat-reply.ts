@@ -13,6 +13,9 @@ import {
 import { CITY_SUGGESTIONS, citiesMatch, compactCityKey, normalizeCityName } from "./cities";
 import {
   DEGREE_ALIASES,
+  GENDER_ALIASES,
+  INCOME_ALIASES,
+  SERVICE_ALIASES,
   YEAR_ALIASES,
   institutionIdFromAlias,
   matchMappedAliases,
@@ -44,10 +47,12 @@ const RESET_COMMANDS = new Set([
 ]);
 const REPORT_COMMANDS = new Set([
   "דוח",
+  "דוח מפורט",
   "להראות דוח עכשיו",
   "להראות תוצאות",
   "הציגו לי מלגות",
   "הציגו מלגות",
+  "הציגו דוח",
   "לראות מלגות",
   "תראה לי",
   "תראי לי",
@@ -55,8 +60,10 @@ const REPORT_COMMANDS = new Set([
   "תראה לי מלגות",
   "תראו לי מלגות",
   "תראי לי מלגות",
+  "תראו דוח",
   "מה מגיע לי",
   "מה מתאים לי",
+  "מלגות שלי",
   "report",
 ]);
 
@@ -68,10 +75,37 @@ const REPORT_PHRASES = [
   "תראי לי מלגות",
   "הציגו מלגות",
   "הציגו לי מלגות",
+  "הציגו דוח",
+  "דוח מפורט",
   "מה מגיע לי",
   "מה מתאים לי",
+  "מלגות שלי",
 ];
-const SKIP_COMMANDS = new Set(["דלג", "דילוג", "תדלג", "תדלגי", "תדלגו", "לדלג", "skip", "0"]);
+const SKIP_COMMANDS = new Set([
+  "דלג",
+  "דילוג",
+  "תדלג",
+  "תדלגי",
+  "תדלגו",
+  "לדלג",
+  "מדלג",
+  "מדלגת",
+  "מדלגים",
+  "לא רלוונטי",
+  "לא יודע",
+  "לא יודעת",
+  "לא יודעים",
+  "אין תשובה",
+  "אין לי",
+  "לא משנה",
+  "skip",
+  "0",
+]);
+
+const SKIP_PHRASES = ["לא רלוונטי", "אין תשובה", "לא יודע", "לא יודעת"];
+
+const DETAILS_COMMANDS = new Set(["פרטים", "פירוט", "חסר", "חסר פרט", "details"]);
+const NEAR_MISS_COMMANDS = new Set(["כמעט", "כמעט מתאים", "near"]);
 
 export type NumberedOption = {
   n: number;
@@ -83,6 +117,8 @@ export type ParsedInbound =
   | { kind: "ignore" }
   | { kind: "reset" }
   | { kind: "report" }
+  | { kind: "details" }
+  | { kind: "nearMiss" }
   | { kind: "skip" }
   | { kind: "action"; action: ChatAction }
   | { kind: "relabel"; options: NumberedOption[]; promptHe: string }
@@ -128,7 +164,20 @@ export function isClarifyNudge(raw: string): boolean {
 }
 
 export function isSkipCommand(raw: string): boolean {
-  return commandMatches(raw, SKIP_COMMANDS);
+  if (commandMatches(raw, SKIP_COMMANDS)) return true;
+  const t = normalizeForMatch(raw);
+  return SKIP_PHRASES.some((p) => {
+    const phrase = normalizeForMatch(p);
+    return t === phrase || (phrase.length >= 6 && t.includes(phrase));
+  });
+}
+
+export function isDetailsCommand(raw: string): boolean {
+  return commandMatches(raw, DETAILS_COMMANDS);
+}
+
+export function isNearMissCommand(raw: string): boolean {
+  return commandMatches(raw, NEAR_MISS_COMMANDS);
 }
 
 export function questionOptions(question: ChatQuestion, searchQuery = ""): NumberedOption[] {
@@ -223,6 +272,38 @@ function optionByNumber(options: NumberedOption[], n: number): NumberedOption | 
   return options.find((o) => o.n === n);
 }
 
+function listedPayloadPrefix(question: ChatQuestion): string | undefined {
+  if (question.kind === "choices") return "choice:";
+  if (question.kind === "multi") return "multi:";
+  if (question.kind === "search-institution") return "institution:";
+  if (question.kind === "search-city") return "city:";
+  return undefined;
+}
+
+/** Drop stale numbered lists (e.g. leftover institution chips on the sector question). */
+export function listedOptionsForQuestion(
+  question: ChatQuestion,
+  listed: NumberedOption[] = [],
+): NumberedOption[] {
+  const prefix = listedPayloadPrefix(question);
+  if (listed.length && prefix && listed.every((o) => o.payload.startsWith(prefix))) {
+    return listed;
+  }
+  return questionOptions(question);
+}
+
+function isMultiNone(raw: string): boolean {
+  const t = normalizeForMatch(raw);
+  return (
+    t === "לא" ||
+    t === "אין" ||
+    t === "אין שיוך" ||
+    t === "בלי שיוך" ||
+    t === "לא רלוונטי" ||
+    t === "none"
+  );
+}
+
 function matchChoiceByText(question: ChatQuestion, raw: string): ChatChoice | undefined {
   const t = normalizeForMatch(raw);
   const exact = question.choices?.find(
@@ -246,6 +327,24 @@ function matchChoiceByText(question: ChatQuestion, raw: string): ChatChoice | un
 
   if (question.id === "yearOfStudy" || question.field === "yearOfStudy") {
     const id = matchMappedAliases(raw, YEAR_ALIASES);
+    const choice = id ? question.choices?.find((c) => c.id === id) : undefined;
+    if (choice) return choice;
+  }
+
+  if (question.id === "service" || question.field === "service") {
+    const id = matchMappedAliases(raw, SERVICE_ALIASES);
+    const choice = id ? question.choices?.find((c) => c.id === id) : undefined;
+    if (choice) return choice;
+  }
+
+  if (question.id === "householdIncomeBand" || question.field === "householdIncomeBand") {
+    const id = matchMappedAliases(raw, INCOME_ALIASES);
+    const choice = id ? question.choices?.find((c) => c.id === id) : undefined;
+    if (choice) return choice;
+  }
+
+  if (question.id === "gender" || question.field === "gender") {
+    const id = matchMappedAliases(raw, GENDER_ALIASES);
     const choice = id ? question.choices?.find((c) => c.id === id) : undefined;
     if (choice) return choice;
   }
@@ -315,11 +414,13 @@ export function parseInbound(
   if (isSandboxKeyword(raw)) return { kind: "ignore" };
   if (isResetCommand(raw)) return { kind: "reset" };
   if (isReportCommand(raw)) return { kind: "report" };
+  if (isDetailsCommand(raw)) return { kind: "details" };
+  if (isNearMissCommand(raw)) return { kind: "nearMiss" };
   if (isSkipCommand(raw)) return { kind: "skip" };
 
   if (!question) return { kind: "unparsed" };
 
-  const options = listed.length ? listed : questionOptions(question);
+  const options = listedOptionsForQuestion(question, listed);
 
   if (inbound.buttonPayload) {
     const fromPayload = payloadToAction(question, inbound.buttonPayload, options);
@@ -336,6 +437,7 @@ export function parseInbound(
   }
 
   if (question.kind === "multi") {
+    if (isMultiNone(raw)) return { kind: "skip" };
     const nums = parseNumberList(raw);
     if (nums && question.multiValues) {
       const values: string[] = [];
@@ -436,11 +538,14 @@ export function emptyWhatsAppSession(): WhatsAppSession {
   };
 }
 
+export type BucketFollowup = "needInfo" | "nearMiss";
+
 export type TurnResult = {
   session: WhatsAppSession;
   messages: string[];
   ignore: boolean;
   reportRequested: boolean;
+  bucketRequested?: BucketFollowup;
   appliedProfile?: StudentProfile;
 };
 
@@ -505,6 +610,13 @@ function nextPromptMessages(
     };
   }
 
+  if (canOfferChatReport(next.profile, next.askedIds)) {
+    // Report is about to auto-send — do not tease «אפשר לראות מלגות».
+    return {
+      messages,
+      session: { ...next, extrasIntroShown, offerShown: true, listed: [] },
+    };
+  }
   if (nextFilled >= 1) {
     messages.push(HE.chat.done);
   } else {
@@ -572,6 +684,31 @@ export function applyWhatsAppTurn(
       messages: started.messages,
       ignore: false,
       reportRequested: false,
+    };
+  }
+
+  if (parsed.kind === "details" || parsed.kind === "nearMiss") {
+    if (!canOfferChatReport(session.profile, session.askedIds)) {
+      const messages: string[] = [HE.whatsapp.tooEarlyBucket];
+      if (question) {
+        const block = promptBlock(session, question);
+        messages.push(block.text);
+        return {
+          session: { ...session, listed: block.listed },
+          messages,
+          ignore: false,
+          reportRequested: false,
+        };
+      }
+      return { session, messages, ignore: false, reportRequested: false };
+    }
+    return {
+      session,
+      messages: [],
+      ignore: false,
+      reportRequested: false,
+      bucketRequested: parsed.kind === "details" ? "needInfo" : "nearMiss",
+      appliedProfile: session.profile,
     };
   }
 

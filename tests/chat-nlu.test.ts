@@ -1,10 +1,16 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { HE } from "@/lib/i18n/he";
 import { chatQuestionById } from "@/lib/chat-intake";
 import { parsedFromLlmJson, resolveUnparsedWithLlm } from "@/lib/chat-nlu";
 import {
   applyWhatsAppTurn,
+  emptyWhatsAppSession,
   isClarifyNudge,
+  isDetailsCommand,
+  isNearMissCommand,
   isReportCommand,
+  isSkipCommand,
+  listedOptionsForQuestion,
   parseInbound,
   questionOptions,
 } from "@/lib/chat-reply";
@@ -102,10 +108,118 @@ describe("deterministic Hebrew synonyms", () => {
       "הציגו מלגות",
       "מה מגיע לי",
       "מה מתאים לי",
+      "דוח מפורט",
+      "הציגו דוח",
     ]) {
       expect(isReportCommand(body), body).toBe(true);
       expect(parseInbound({ body }, degree).kind, body).toBe("report");
     }
+  });
+
+  it("maps service לא / לא שירתתי / בלי שירות to none, and פטור to exempt", () => {
+    const service = q("service");
+    const listed = questionOptions(service);
+    for (const body of ["לא", "לא שירתתי", "בלי שירות"]) {
+      const parsed = parseInbound({ body }, service, listed);
+      expect(parsed.kind, body).toBe("action");
+      if (parsed.kind !== "action" || parsed.action.type !== "choice") throw new Error(body);
+      expect(parsed.action.choice.id).toBe("none");
+    }
+    const exempt = parseInbound({ body: "פטור משירות" }, service, listed);
+    expect(exempt.kind).toBe("action");
+    if (exempt.kind !== "action" || exempt.action.type !== "choice") throw new Error("exempt");
+    expect(exempt.action.choice.id).toBe("exempt");
+  });
+
+  it("maps הכנסה בינונית / ממוצעת to the middle household band", () => {
+    const income = q("householdIncomeBand");
+    const listed = questionOptions(income);
+    for (const body of ["הכנסה בינונית", "בינונית", "ממוצעת"]) {
+      const parsed = parseInbound({ body }, income, listed);
+      expect(parsed.kind, body).toBe("action");
+      if (parsed.kind !== "action" || parsed.action.type !== "choice") throw new Error(body);
+      expect(parsed.action.choice.id).toBe("band_15_25k");
+    }
+  });
+
+  it("maps אישה / גבר on the gender question", () => {
+    const gender = q("gender");
+    const listed = questionOptions(gender);
+    const female = parseInbound({ body: "אישה" }, gender, listed);
+    expect(female.kind).toBe("action");
+    if (female.kind !== "action" || female.action.type !== "choice") throw new Error("female");
+    expect(female.action.choice.id).toBe("female");
+    const male = parseInbound({ body: "גבר" }, gender, listed);
+    expect(male.kind).toBe("action");
+    if (male.kind !== "action" || male.action.type !== "choice") throw new Error("male");
+    expect(male.action.choice.id).toBe("male");
+  });
+
+  it("expands skip phrases and treats לא / אין on sectors as skip", () => {
+    expect(isSkipCommand("לא רלוונטי")).toBe(true);
+    expect(isSkipCommand("לא יודעת")).toBe(true);
+    expect(isSkipCommand("לא")).toBe(false);
+    const sectors = q("sectors");
+    expect(parseInbound({ body: "לא" }, sectors, questionOptions(sectors)).kind).toBe("skip");
+    expect(parseInbound({ body: "אין" }, sectors, questionOptions(sectors)).kind).toBe("skip");
+  });
+
+  it("treats פרטים / כמעט as follow-up bucket commands", () => {
+    expect(isDetailsCommand("פרטים")).toBe(true);
+    expect(isNearMissCommand("כמעט")).toBe(true);
+    expect(parseInbound({ body: "פרטים" }, undefined).kind).toBe("details");
+    expect(parseInbound({ body: "כמעט" }, undefined).kind).toBe("nearMiss");
+  });
+
+  it("does not map a stale institution list number onto the sector question", () => {
+    const sectors = q("sectors");
+    const stale = questionOptions(q("institution"));
+    const options = listedOptionsForQuestion(sectors, stale);
+    expect(options.every((o) => o.payload.startsWith("multi:"))).toBe(true);
+    const parsed = parseInbound({ body: "6" }, sectors, stale);
+    expect(parsed.kind).toBe("action");
+    if (parsed.kind !== "action" || parsed.action.type !== "multi") throw new Error("sector 6");
+    expect(parsed.action.values).toEqual(["haredi"]);
+    expect(parsed.action.type).not.toBe("institution");
+  });
+
+  it("does not send «אפשר לראות מלגות» when the report auto-sends", () => {
+    const session = {
+      ...emptyWhatsAppSession(),
+      profile: {
+        degreeLevel: "ba" as const,
+        reservistDaysLastYear: 0,
+        cityOfResidence: "רעננה",
+        institution: "openu",
+        gender: "male" as const,
+        householdSize: 3,
+        householdIncomeBand: "band_15_25k" as const,
+        yearOfStudy: 3,
+        service: "none" as const,
+        willingToVolunteer: false,
+        sectors: null,
+      },
+      askedIds: [
+        "degreeLevel",
+        "miluim",
+        "cityOfResidence",
+        "institution",
+        "gender",
+        "householdSize",
+        "householdIncomeBand",
+        "yearOfStudy",
+        "service",
+        "willingToVolunteer",
+        "sectors",
+      ],
+    };
+    const oleh = q("isOleh");
+    const no = oleh.choices?.find((c) => c.id === "no");
+    if (!no) throw new Error("oleh no");
+    const turn = applyWhatsAppTurn(session, { body: "לא" });
+    expect(turn.reportRequested).toBe(true);
+    expect(turn.messages.join("\n")).not.toContain(HE.chat.done);
+    expect(turn.messages.join("\n")).not.toContain("אפשר לראות מלגות");
   });
 
   it("treats ??? as a clarify nudge, not a choice", () => {

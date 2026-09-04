@@ -223,7 +223,10 @@ describe("webhook TwiML + matcher on the built profile", () => {
     expect(report.counts.eligible + report.counts.needInfo + report.counts.nearMiss + report.counts.guide).toBeGreaterThan(
       0,
     );
-    expect(report.text).toMatch(/מתאים עכשיו|חסר פרט אחד|כמעט מתאים|צריך לבדוק במוסד/);
+    expect(report.text).toMatch(/מתאים עכשיו|אין כרגע מלגות שמתאימות|בדוח המלא/);
+    expect(report.messages.length).toBeLessThanOrEqual(3);
+    expect(report.messages.reduce((n, m) => n + m.length, 0)).toBeLessThanOrEqual(1500);
+    expect(early.xml).not.toContain(HE.chat.done);
     expect(report.resultsUrl).toContain("#p=");
     expect(report.text).not.toContain("זכאים לזכייה");
     expect(MIN_CHAT_ANSWERS_FOR_REPORT).toBe(3);
@@ -326,6 +329,44 @@ describe("Twilio signature", () => {
   });
 });
 
+describe("gender is asked on the WhatsApp core path", () => {
+  it("prompts מגדר after institution before household size", async () => {
+    await xmlOf("התחלה");
+    await xmlOf("1");
+    await xmlOf("2");
+    await xmlOf("חיפה");
+    const inst = await xmlOf("1");
+    expect(inst.xml).toContain("מגדר");
+    expect(inst.xml).toContain("אישה");
+    expect(inst.xml).not.toContain("כמה נפשות");
+  });
+});
+
+describe("optional bucket follow-up after the short report", () => {
+  it("פרטים sends one extra needInfo message, not a 7-message dump", async () => {
+    putSession(FROM, {
+      ...emptyWhatsAppSession(),
+      profile: OPENU_YEAR3_FIXTURE,
+      askedIds: ["degreeLevel", "miluim", "cityOfResidence", "institution"],
+      offerShown: true,
+      reportSent: true,
+    });
+    const result = await handleInbound({ from: FROM, body: "פרטים" }, { asOf: AS_OF });
+    expect(result.status).toBe(200);
+    const messageBodies = [...result.xml.matchAll(/<Message>([\s\S]*?)<\/Message>/g)].map((m) =>
+      (m[1] ?? "")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, '"'),
+    );
+    expect(messageBodies.length).toBe(1);
+    expect(messageBodies[0]?.length).toBeLessThan(1500);
+    expect(messageBodies.some((b) => b.includes("🟡") || b.includes("חסר"))).toBe(true);
+    expect(result.xml).not.toContain(HE.chat.done);
+  });
+});
+
 describe("Twilio report is sequential, never URL-only", () => {
   it("Open University year-3 fixture yields ≥2 TwiML messages with a counselor lead then the URL", async () => {
     putSession(FROM, {
@@ -344,7 +385,8 @@ describe("Twilio report is sequential, never URL-only", () => {
         .replace(/&quot;/g, '"'),
     );
     expect(messageBodies.length).toBeGreaterThan(1);
-    expect(messageBodies.length).toBeLessThanOrEqual(6);
+    expect(messageBodies.length).toBeLessThanOrEqual(3);
+    expect(messageBodies.reduce((n, b) => n + b.length, 0)).toBeLessThanOrEqual(1500);
     for (const body of messageBodies) {
       expect(body.length).toBeLessThan(1500);
     }
