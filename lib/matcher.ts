@@ -19,6 +19,7 @@ import { cityInList, isPeripheryCity, neighborhoodMatches } from "./cities";
 import { fieldLabelHe, predicateLabelHe } from "./labels";
 import { isDeadlineClosed } from "./format";
 import { profileIncomeBand } from "./income";
+import { collectInstitutionValues } from "./rule-walk";
 
 function isUnknown(value: unknown): boolean {
   return value === null || value === undefined;
@@ -606,10 +607,54 @@ function evalRule(rule: Rule, profile: StudentProfile): RuleEval {
 
 const NEAR_MISS_MAX = 2;
 
-export function bucketFromEval(evaluation: RuleEval): MatchBucket {
+/**
+ * True when every passing path requires an institutionIn leaf.
+ * anyOf(city, institution) is not required — city can still pass.
+ */
+function ruleRequiresInstitutionIn(rule: Rule): boolean {
+  if (isPredicate(rule)) return rule.type === "institutionIn";
+  if (rule.op === "not") return false;
+  if (rule.op === "anyOf") {
+    return rule.rules.length > 0 && rule.rules.every(ruleRequiresInstitutionIn);
+  }
+  return rule.rules.some(ruleRequiresInstitutionIn);
+}
+
+/**
+ * Catalog landing `institutionIds` is a student-institution gate when eligibility
+ * never mentions institutionIn. Records that already encode school (including
+ * anyOf city-or-campus) are left unchanged.
+ */
+function catalogInstitutionIdsGate(scholarship: Scholarship): string[] | null {
+  const ids = scholarship.institutionIds?.filter(Boolean) ?? [];
+  if (!ids.length) return null;
+  if (collectInstitutionValues(scholarship.eligibility).length > 0) return null;
+  return ids;
+}
+
+function eligibilityWithInstitutionGate(scholarship: Scholarship): Rule {
+  const ids = catalogInstitutionIdsGate(scholarship);
+  if (!ids) return scholarship.eligibility;
+  return { op: "allOf", rules: [{ type: "institutionIn", values: ids }, scholarship.eligibility] };
+}
+
+function unknownRequiredInstitution(scholarship: Scholarship, profile: StudentProfile): boolean {
+  if (!isUnknown(profile.institution)) return false;
+  if (catalogInstitutionIdsGate(scholarship)) return true;
+  return ruleRequiresInstitutionIn(scholarship.eligibility);
+}
+
+export function bucketFromEval(
+  evaluation: RuleEval,
+  options: { unknownRequiredInstitution?: boolean } = {},
+): MatchBucket {
   if (evaluation.immutableFailCount > 0) return "ineligible";
   if (evaluation.failCount === 0 && evaluation.status === "pass") return "eligible";
   if (evaluation.failCount === 0) return "needInfo";
+  // School is a required identity fact that is still blank: never «כמעט מתאים».
+  if (options.unknownRequiredInstitution) {
+    return evaluation.mutableFailCount <= NEAR_MISS_MAX ? "needInfo" : "ineligible";
+  }
   if (evaluation.mutableFailCount <= NEAR_MISS_MAX) return "nearMiss";
   return "ineligible";
 }
@@ -702,8 +747,10 @@ export function matchScholarship(
 ): ScholarshipMatch {
   seq = 0;
   const asOf = options.asOf ?? new Date();
-  const evaluation = evalRule(scholarship.eligibility, profile);
-  const rawBucket = bucketFromEval(evaluation);
+  const evaluation = evalRule(eligibilityWithInstitutionGate(scholarship), profile);
+  const rawBucket = bucketFromEval(evaluation, {
+    unknownRequiredInstitution: unknownRequiredInstitution(scholarship, profile),
+  });
   const { bucket, evaluation: finalEval } = applyPostEval(
     scholarship,
     evaluation,

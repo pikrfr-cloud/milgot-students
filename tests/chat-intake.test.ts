@@ -24,6 +24,7 @@ import {
 import { matchAll, matchScholarship } from "@/lib/matcher";
 import { uniqueMatchableByApplyUrl } from "@/lib/catalog";
 import { CATALOG_STATS, SCHOLARSHIPS } from "@/data/scholarships";
+import { collectInstitutionIn } from "@/data/scholarships/helpers";
 import {
   CHAT_CORE_FIELDS,
   CHAT_EXTRA_FIELDS,
@@ -264,5 +265,52 @@ describe("chat partial profile still produces a report", () => {
     const counts = chatReportCounts(profile, asOf);
     expect(counts.ineligible).toBeLessThanOrEqual(CATALOG_STATS.total);
     expect(chatCountWithinCatalog(counts)).toBe(true);
+  });
+
+  it("does not count a Weizmann-only fund as כמעט מתאים for Open University or a blank school", () => {
+    const asOf = new Date("2026-09-03T12:00:00+03:00");
+    const unique = uniqueMatchableByApplyUrl(SCHOLARSHIPS);
+    const openu: StudentProfile = {
+      institution: "openu",
+      yearOfStudy: 3,
+      degreeLevel: "ba",
+      average: 80,
+      fieldOfStudy: "computer_science",
+    };
+    const openuMatches = matchAll(unique, openu, { asOf });
+    const openuNear = openuMatches.filter((m) => m.bucket === "nearMiss");
+    expect(
+      openuNear
+        .filter(
+          (m) =>
+            (m.scholarship.institutionIds?.length ?? 0) > 0 &&
+            !m.scholarship.institutionIds!.includes("openu") &&
+            collectInstitutionIn(m.scholarship.eligibility).length === 0,
+        )
+        .map((m) => m.scholarship.id),
+    ).toEqual([]);
+    expect(openuMatches.find((m) => m.scholarship.id === "weizmann-young-scholars")?.bucket).toBe(
+      "ineligible",
+    );
+    const openuCounts = chatReportCounts(openu, asOf);
+    expect(openuCounts.nearMiss).toBe(openuNear.length);
+
+    const noSchool: StudentProfile = {
+      degreeLevel: "ba",
+      yearOfStudy: 3,
+      average: 80,
+      fieldOfStudy: "computer_science",
+    };
+    const noSchoolMatches = matchAll(unique, noSchool, { asOf });
+    expect(noSchoolMatches.find((m) => m.scholarship.id === "weizmann-young-scholars")?.bucket).toBe(
+      "needInfo",
+    );
+    expect(noSchoolMatches.some((m) => m.bucket === "nearMiss" && m.scholarship.id === "weizmann-young-scholars")).toBe(
+      false,
+    );
+    const noSchoolCounts = chatReportCounts(noSchool, asOf);
+    expect(noSchoolCounts.nearMiss).toBe(
+      noSchoolMatches.filter((m) => m.bucket === "nearMiss").length,
+    );
   });
 });
