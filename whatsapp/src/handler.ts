@@ -15,6 +15,7 @@ import {
   REMINDER_COPY,
   type ReminderItem,
 } from "../../lib/whatsapp-reminders";
+import { HE } from "../../lib/i18n/he";
 import { buildWhatsAppReport } from "../../lib/whatsapp-report";
 import { getSession, putSession } from "./session";
 import { deleteSubscription, putSubscription, type ReminderKv } from "./reminders-kv";
@@ -56,6 +57,26 @@ function envString(env: WhatsAppEnv | undefined, key: Exclude<keyof WhatsAppEnv,
 }
 
 export async function handleWhatsAppPost(args: {
+  rawBody: string;
+  requestUrl: string;
+  signature: string | undefined;
+  env?: WhatsAppEnv;
+  asOf?: Date;
+}): Promise<HandleResult> {
+  try {
+    return await handleWhatsAppPostUnchecked(args);
+  } catch (err) {
+    console.error("[whatsapp] POST handler crashed", err);
+    return {
+      status: 200,
+      xml: twimlMessages([HE.whatsapp.crashApology]),
+      maskedFrom: "…",
+      ignored: true,
+    };
+  }
+}
+
+async function handleWhatsAppPostUnchecked(args: {
   rawBody: string;
   requestUrl: string;
   signature: string | undefined;
@@ -171,6 +192,23 @@ async function handleReminderSubscribe(
 }
 
 export async function handleInbound(
+  inbound: TwilioInbound,
+  options: { asOf?: Date; env?: WhatsAppEnv } = {},
+): Promise<HandleResult> {
+  try {
+    return await handleInboundUnchecked(inbound, options);
+  } catch (err) {
+    console.error("[whatsapp] inbound crashed", err);
+    return {
+      status: 200,
+      xml: twimlMessages([HE.whatsapp.crashApology]),
+      maskedFrom: maskFrom(inbound.from),
+      ignored: true,
+    };
+  }
+}
+
+async function handleInboundUnchecked(
   inbound: TwilioInbound,
   options: { asOf?: Date; env?: WhatsAppEnv } = {},
 ): Promise<HandleResult> {

@@ -899,6 +899,21 @@ export function ProfileWizard() {
             <UnlockField
               profile={profile}
               unlocks={unlockByField}
+              field="histadrutMember"
+              label="חברה בנעמת / בהסתדרות?"
+              hint="נשאל כי מלגות נעמת דורשות חברות בהסתדרות העובדים הכללית החדשה (חברות בנעמת אוטומטית). אם תדלגו — המלגה תופיע תחת «חסר פרט»."
+            >
+              <TriStateSelect
+                className={inputClass}
+                value={profile.histadrutMember}
+                onChange={(v) => patch({ histadrutMember: v })}
+                yesLabel="כן, חברה בנעמת / בהסתדרות"
+                noLabel="לא חברה"
+              />
+            </UnlockField>
+            <UnlockField
+              profile={profile}
+              unlocks={unlockByField}
               field="hasDisability"
               label="מוגבלות מוכרת?"
               hint="למשל נכות רפואית לצורך שיקום מקצועי. השדה רגיש ואופציונלי."

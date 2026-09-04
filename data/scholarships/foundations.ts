@@ -373,16 +373,40 @@ export const FOUNDATIONS: Scholarship[] = [
     funderHe: "נעמת — תנועת נשים עובדות ומתנדבות",
     types: ["need", "population"],
     scope: "national",
-    amounts: amount("משתנה לפי קול קורא", { uncertain: true }),
+    amounts: amount("2,000 ₪ (דף המלגות הרשמי של נעמת)", { min: 2000, max: 2000 }),
     cadence: "annual",
     deadline: CHECK_ANNUALLY,
-    whoItsForHe: "סטודנטיות, לעיתים עם עדיפות להורות עצמאית / מצב כלכלי. יש לאמת קול קורא עדכני.",
-    documentsHe: [...DOCS_BASIC, ...DOCS_INCOME],
-    howToApplyHe: "אתר נעמת.",
-    applyUrl: "https://www.naamat.org.il/",
-    lastVerified: VERIFIED,
-    sourceUrls: ["https://www.naamat.org.il/"],
-    eligibility: allOf({ type: "genderIn", values: ["female"] }, { type: "incomeAtMost", value: "lower_middle" }),
+    whoItsForHe:
+      "סטודנטיות חברות נעמת / ההסתדרות בלבד (חברות בנעמת אוטומטית לחברות הסתדרות העובדים הכללית החדשה), לאחר שירות צבאי מלא / שירות לאומי או אזרחי. תואר ראשון מהשנה השנייה, או תואר שני, במוסד המקנה תואר אקדמי ישראלי. עדיפות למקצועות מדעיים–טכנולוגיים. 180 מלגות בשנה לפי הדף הרשמי.",
+    documentsHe: [
+      ...DOCS_BASIC,
+      "אישור חברות בהסתדרות הכללית החדשה (המהווה חברות בנעמת)",
+      ...DOCS_SERVICE,
+      "קורות חיים",
+    ],
+    howToApplyHe:
+      "הגשה לפי מרחב נעמת לפי כתובת המגורים בתעודת הזהות. חובה לצרף אישור חברות בהסתדרות/נעמת ואישור שירות. פרטים באתר נעמת.",
+    applyUrl: "https://naamat.org.il/%d7%9e%d7%9c%d7%92%d7%95%d7%aa-%d7%9c%d7%a1%d7%98%d7%95%d7%93%d7%a0%d7%98%d7%99%d7%95%d7%aa/",
+    lastVerified: "2026-09-04",
+    sourceUrls: [
+      "https://naamat.org.il/%d7%9e%d7%9c%d7%92%d7%95%d7%aa-%d7%9c%d7%a1%d7%98%d7%95%d7%93%d7%a0%d7%98%d7%99%d7%95%d7%aa/",
+    ],
+    eligibility: allOf(
+      { type: "genderIn", values: ["female"] },
+      anyOf(
+        allOf({ type: "degreeLevelIn", values: ["ba"] }, { type: "yearOfStudyMin", value: 2 }),
+        { type: "degreeLevelIn", values: ["ma"] },
+      ),
+      {
+        type: "histadrutMember",
+        labelHe: "חברה בנעמת / בהסתדרות העובדים הכללית החדשה",
+      },
+      {
+        type: "serviceIn",
+        values: ["idf", "national", "civil"],
+        labelHe: "שירות צבאי מלא / שירות לאומי או אזרחי (שנה לפחות לפי טופס נעמת)",
+      },
+    ),
   }),
   s({
     id: "wizo-students",

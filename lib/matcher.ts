@@ -73,6 +73,7 @@ const IMMUTABLE_TYPES = new Set<Predicate["type"]>([
   "combatRole",
   "loneSoldier",
   "firstGeneration",
+  "histadrutMember",
   "ageMin",
   "ageMax",
   "yearsSinceDischargeMax",
@@ -287,6 +288,8 @@ function fieldFor(pred: Predicate, profile?: StudentProfile): ProfileField | und
       return "outstanding";
     case "firstGeneration":
       return "firstGeneration";
+    case "histadrutMember":
+      return "histadrutMember";
     case "completedMechina":
       return "completedMechina";
     case "weeklyHoursMin":
@@ -398,6 +401,8 @@ function evalPredicate(pred: Predicate, profile: StudentProfile): EvalStatus {
       return arrayOverlap(profile.outstanding, pred.values);
     case "firstGeneration":
       return boolPred(profile.firstGeneration, pred.value ?? true);
+    case "histadrutMember":
+      return boolPred(profile.histadrutMember, pred.value ?? true);
     case "completedMechina":
       return boolPred(profile.completedMechina, pred.value ?? true);
     case "weeklyHoursMin": {
